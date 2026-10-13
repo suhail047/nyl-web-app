@@ -8,8 +8,10 @@
     "node": ">=22.13"
   },
   "scripts": {
+    "prestart": "node src/check-node.js",
     "start": "node --disable-warning=ExperimentalWarning server.js",
     "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
+    "preseed": "node src/check-node.js",
     "seed": "node --disable-warning=ExperimentalWarning src/seed.js"
   },
   "dependencies": {

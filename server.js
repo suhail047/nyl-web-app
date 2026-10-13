@@ -357,4 +357,18 @@ app.use((err, _req, res, _next) => {
 app.listen(PORT, () => {
   console.log(`Patient app:     http://localhost:${PORT}`);
   console.log(`Admin dashboard: http://localhost:${PORT}/admin`);
+  // Set by the start-windows.bat / start-mac.command scripts: open the browser once the server is ready.
+  if (process.env.OPEN_BROWSER) {
+    const url = `http://localhost:${PORT}`;
+    const cmd = process.platform === 'win32' ? `start "" "${url}"` : process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`;
+    require('node:child_process').exec(cmd, () => {});
+  }
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\nPort ${PORT} is already in use. Either the app is already running in another window`);
+    console.error(`(just open http://localhost:${PORT}), or another program uses it: set PORT=3001 in .env and restart.\n`);
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
 });
