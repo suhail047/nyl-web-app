@@ -2,7 +2,11 @@
 async function api(url, options = {}) {
   const res = await fetch(url, options);
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error || 'Something went wrong. Please try again.');
+  if (res.status === 401 && body.needsLogin && location.pathname !== '/') {
+    location.href = '/';
+    return new Promise(() => {}); // page is navigating away
+  }
+  if (!res.ok) throw Object.assign(new Error(body.error || 'Something went wrong. Please try again.'), { retryAfter: body.retryAfter });
   return body;
 }
 
@@ -21,3 +25,13 @@ function getConfig() {
 }
 
 getConfig().then((c) => document.querySelectorAll('[data-clinic]').forEach((el) => (el.textContent = c.clinicName))).catch(() => {});
+
+async function logout() {
+  await fetch('/api/logout', { method: 'POST' }).catch(() => {});
+  sessionStorage.removeItem('phone');
+  location.href = '/';
+}
+
+function fmtPhone(p) {
+  return '+91 ' + p.slice(0, 5) + ' ' + p.slice(5);
+}

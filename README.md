@@ -2,8 +2,9 @@
 
 A small web app for patient check-in:
 
-1. **Phone number** – patient enters the mobile number their family is registered under.
-2. **Select patient** – all names registered under that number are listed (a new name can be added).
+1. **Phone number + OTP** – patient enters the mobile number their family is registered under and
+   verifies it with a 6-digit code sent by SMS.
+2. **Select patient** – all names registered under that (verified) number are listed (a new name can be added).
 3. **Photo, problems & payment** – patient takes/uploads a photo, describes their problems/diseases,
    and pays the consultation fee through **Razorpay**.
 
@@ -34,6 +35,28 @@ npm start
 
 Without Razorpay keys the app still works; submissions are recorded with status *No payment*.
 
+## OTP (SMS verification)
+
+Patient names are only shown after the phone number is verified with a one-time code. Once verified,
+the browser stays signed in for 12 hours (HttpOnly cookie); every patient API checks that the patient or
+visit belongs to the verified number.
+
+Configure in `.env`:
+
+| Setting | Meaning |
+| --- | --- |
+| `OTP_ENABLED` | `true` (default) or `false` to skip verification |
+| `SMS_PROVIDER` | `console` (default, dev only: code printed in the server log), `msg91`, `2factor` or `twilio` |
+| `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID` | MSG91 OTP API |
+| `TWOFACTOR_API_KEY`, `TWOFACTOR_TEMPLATE` | 2Factor.in SMS OTP API |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | Twilio Messaging |
+
+For Indian numbers, MSG91 and 2Factor are the usual choice; SMS in India needs a **DLT-registered sender
+ID and OTP template**, which the provider helps you set up.
+
+Limits: code valid 5 minutes, single use, 5 wrong attempts per code, resend after 30 s, max 5 codes per
+number per hour and 20 per IP per hour.
+
 ## Razorpay setup
 
 1. In the Razorpay Dashboard → *Account & Settings → API Keys*, generate keys (use **Test mode** first)
@@ -51,8 +74,11 @@ visit *Paid*. If the patient closes the payment window they get a "Try payment a
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/patients?phone=` | Patients registered under a number |
-| POST | `/api/patients` | Register a new patient `{phone, name, age, gender}` |
+| POST | `/api/otp/send` | Send OTP `{phone}` |
+| POST | `/api/otp/verify` | Verify `{phone, code}` → sets session cookie |
+| POST | `/api/logout` | End the patient session |
+| GET | `/api/patients` | Patients under the verified number |
+| POST | `/api/patients` | Register a new patient `{name, age, gender}` under the verified number |
 | POST | `/api/visits` | Multipart: `patientId`, `problems`, `photo` → saves + creates Razorpay order |
 | POST | `/api/visits/:id/verify` | Verify Razorpay checkout signature |
 | POST | `/api/visits/:id/order` | New order to retry payment |
@@ -68,6 +94,4 @@ If you use nginx, disable buffering for `/api/admin/stream` so live updates are 
 
 ## Notes / next steps
 
-- Anyone who knows a phone number can see the names registered under it. If that matters, add an
-  OTP check on the phone page (e.g. MSG91 / Twilio) before showing names.
 - Photos are health data – keep the admin password strong and the server on HTTPS.

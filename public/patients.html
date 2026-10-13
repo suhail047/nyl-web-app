@@ -10,7 +10,7 @@
   <main class="wrap">
     <header class="brand"><div class="logo">✚</div><span data-clinic>Clinic</span></header>
     <div class="steps"><span class="on"></span><span class="on"></span><span></span></div>
-    <a class="back" href="/">← Change number</a>
+    <button type="button" class="link back" onclick="logout()">← Change number</button>
     <section class="card">
       <h1>Who is the patient?</h1>
       <p class="sub" id="sub">Loading…</p>
@@ -33,7 +33,7 @@
   </main>
   <script src="/common.js"></script>
   <script>
-    const phone = new URLSearchParams(location.search).get('phone') || sessionStorage.getItem('phone');
+    let phone;
     const list = document.getElementById('list');
     const sub = document.getElementById('sub');
     const error = document.getElementById('error');
@@ -50,10 +50,11 @@
     showAdd.addEventListener('click', openAddForm);
 
     async function load() {
-      if (!phone) return (location.href = '/');
       try {
-        const { patients } = await api('/api/patients?phone=' + encodeURIComponent(phone));
-        const shown = '+91 ' + phone.slice(0, 5) + ' ' + phone.slice(5);
+        const res = await api('/api/patients');
+        const patients = res.patients;
+        phone = res.phone;
+        const shown = fmtPhone(phone);
         if (!patients.length) {
           sub.textContent = 'No patients are registered under ' + shown + ' yet. Add the patient below.';
           openAddForm();
@@ -85,7 +86,6 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone,
             name: document.getElementById('name').value,
             age: document.getElementById('age').value,
             gender: document.getElementById('gender').value,

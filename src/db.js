@@ -31,6 +31,23 @@ db.exec(`
     paid_at              TEXT
   );
   CREATE INDEX IF NOT EXISTS idx_visits_order ON visits(razorpay_order_id);
+
+  CREATE TABLE IF NOT EXISTS otp_codes (
+    phone         TEXT PRIMARY KEY,
+    code_hash     TEXT NOT NULL,
+    salt          TEXT NOT NULL,
+    expires_at    INTEGER NOT NULL,  -- unix ms
+    attempts      INTEGER NOT NULL DEFAULT 0,
+    last_sent_at  INTEGER NOT NULL,
+    window_start  INTEGER NOT NULL,  -- start of the hourly send-limit window
+    sends_in_window INTEGER NOT NULL DEFAULT 1
+  );
+
+  CREATE TABLE IF NOT EXISTS patient_sessions (
+    token_hash  TEXT PRIMARY KEY,
+    phone       TEXT NOT NULL,
+    expires_at  INTEGER NOT NULL     -- unix ms
+  );
 `);
 
 // Store phone numbers as the 10-digit Indian mobile number so "+91 98765 43210",
@@ -66,6 +83,18 @@ const q = {
   markFailed: db.prepare(`UPDATE visits SET payment_status = 'failed' WHERE id = ? AND payment_status = 'pending'`),
   visitById: db.prepare(`${VISIT_SELECT} WHERE v.id = ?`),
   visitByOrder: db.prepare(`${VISIT_SELECT} WHERE v.razorpay_order_id = ?`),
+  getOtp: db.prepare('SELECT * FROM otp_codes WHERE phone = ?'),
+  upsertOtp: db.prepare(`
+    INSERT INTO otp_codes (phone, code_hash, salt, expires_at, attempts, last_sent_at, window_start, sends_in_window)
+    VALUES (?, ?, ?, ?, 0, ?, ?, ?)
+    ON CONFLICT(phone) DO UPDATE SET code_hash = excluded.code_hash, salt = excluded.salt, expires_at = excluded.expires_at,
+      attempts = 0, last_sent_at = excluded.last_sent_at, window_start = excluded.window_start, sends_in_window = excluded.sends_in_window`),
+  bumpOtpAttempts: db.prepare('UPDATE otp_codes SET attempts = attempts + 1 WHERE phone = ?'),
+  expireOtp: db.prepare('UPDATE otp_codes SET expires_at = 0 WHERE phone = ?'),
+  insertSession: db.prepare('INSERT INTO patient_sessions (token_hash, phone, expires_at) VALUES (?, ?, ?)'),
+  getSession: db.prepare('SELECT phone FROM patient_sessions WHERE token_hash = ? AND expires_at > ?'),
+  deleteSession: db.prepare('DELETE FROM patient_sessions WHERE token_hash = ?'),
+  purgeSessions: db.prepare('DELETE FROM patient_sessions WHERE expires_at <= ?'),
   recentVisits: db.prepare(`${VISIT_SELECT} ORDER BY v.id DESC LIMIT ?`),
 };
 

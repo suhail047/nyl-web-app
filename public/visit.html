@@ -48,8 +48,6 @@
     const submit = document.getElementById('submit');
     let visitId = null;
 
-    const phone = sessionStorage.getItem('phone');
-    if (phone) document.getElementById('back').href = '/patients?phone=' + phone;
 
     (async () => {
       if (!patientId) return (location.href = '/');

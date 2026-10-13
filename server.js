@@ -7,6 +7,7 @@ if (fs.existsSync(path.join(__dirname, '.env'))) process.loadEnvFile(path.join(_
 const express = require('express');
 const multer = require('multer');
 const { q, normalizePhone } = require('./src/db');
+const otp = require('./src/otp');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
@@ -17,11 +18,14 @@ const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
 const RZP_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 const PAYMENTS_ENABLED = Boolean(RZP_KEY_ID && RZP_KEY_SECRET);
+const OTP_ENABLED = process.env.OTP_ENABLED !== 'false';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 if (ADMIN_PASSWORD === 'change-me') console.warn('WARNING: set ADMIN_PASSWORD in .env before going live.');
 if (!PAYMENTS_ENABLED) console.warn('Razorpay keys not set: submissions will be recorded without payment.');
+if (!OTP_ENABLED) console.warn('OTP_ENABLED=false: phone numbers are NOT verified.');
+else if (otp.PROVIDER === 'console') console.warn('SMS_PROVIDER=console: OTP codes are printed here, not sent by SMS.');
 
 const app = express();
 app.set('trust proxy', true);
@@ -49,6 +53,28 @@ function requireAdmin(req, res, next) {
     if (safeEqual(decoded.slice(0, i), ADMIN_USER) && safeEqual(decoded.slice(i + 1), ADMIN_PASSWORD)) return next();
   }
   res.set('WWW-Authenticate', 'Basic realm="NYL Admin", charset="UTF-8"').status(401).send('Authentication required');
+}
+
+// ---------- Patient phone sessions (set after OTP verification) ----------
+const SESSION_COOKIE = 'nyl_session';
+
+function readCookie(req, name) {
+  for (const part of (req.headers.cookie || '').split(';')) {
+    const [k, ...v] = part.trim().split('=');
+    if (k === name) return decodeURIComponent(v.join('='));
+  }
+  return null;
+}
+
+function startSession(req, res, phone) {
+  const { token, maxAge } = otp.createSession(phone);
+  res.cookie(SESSION_COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: req.secure, maxAge, path: '/' });
+}
+
+function requirePatient(req, res, next) {
+  req.phone = otp.sessionPhone(readCookie(req, SESSION_COOKIE));
+  if (!req.phone) return res.status(401).json({ error: 'Please verify your mobile number first.', needsLogin: true });
+  next();
 }
 
 function cleanText(value, max) {
@@ -128,13 +154,48 @@ app.use(express.json({ limit: '100kb' }));
 
 // ---------- Patient-facing API ----------
 app.get('/api/config', (_req, res) => {
-  res.json({ clinicName: CLINIC_NAME, fee: FEE_PAISE / 100, paymentsEnabled: PAYMENTS_ENABLED });
+  res.json({ clinicName: CLINIC_NAME, fee: FEE_PAISE / 100, paymentsEnabled: PAYMENTS_ENABLED, otpEnabled: OTP_ENABLED });
 });
 
-app.get('/api/patients', (req, res) => {
-  const phone = normalizePhone(req.query.phone);
+app.post('/api/otp/send', async (req, res, next) => {
+  try {
+    const phone = normalizePhone(req.body.phone);
+    if (!phone) return res.status(400).json({ error: 'Enter a valid 10-digit mobile number.' });
+    if (!OTP_ENABLED) {
+      startSession(req, res, phone);
+      return res.json({ phone, verified: true });
+    }
+    const { resendAfter } = await otp.sendOtp(phone, req.ip);
+    res.json({ phone, sent: true, resendAfter });
+  } catch (err) {
+    if (!err.status) {
+      console.error('OTP send failed:', err.message);
+      return res.status(502).json({ error: 'Could not send the code. Please try again.' });
+    }
+    next(err);
+  }
+});
+
+app.post('/api/otp/verify', (req, res) => {
+  const phone = normalizePhone(req.body.phone);
   if (!phone) return res.status(400).json({ error: 'Enter a valid 10-digit mobile number.' });
-  res.json({ phone, patients: q.patientsByPhone.all(phone) });
+  otp.verifyOtp(phone, req.body.code);
+  startSession(req, res, phone);
+  res.json({ phone, verified: true });
+});
+
+app.get('/api/session', requirePatient, (req, res) => res.json({ phone: req.phone }));
+
+app.post('/api/logout', (req, res) => {
+  otp.endSession(readCookie(req, SESSION_COOKIE));
+  res.clearCookie(SESSION_COOKIE, { path: '/' }).json({ ok: true });
+});
+
+// Everything below only works for the phone number verified in this browser.
+app.use(['/api/patients', '/api/visits'], requirePatient);
+
+app.get('/api/patients', (req, res) => {
+  res.json({ phone: req.phone, patients: q.patientsByPhone.all(req.phone) });
 });
 
 function createPatient(req, res) {
@@ -152,10 +213,23 @@ function createPatient(req, res) {
   res.status(201).json(patient);
 }
 
-app.post('/api/patients', createPatient);
+app.post('/api/patients', (req, res) => {
+  req.body.phone = req.phone;
+  createPatient(req, res);
+});
+
+function ownPatient(req, id) {
+  const p = q.patientById.get(Number(id));
+  return p && p.phone === req.phone ? p : null;
+}
+
+function ownVisit(req) {
+  const v = q.visitById.get(Number(req.params.id));
+  return v && v.patient_phone === req.phone ? v : null;
+}
 
 app.get('/api/patients/:id', (req, res) => {
-  const p = q.patientById.get(Number(req.params.id));
+  const p = ownPatient(req, req.params.id);
   if (!p) return res.status(404).json({ error: 'Patient not found.' });
   res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone });
 });
@@ -163,7 +237,7 @@ app.get('/api/patients/:id', (req, res) => {
 // Saves the photo + problems immediately (so staff see it live), then creates the Razorpay order.
 app.post('/api/visits', upload.single('photo'), async (req, res, next) => {
   try {
-    const patient = q.patientById.get(Number(req.body.patientId));
+    const patient = ownPatient(req, req.body.patientId);
     const problems = cleanText(req.body.problems, 5000);
     if (!patient || !problems || !req.file) {
       if (req.file) fs.rm(req.file.path, () => {});
@@ -204,7 +278,7 @@ app.post('/api/visits', upload.single('photo'), async (req, res, next) => {
 // Retry payment for an existing unpaid visit (e.g. the user closed the Razorpay window).
 app.post('/api/visits/:id/order', async (req, res, next) => {
   try {
-    const visit = q.visitById.get(Number(req.params.id));
+    const visit = ownVisit(req);
     if (!visit) return res.status(404).json({ error: 'Visit not found.' });
     if (visit.payment_status === 'paid') return res.status(409).json({ error: 'Already paid.' });
     if (!PAYMENTS_ENABLED) return res.status(400).json({ error: 'Payments are not configured.' });
@@ -220,7 +294,7 @@ app.post('/api/visits/:id/order', async (req, res, next) => {
 });
 
 app.post('/api/visits/:id/verify', (req, res) => {
-  const visit = q.visitById.get(Number(req.params.id));
+  const visit = ownVisit(req);
   const { razorpay_order_id: orderId, razorpay_payment_id: paymentId, razorpay_signature: signature } = req.body;
   if (!visit || !PAYMENTS_ENABLED || !orderId || !paymentId || !signature || orderId !== visit.razorpay_order_id) {
     return res.status(400).json({ error: 'Invalid payment details.' });
@@ -233,7 +307,7 @@ app.post('/api/visits/:id/verify', (req, res) => {
 });
 
 app.post('/api/visits/:id/failed', (req, res) => {
-  const visit = q.visitById.get(Number(req.params.id));
+  const visit = ownVisit(req);
   if (visit && q.markFailed.run(visit.id).changes) broadcast('visit-updated', visitDto(q.visitById.get(visit.id)));
   res.json({ ok: true });
 });
@@ -276,7 +350,8 @@ app.use((err, _req, res, _next) => {
     return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'Photo is too large (max 15 MB).' : err.message });
   }
   if (!err.status) console.error(err);
-  res.status(err.status || 500).json({ error: err.status ? err.message : 'Something went wrong. Please try again.' });
+  if (err.retryAfter) res.set('Retry-After', String(err.retryAfter));
+  res.status(err.status || 500).json({ error: err.status ? err.message : 'Something went wrong. Please try again.', retryAfter: err.retryAfter });
 });
 
 app.listen(PORT, () => {
