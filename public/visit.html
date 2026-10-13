@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <title>Photo &amp; Payment</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand"><div class="logo">✚</div><span data-clinic>Clinic</span></header>
+    <div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+    <a class="back" id="back" href="/patients">← Choose another patient</a>
+
+    <form class="card" id="visitForm" novalidate>
+      <div class="who" style="margin-bottom:16px"><span class="avatar" id="avatar"></span><div><h1 id="pname" style="margin:0">…</h1><span class="meta" id="pmeta" style="color:var(--muted)"></span></div></div>
+
+      <label>Your photo</label>
+      <label class="photo-drop" id="drop">
+        <img id="preview" class="hidden" alt="Selected photo preview">
+        <span id="dropText">📷 Tap to take or upload a photo<br><small>JPG, PNG or HEIC, up to 15 MB</small></span>
+        <input id="photo" name="photo" type="file" accept="image/*" capture="user" required>
+      </label>
+
+      <label for="problems">What problems are you facing?</label>
+      <textarea id="problems" name="problems" maxlength="5000" required placeholder="Describe your illness, symptoms, how long you've had them, any medicines you're taking…"></textarea>
+
+      <div class="fee" id="feeRow"><span>Consultation fee</span><span id="fee">—</span></div>
+      <div class="error" id="error" role="alert"></div>
+      <button type="submit" id="submit">Upload &amp; Pay</button>
+    </form>
+
+    <section class="card center hidden" id="retryCard">
+      <div class="tick warn">!</div>
+      <h1>Payment not completed</h1>
+      <p class="sub">Your photo and details have been sent to the clinic. Please complete the payment to confirm your consultation.</p>
+      <button type="button" id="retry">Try payment again</button>
+    </section>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    const patientId = new URLSearchParams(location.search).get('patient');
+    const form = document.getElementById('visitForm');
+    const photo = document.getElementById('photo');
+    const preview = document.getElementById('preview');
+    const error = document.getElementById('error');
+    const submit = document.getElementById('submit');
+    let visitId = null;
+
+    const phone = sessionStorage.getItem('phone');
+    if (phone) document.getElementById('back').href = '/patients?phone=' + phone;
+
+    (async () => {
+      if (!patientId) return (location.href = '/');
+      try {
+        const [p, cfg] = await Promise.all([api('/api/patients/' + encodeURIComponent(patientId)), getConfig()]);
+        document.getElementById('pname').textContent = p.name;
+        document.getElementById('avatar').textContent = initials(p.name);
+        document.getElementById('pmeta').textContent = [p.age != null ? p.age + ' yrs' : '', p.gender].filter(Boolean).join(' · ');
+        document.getElementById('fee').textContent = '₹' + cfg.fee.toLocaleString('en-IN');
+        if (!cfg.paymentsEnabled) {
+          document.getElementById('feeRow').classList.add('hidden');
+          submit.textContent = 'Submit';
+        }
+      } catch (err) {
+        error.textContent = err.message;
+        submit.disabled = true;
+      }
+    })();
+
+    photo.addEventListener('change', () => {
+      const file = photo.files[0];
+      if (!file) return;
+      preview.src = URL.createObjectURL(file);
+      preview.classList.remove('hidden');
+      document.getElementById('dropText').innerHTML = '<small>Tap to change photo</small>';
+    });
+
+    function openCheckout(payment) {
+      if (!window.Razorpay) {
+        error.textContent = 'Could not load Razorpay. Check your internet connection and try again.';
+        showRetry();
+        return;
+      }
+      const rzp = new Razorpay({
+        key: payment.keyId,
+        order_id: payment.orderId,
+        amount: payment.amount,
+        currency: payment.currency,
+        name: payment.name,
+        description: 'Consultation fee',
+        prefill: payment.prefill,
+        theme: { color: '#0f766e' },
+        handler: async (resp) => {
+          try {
+            await api('/api/visits/' + visitId + '/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(resp),
+            });
+            location.href = '/done?status=paid';
+          } catch (err) {
+            error.textContent = err.message;
+            showRetry();
+          }
+        },
+        modal: { ondismiss: showRetry },
+      });
+      rzp.on('payment.failed', () => fetch('/api/visits/' + visitId + '/failed', { method: 'POST' }));
+      rzp.open();
+    }
+
+    function showRetry() {
+      form.classList.add('hidden');
+      document.getElementById('retryCard').classList.remove('hidden');
+    }
+
+    document.getElementById('retry').addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      try {
+        openCheckout(await api('/api/visits/' + visitId + '/order', { method: 'POST' }));
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        e.target.disabled = false;
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      error.textContent = '';
+      if (!photo.files[0]) return (error.textContent = 'Please add a photo.');
+      if (!document.getElementById('problems').value.trim()) return (error.textContent = 'Please describe your problems.');
+
+      const data = new FormData(form);
+      data.append('patientId', patientId);
+      submit.disabled = true;
+      submit.textContent = 'Uploading…';
+      try {
+        const res = await api('/api/visits', { method: 'POST', body: data });
+        visitId = res.visitId;
+        if (res.paymentError) {
+          showRetry();
+          return alert(res.paymentError);
+        }
+        if (!res.payment) return (location.href = '/done?status=submitted');
+        submit.textContent = 'Opening payment…';
+        openCheckout(res.payment);
+      } catch (err) {
+        error.textContent = err.message;
+        submit.disabled = false;
+        submit.textContent = 'Upload & Pay';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <title>Select Patient</title>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand"><div class="logo">✚</div><span data-clinic>Clinic</span></header>
+    <div class="steps"><span class="on"></span><span class="on"></span><span></span></div>
+    <a class="back" href="/">← Change number</a>
+    <section class="card">
+      <h1>Who is the patient?</h1>
+      <p class="sub" id="sub">Loading…</p>
+      <ul class="list" id="list"></ul>
+      <button type="button" class="secondary" id="showAdd">+ Add a new patient</button>
+
+      <form id="addForm" class="hidden" novalidate>
+        <label for="name">Full name</label>
+        <input id="name" required maxlength="100" autocomplete="name">
+        <div class="phone-row">
+          <div style="flex:1"><label for="age">Age</label><input id="age" type="number" min="0" max="130" inputmode="numeric"></div>
+          <div style="flex:1"><label for="gender">Gender</label>
+            <select id="gender"><option value="">—</option><option>Female</option><option>Male</option><option>Other</option></select>
+          </div>
+        </div>
+        <button type="submit" id="addBtn">Add &amp; continue</button>
+      </form>
+      <div class="error" id="error" role="alert"></div>
+    </section>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    const phone = new URLSearchParams(location.search).get('phone') || sessionStorage.getItem('phone');
+    const list = document.getElementById('list');
+    const sub = document.getElementById('sub');
+    const error = document.getElementById('error');
+    const addForm = document.getElementById('addForm');
+    const showAdd = document.getElementById('showAdd');
+
+    function choose(id) { location.href = '/visit?patient=' + id; }
+
+    function openAddForm() {
+      addForm.classList.remove('hidden');
+      showAdd.classList.add('hidden');
+      document.getElementById('name').focus();
+    }
+    showAdd.addEventListener('click', openAddForm);
+
+    async function load() {
+      if (!phone) return (location.href = '/');
+      try {
+        const { patients } = await api('/api/patients?phone=' + encodeURIComponent(phone));
+        const shown = '+91 ' + phone.slice(0, 5) + ' ' + phone.slice(5);
+        if (!patients.length) {
+          sub.textContent = 'No patients are registered under ' + shown + ' yet. Add the patient below.';
+          openAddForm();
+          return;
+        }
+        sub.textContent = patients.length + ' patient' + (patients.length > 1 ? 's' : '') + ' registered under ' + shown + '.';
+        list.innerHTML = patients.map((p) => {
+          const meta = [p.age != null ? p.age + ' yrs' : '', p.gender || ''].filter(Boolean).join(' · ');
+          return '<li><button type="button" data-id="' + p.id + '"><span class="who"><span class="avatar">' + esc(initials(p.name)) +
+            '</span><span>' + esc(p.name) + (meta ? '<br><span class="meta">' + esc(meta) + '</span>' : '') + '</span></span><span>›</span></button></li>';
+        }).join('');
+      } catch (err) {
+        sub.textContent = '';
+        error.textContent = err.message;
+      }
+    }
+    list.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-id]');
+      if (btn) choose(btn.dataset.id);
+    });
+
+    addForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('addBtn');
+      error.textContent = '';
+      btn.disabled = true;
+      try {
+        const p = await api('/api/patients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone,
+            name: document.getElementById('name').value,
+            age: document.getElementById('age').value,
+            gender: document.getElementById('gender').value,
+          }),
+        });
+        choose(p.id);
+      } catch (err) {
+        error.textContent = err.message;
+        btn.disabled = false;
+      }
+    });
+    load();
+  </script>
+</body>
+</html>

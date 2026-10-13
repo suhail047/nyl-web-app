@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clinic Admin</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <div class="admin">
+    <header class="topbar">
+      <div class="brand-row"><div class="logo">✚</div><strong><span data-clinic>Clinic</span> · Admin</strong></div>
+      <div class="live" id="live"><span class="dot"></span><span id="liveText">Connecting…</span></div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="visits">Submissions <span class="badge hidden" id="newCount">0</span></button>
+      <button class="tab" data-tab="patients">Patients</button>
+    </nav>
+
+    <section id="tab-visits">
+      <div class="toolbar">
+        <input id="visitSearch" type="search" placeholder="Search name, phone or problem…">
+        <select id="statusFilter">
+          <option value="">All payments</option><option value="paid">Paid</option><option value="pending">Pending</option>
+          <option value="failed">Failed</option><option value="not_configured">No payment</option>
+        </select>
+      </div>
+      <div class="grid" id="visits"></div>
+      <p class="empty hidden" id="visitsEmpty">No submissions yet. New uploads will appear here instantly.</p>
+    </section>
+
+    <section id="tab-patients" class="hidden">
+      <form class="card add-patient" id="addPatient" novalidate>
+        <input id="apPhone" type="tel" placeholder="Mobile number" required>
+        <input id="apName" placeholder="Full name" required>
+        <input id="apAge" type="number" min="0" max="130" placeholder="Age">
+        <select id="apGender"><option value="">Gender</option><option>Female</option><option>Male</option><option>Other</option></select>
+        <button type="submit">Add patient</button>
+      </form>
+      <div class="error" id="apError"></div>
+      <div class="toolbar"><input id="patientSearch" type="search" placeholder="Search name or phone…"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Phone</th><th>Name</th><th>Age</th><th>Gender</th><th>Visits</th><th>Last visit</th><th>Registered</th><th></th></tr></thead>
+          <tbody id="patients"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  <script src="/common.js"></script>
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <title>Thank You</title>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand"><div class="logo">✚</div><span data-clinic>Clinic</span></header>
+    <section class="card center">
+      <div class="tick">✓</div>
+      <h1 id="title">Thank you!</h1>
+      <p class="sub" id="msg">Your photo and details have reached the clinic.</p>
+      <a class="btn secondary" href="/">Done</a>
+    </section>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    if (new URLSearchParams(location.search).get('status') === 'paid') {
+      document.getElementById('title').textContent = 'Payment successful';
+      document.getElementById('msg').textContent = 'Your payment is confirmed and your photo and details have reached the clinic. We will contact you shortly.';
+    }
+  </script>
+</body>
+</html>
