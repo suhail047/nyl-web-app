@@ -2,8 +2,8 @@
 
 A small web app for patient check-in:
 
-1. **Phone number + OTP** – patient enters the mobile number their family is registered under and
-   verifies it with a 6-digit code sent by SMS.
+1. **Phone number** – patient enters the mobile number their family is registered under (optionally
+   verified with a 6-digit SMS code – see *OTP* below; off by default).
 2. **Select patient** – all names registered under that (verified) number are listed (a new name can be added).
 3. **Photo, problems & payment** – patient takes/uploads a photo, describes their problems/diseases,
    and pays the consultation fee through **Razorpay**.
@@ -37,7 +37,7 @@ Without Razorpay keys the app still works; submissions are recorded with status 
 
 ## OTP (SMS verification)
 
-Patient names are only shown after the phone number is verified with a one-time code. Once verified,
+**OTP is off by default.** When turned on, patient names are only shown after the phone number is verified with a one-time code. Once verified,
 the browser stays signed in for 12 hours (HttpOnly cookie); every patient API checks that the patient or
 visit belongs to the verified number.
 
@@ -45,7 +45,7 @@ Configure in `.env`:
 
 | Setting | Meaning |
 | --- | --- |
-| `OTP_ENABLED` | `true` (default) or `false` to skip verification |
+| `OTP_ENABLED` | `false` (default) or `true` to require SMS verification |
 | `SMS_PROVIDER` | `console` (default, dev only: code printed in the server log), `msg91`, `2factor` or `twilio` |
 | `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID` | MSG91 OTP API |
 | `TWOFACTOR_API_KEY`, `TWOFACTOR_TEMPLATE` | 2Factor.in SMS OTP API |

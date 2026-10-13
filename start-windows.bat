@@ -8,7 +8,7 @@ if not exist node_modules (echo Installing, please wait... & call npm install ||
 if not exist data\nyl.db call npm run seed
 echo.
 echo Starting... the browser will open when the app is ready.
-echo OTP codes will appear in this window. Close this window to stop the app.
+echo Close this window to stop the app.
 echo.
 set OPEN_BROWSER=1
 call npm start

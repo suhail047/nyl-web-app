@@ -18,13 +18,13 @@ const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
 const RZP_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 const PAYMENTS_ENABLED = Boolean(RZP_KEY_ID && RZP_KEY_SECRET);
-const OTP_ENABLED = process.env.OTP_ENABLED !== 'false';
+const OTP_ENABLED = process.env.OTP_ENABLED === 'true';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 if (ADMIN_PASSWORD === 'change-me') console.warn('WARNING: set ADMIN_PASSWORD in .env before going live.');
 if (!PAYMENTS_ENABLED) console.warn('Razorpay keys not set: submissions will be recorded without payment.');
-if (!OTP_ENABLED) console.warn('OTP_ENABLED=false: phone numbers are NOT verified.');
+if (!OTP_ENABLED) console.log('OTP is off: patients go straight from phone number to the patient list.');
 else if (otp.PROVIDER === 'console') console.warn('SMS_PROVIDER=console: OTP codes are printed here, not sent by SMS.');
 
 const app = express();

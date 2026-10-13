@@ -10,7 +10,7 @@ node src/check-node.js || { open https://nodejs.org; read -p "Press Enter to clo
 [ -f data/nyl.db ] || npm run seed
 echo
 echo "Starting... the browser will open when the app is ready."
-echo "OTP codes will appear in this window. Close this window to stop the app."
+echo "Close this window to stop the app."
 echo
 OPEN_BROWSER=1 npm start
 echo
