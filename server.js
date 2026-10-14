@@ -429,7 +429,7 @@ app.use((err, _req, res, _next) => {
   res.status(err.status || 500).json({ error: err.status ? err.message : 'Something went wrong. Please try again.', retryAfter: err.retryAfter });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, process.env.HOST || undefined, () => {
   console.log(`Patient app:     http://localhost:${PORT}`);
   console.log(`Admin dashboard: http://localhost:${PORT}/admin`);
   // Set by the start-windows.bat / start-mac.command scripts: open the browser once the server is ready.

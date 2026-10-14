@@ -119,9 +119,16 @@ wipe files on restart will lose data). It also needs HTTPS, which the hosts belo
 
 **Railway / Fly.io:** same idea – attach a volume and point `DB_PATH` and `UPLOAD_DIR` at it.
 
-**Your own VPS** (e.g. DigitalOcean, Lightsail, Hostinger in Mumbai/Bangalore): install Node.js 22 LTS,
-copy the folder, `npm ci`, run it with `pm2 start npm --name nyl -- start`, and put Caddy in front
-(`yourdomain.com { reverse_proxy localhost:3000 }`) for automatic HTTPS. Back up `data/` and `uploads/`.
+**Your own VPS (e.g. Hostinger KVM, Ubuntu 24.04):** copy the unzipped folder to the server and run
+
+```bash
+sudo bash deploy/setup-vps.sh yourdomain.com     # or without a domain: sudo bash deploy/setup-vps.sh
+```
+
+It installs Node.js 22 and Caddy (automatic HTTPS), copies the app to `/opt/nyl-web-app`, keeps data in
+`/var/lib/nyl-web-app`, asks for the clinic name / admin password / UPI ID (saved in `/etc/nyl-web-app.env`),
+runs the app as a `systemd` service and turns on the firewall. Run it again after uploading a new version
+to update; data and settings are kept. Logs: `sudo journalctl -u nyl-web-app -f`.
 If you use nginx instead, disable buffering for `/api/admin/stream` so live updates are not delayed.
 
 ## Notes / next steps
