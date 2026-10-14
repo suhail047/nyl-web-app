@@ -6,24 +6,33 @@ if (fs.existsSync(path.join(__dirname, '.env'))) process.loadEnvFile(path.join(_
 
 const express = require('express');
 const multer = require('multer');
+const QRCode = require('qrcode');
 const { q, normalizePhone } = require('./src/db');
 const otp = require('./src/otp');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
-const FEE_PAISE = Math.round(Number(process.env.CONSULTATION_FEE_INR || 500) * 100);
+// Consultation fee: ₹300 when not configured; CONSULTATION_FEE_INR=0 (or empty) means no fixed fee.
+const FEE_ENV = process.env.CONSULTATION_FEE_INR;
+const FEE_PAISE = FEE_ENV === undefined ? 30000 : Math.max(0, Math.round((Number(FEE_ENV) || 0) * 100));
 const CLINIC_NAME = process.env.CLINIC_NAME || 'NYL Clinic';
 const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
 const RZP_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
-const PAYMENTS_ENABLED = Boolean(RZP_KEY_ID && RZP_KEY_SECRET);
+const UPI_ID = (process.env.UPI_ID || '').trim();
+const UPI_NAME = process.env.UPI_NAME || CLINIC_NAME;
+// UPI QR takes priority over Razorpay when a UPI ID is set.
+// Razorpay needs a fixed amount; with no fee set, the patient types the amount in their UPI app.
+const PAYMENT_METHOD = UPI_ID ? 'upi' : RZP_KEY_ID && RZP_KEY_SECRET && FEE_PAISE > 0 ? 'razorpay' : 'none';
+const RAZORPAY_ENABLED = PAYMENT_METHOD === 'razorpay';
 const OTP_ENABLED = process.env.OTP_ENABLED === 'true';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 if (ADMIN_PASSWORD === 'change-me') console.warn('WARNING: set ADMIN_PASSWORD in .env before going live.');
-if (!PAYMENTS_ENABLED) console.warn('Razorpay keys not set: submissions will be recorded without payment.');
+if (PAYMENT_METHOD === 'upi') console.log(`Payments: UPI QR to ${UPI_ID}`);
+else if (PAYMENT_METHOD === 'none') console.warn('No UPI_ID or Razorpay keys set: patients will be asked to pay at the clinic.');
 if (!OTP_ENABLED) console.log('OTP is off: patients go straight from phone number to the patient list.');
 else if (otp.PROVIDER === 'console') console.warn('SMS_PROVIDER=console: OTP codes are printed here, not sent by SMS.');
 
@@ -95,6 +104,8 @@ function visitDto(v) {
     paymentStatus: v.payment_status,
     razorpayOrderId: v.razorpay_order_id,
     razorpayPaymentId: v.razorpay_payment_id,
+    paymentMethod: v.payment_method,
+    upiRef: v.upi_ref,
     createdAt: v.created_at,
     paidAt: v.paid_at,
   };
@@ -154,7 +165,7 @@ app.use(express.json({ limit: '100kb' }));
 
 // ---------- Patient-facing API ----------
 app.get('/api/config', (_req, res) => {
-  res.json({ clinicName: CLINIC_NAME, fee: FEE_PAISE / 100, paymentsEnabled: PAYMENTS_ENABLED, otpEnabled: OTP_ENABLED });
+  res.json({ clinicName: CLINIC_NAME, fee: FEE_PAISE / 100, paymentMethod: PAYMENT_METHOD, paymentsEnabled: PAYMENT_METHOD !== 'none', otpEnabled: OTP_ENABLED });
 });
 
 app.post('/api/otp/send', async (req, res, next) => {
@@ -243,20 +254,41 @@ app.post('/api/visits', upload.single('photo'), (req, res) => {
     return res.status(400).json({ error: !patient ? 'Patient not found.' : !problems ? 'Please describe your problems.' : 'Please upload a photo.' });
   }
 
-  const status = PAYMENTS_ENABLED ? 'pending' : 'not_configured';
-  const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, FEE_PAISE, status);
+  const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
+  const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, FEE_PAISE, status, PAYMENT_METHOD);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });
 });
 
 // Summary shown on the payment page.
-app.get('/api/visits/:id', (req, res) => {
+app.get('/api/visits/:id', async (req, res) => {
   const v = ownVisit(req);
   if (!v) return res.status(404).json({ error: 'Visit not found.' });
-  res.json({
+  const out = {
     id: v.id, patientName: v.patient_name, age: v.patient_age, gender: v.patient_gender, problems: v.problems,
-    amount: v.amount_paise / 100, paymentStatus: v.payment_status, paymentsEnabled: PAYMENTS_ENABLED,
-  });
+    amount: v.amount_paise / 100, paymentStatus: v.payment_status, paymentMethod: PAYMENT_METHOD,
+  };
+  if (PAYMENT_METHOD === 'upi') {
+    // Standard UPI payment link; any UPI app (GPay, PhonePe, Paytm, BHIM…) can scan or open it.
+    // The note (tn) shows up in the clinic's bank/UPI statement so staff can match the payment.
+    const params = { pa: UPI_ID, pn: UPI_NAME, cu: 'INR', tn: `Visit ${v.id} ${v.patient_name}`.slice(0, 50) };
+    if (v.amount_paise > 0) params.am = (v.amount_paise / 100).toFixed(2);
+    // Keep "@" in the UPI ID as-is: some UPI apps reject "%40".
+    const query = Object.entries(params).map(([k, val]) => `${k}=${encodeURIComponent(val).replace(/%40/g, '@')}`).join('&');
+    out.upi = { id: UPI_ID, name: UPI_NAME, link: `upi://pay?${query}` };
+    out.upi.qrSvg = await QRCode.toString(out.upi.link, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' });
+  }
+  res.json(out);
+});
+
+// Patient says they paid by UPI. Staff confirm it on the dashboard after checking their UPI/bank app.
+app.post('/api/visits/:id/upi-paid', (req, res) => {
+  const v = ownVisit(req);
+  if (!v || PAYMENT_METHOD !== 'upi') return res.status(400).json({ error: 'Invalid request.' });
+  const ref = cleanText(req.body.ref, 40).replace(/\s/g, '');
+  if (ref && !/^[A-Za-z0-9]{6,35}$/.test(ref)) return res.status(400).json({ error: 'Please check the transaction ID (UTR) – letters and numbers only.' });
+  if (q.markUpiClaimed.run(ref || null, v.id).changes) broadcast('visit-updated', visitDto(q.visitById.get(v.id)));
+  res.json({ ok: true });
 });
 
 // Creates a Razorpay order for the visit (called when the patient taps Pay, and again on retry).
@@ -265,7 +297,7 @@ app.post('/api/visits/:id/order', async (req, res, next) => {
     const visit = ownVisit(req);
     if (!visit) return res.status(404).json({ error: 'Visit not found.' });
     if (visit.payment_status === 'paid') return res.status(409).json({ error: 'Already paid.' });
-    if (!PAYMENTS_ENABLED) return res.status(400).json({ error: 'Payments are not configured.' });
+    if (!RAZORPAY_ENABLED) return res.status(400).json({ error: 'Payments are not configured.' });
     let order;
     try {
       order = await createRazorpayOrder(visit.id);
@@ -286,7 +318,7 @@ app.post('/api/visits/:id/order', async (req, res, next) => {
 app.post('/api/visits/:id/verify', (req, res) => {
   const visit = ownVisit(req);
   const { razorpay_order_id: orderId, razorpay_payment_id: paymentId, razorpay_signature: signature } = req.body;
-  if (!visit || !PAYMENTS_ENABLED || !orderId || !paymentId || !signature || orderId !== visit.razorpay_order_id) {
+  if (!visit || !RAZORPAY_ENABLED || !orderId || !paymentId || !signature || orderId !== visit.razorpay_order_id) {
     return res.status(400).json({ error: 'Invalid payment details.' });
   }
   const expected = crypto.createHmac('sha256', RZP_KEY_SECRET).update(`${orderId}|${paymentId}`).digest('hex');
@@ -317,6 +349,17 @@ app.get('/api/admin/stream', (req, res) => {
 app.get('/api/admin/visits', (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 200, 1000);
   res.json(q.recentVisits.all(limit).map(visitDto));
+});
+
+app.post('/api/admin/visits/:id/payment', (req, res) => {
+  const id = Number(req.params.id);
+  const stmt = req.body.action === 'confirm' ? q.confirmPayment : req.body.action === 'reject' ? q.rejectPayment : null;
+  if (!stmt) return res.status(400).json({ error: 'Unknown action.' });
+  stmt.run(id);
+  const v = q.visitById.get(id);
+  if (!v) return res.status(404).json({ error: 'Visit not found.' });
+  broadcast('visit-updated', visitDto(v));
+  res.json(visitDto(v));
 });
 
 app.get('/api/admin/patients', (_req, res) => res.json(q.allPatients.all()));

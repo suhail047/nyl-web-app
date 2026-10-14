@@ -1,6 +1,6 @@
 const state = { visits: [], patients: [], unseen: 0 };
 const $ = (id) => document.getElementById(id);
-const STATUS_LABEL = { paid: 'Paid', pending: 'Payment pending', failed: 'Payment failed', not_configured: 'No payment' };
+const STATUS_LABEL = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'UPI – please confirm', failed: 'Not received', not_configured: 'Pay at clinic' };
 
 // SQLite stores UTC as "YYYY-MM-DD HH:MM:SS"
 function fmtDate(s) {
@@ -17,8 +17,14 @@ function visitCard(v, fresh) {
       <div class="row"><span class="name">${esc(v.patientName)}</span><span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}</span></div>
       <div class="muted">${esc(fmtPhone(v.phone))}${v.age != null ? ' · ' + esc(v.age) + ' yrs' : ''}${v.gender ? ' · ' + esc(v.gender) : ''}</div>
       <div class="problems">${esc(v.problems)}</div>
-      <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>₹${esc(v.amount.toLocaleString('en-IN'))}</span></div>
+      <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
+      ${v.paymentMethod === 'upi' && v.paymentStatus !== 'paid' ? `<div class="muted">UPI note to look for: <b>Visit ${v.id}</b></div>` : ''}
+      ${v.upiRef ? `<div class="muted">UTR given by patient: <b>${esc(v.upiRef)}</b></div>` : ''}
+      ${v.paymentStatus !== 'paid' ? `<div class="pay-actions">
+        <button type="button" data-pay="confirm" data-id="${v.id}">✓ Mark paid</button>
+        ${v.paymentStatus === 'upi_claimed' ? `<button type="button" class="secondary" data-pay="reject" data-id="${v.id}">Not received</button>` : ''}
+      </div>` : ''}
     </div>
   </article>`;
 }
@@ -119,6 +125,27 @@ window.addEventListener('focus', () => { if (!$('tab-visits').classList.contains
 document.addEventListener('click', () => {
   if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
 }, { once: true });
+
+$('visits').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-pay]');
+  if (!btn) return;
+  const v = state.visits.find((x) => String(x.id) === btn.dataset.id);
+  const question = btn.dataset.pay === 'confirm'
+    ? `Mark ${v.amount > 0 ? '₹' + v.amount : 'the payment'} from ${v.patientName} as received?`
+    : `Mark ${v.patientName}'s UPI payment as NOT received?`;
+  if (!confirm(question)) return;
+  btn.disabled = true;
+  try {
+    await api('/api/admin/visits/' + btn.dataset.id + '/payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: btn.dataset.pay }),
+    });
+  } catch (err) {
+    alert(err.message);
+    btn.disabled = false;
+  }
+});
 
 $('visitSearch').addEventListener('input', () => renderVisits());
 $('statusFilter').addEventListener('change', () => renderVisits());

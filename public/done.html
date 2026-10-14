@@ -18,7 +18,12 @@
   </main>
   <script src="/common.js"></script>
   <script>
-    if (new URLSearchParams(location.search).get('status') === 'paid') {
+    const status = new URLSearchParams(location.search).get('status');
+    if (status === 'upi') {
+      document.getElementById('title').textContent = 'Thank you!';
+      document.getElementById('msg').textContent = 'We have received your photo and details. The clinic will confirm your UPI payment and contact you shortly.';
+    }
+    if (status === 'paid') {
       document.getElementById('title').textContent = 'Payment successful';
       document.getElementById('msg').textContent = 'Your payment is confirmed and your photo and details have reached the clinic. We will contact you shortly.';
     }

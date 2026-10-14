@@ -6,8 +6,8 @@ A small web app for patient check-in:
    verified with a 6-digit SMS code – see *OTP* below; off by default).
 2. **Select patient** – all names registered under that (verified) number are listed (a new name can be added).
 3. **Photo & problems** – patient takes/uploads a photo and describes their problems/diseases.
-4. **Payment** – a payment page shows the summary and fee; *Pay* opens **Razorpay** (UPI, cards,
-   net banking, wallets). Without Razorpay keys this page tells the patient to pay at the clinic.
+4. **Payment** – a payment page shows the summary and fee, then either a **UPI QR code** (set `UPI_ID`)
+   or **Razorpay** checkout (set Razorpay keys). With neither, the patient is asked to pay at the clinic.
 
 The **admin dashboard** (`/admin`, password protected) shows every submission **live**: the moment a
 patient taps *Upload & Pay*, their photo, name, phone and problems appear on the dashboard (with a sound,
@@ -58,7 +58,26 @@ ID and OTP template**, which the provider helps you set up.
 Limits: code valid 5 minutes, single use, 5 wrong attempts per code, resend after 30 s, max 5 codes per
 number per hour and 20 per IP per hour.
 
-## Razorpay setup
+## UPI QR payments (no payment gateway)
+
+Set your clinic's UPI ID in `.env`:
+
+```
+UPI_ID=nylclinic@okhdfcbank
+UPI_NAME=NYL Clinic
+CONSULTATION_FEE_INR=300
+```
+
+The payment page then shows a QR code with the fee pre-filled (plus a *Pay with UPI app* button on phones).
+The UPI note reads `Visit <number> <patient name>`, so it shows up in your UPI/bank statement.
+A plain UPI QR can't confirm payment automatically, so the patient taps **I have paid** (optionally entering
+the UTR), the dashboard shows *UPI – please confirm*, and staff click **Mark paid** or **Not received**
+after checking their UPI app. A business/merchant UPI ID is more reliable than a personal one.
+
+Fee: `CONSULTATION_FEE_INR` defaults to ₹300. Set it to `0` for no fixed fee – the QR then carries no
+amount and the patient types it in.
+
+## Razorpay setup (alternative to UPI QR)
 
 1. In the Razorpay Dashboard → *Account & Settings → API Keys*, generate keys (use **Test mode** first)
    and put them in `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`.

@@ -24,7 +24,7 @@ db.exec(`
     problems             TEXT NOT NULL,
     photo_file           TEXT,
     amount_paise         INTEGER NOT NULL,
-    payment_status       TEXT NOT NULL DEFAULT 'pending', -- pending | paid | failed | not_configured
+    payment_status       TEXT NOT NULL DEFAULT 'pending', -- pending | upi_claimed | paid | failed | not_configured
     razorpay_order_id    TEXT,
     razorpay_payment_id  TEXT,
     created_at           TEXT NOT NULL DEFAULT (datetime('now')),
@@ -59,6 +59,11 @@ function normalizePhone(input) {
   return /^\d{10}$/.test(digits) ? digits : null;
 }
 
+// Columns added after the first release.
+const visitColumns = db.prepare('PRAGMA table_info(visits)').all().map((c) => c.name);
+if (!visitColumns.includes('payment_method')) db.exec('ALTER TABLE visits ADD COLUMN payment_method TEXT');
+if (!visitColumns.includes('upi_ref')) db.exec('ALTER TABLE visits ADD COLUMN upi_ref TEXT');
+
 const VISIT_SELECT = `
   SELECT v.*, p.name AS patient_name, p.phone AS patient_phone, p.age AS patient_age, p.gender AS patient_gender
   FROM visits v JOIN patients p ON p.id = v.patient_id`;
@@ -74,8 +79,13 @@ const q = {
     FROM patients p LEFT JOIN visits v ON v.patient_id = p.id
     GROUP BY p.id ORDER BY p.phone, p.name`),
   insertVisit: db.prepare(`
-    INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status)
-    VALUES (?, ?, ?, ?, ?)`),
+    INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method)
+    VALUES (?, ?, ?, ?, ?, ?)`),
+  markUpiClaimed: db.prepare(`
+    UPDATE visits SET payment_status = 'upi_claimed', upi_ref = ? WHERE id = ? AND payment_status IN ('pending', 'failed')`),
+  confirmPayment: db.prepare(`
+    UPDATE visits SET payment_status = 'paid', paid_at = datetime('now') WHERE id = ? AND payment_status != 'paid'`),
+  rejectPayment: db.prepare(`UPDATE visits SET payment_status = 'failed' WHERE id = ? AND payment_status = 'upi_claimed'`),
   setVisitOrder: db.prepare(`
     UPDATE visits SET razorpay_order_id = ?, payment_status = CASE payment_status WHEN 'paid' THEN 'paid' ELSE 'pending' END
     WHERE id = ?`),
