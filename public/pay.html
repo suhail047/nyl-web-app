@@ -21,7 +21,12 @@
         <div class="line"><span>Service</span><span>Consultation fee</span></div>
         <div class="problems" id="problems"></div>
       </div>
-      <div class="total"><span>Total</span><span class="amount" id="amount">—</span></div>
+      <div class="total" id="totalRow"><span>Total</span><span class="amount" id="amount">—</span></div>
+      <div class="amount-edit hidden" id="amountEdit">
+        <label for="amountInput">Amount to pay</label>
+        <div class="rupee-input"><span>₹</span><input id="amountInput" type="text" inputmode="decimal" autocomplete="off" maxlength="9" placeholder="Enter amount"></div>
+        <p class="hint-left" id="amountHint"></p>
+      </div>
 
       <div id="upi" class="hidden">
         <div class="qr-box">
@@ -69,17 +74,58 @@
         return;
       }
       if (visit.paymentStatus === 'paid') return location.replace('/done?status=paid');
+      if (visit.paymentStatus === 'upi_claimed') return location.replace('/done?status=upi');
       $('pname').textContent = visit.patientName;
       $('problems').textContent = visit.problems;
-      const amount = '₹' + visit.amount.toLocaleString('en-IN');
-      $('amount').textContent = visit.amount > 0 ? amount : 'As advised';
-      if (!visit.amount) $('upiHint').textContent = 'Scan with any UPI app and enter the amount advised by the clinic.';
-      if (visit.paymentStatus === 'upi_claimed') return location.replace('/done?status=upi');
+      $('amount').textContent = visit.amount > 0 ? rupees(visit.amount) : 'As advised';
+      if (visit.paymentMethod !== 'upi' && visit.paymentMethod !== 'razorpay') return $('offline').classList.remove('hidden');
+
+      // The clinic's fee is pre-filled; the patient can change it or clear it.
+      $('totalRow').classList.add('hidden');
+      $('amountEdit').classList.remove('hidden');
+      $('amountInput').value = visit.amount > 0 ? visit.amount : '';
+      $('amountHint').textContent = visit.amount > 0
+        ? 'Consultation fee is ' + rupees(visit.amount) + '. You can change it if the clinic advised a different amount.'
+        : 'Enter the amount advised by the clinic.';
       if (visit.paymentMethod === 'upi') return showUpi(visit.upi);
-      if (visit.paymentMethod !== 'razorpay') return $('offline').classList.remove('hidden');
       $('online').classList.remove('hidden');
-      $('payBtn').textContent = 'Pay ' + amount;
-      $('payBtn').disabled = false;
+      updatePayButton();
+    }
+
+    function rupees(n) {
+      return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    }
+
+    // Returns the typed amount in rupees, 0 for blank, or null if invalid.
+    function typedAmount() {
+      const raw = $('amountInput').value.replace(/[,₹\s]/g, '');
+      if (!raw) return 0;
+      const n = Number(raw);
+      return Number.isFinite(n) && n >= 0 && n <= 100000 ? n : null;
+    }
+
+    function updatePayButton() {
+      const n = typedAmount();
+      $('payBtn').disabled = !n || n < 1;
+      $('payBtn').textContent = n && n >= 1 ? 'Pay ' + rupees(n) : 'Enter an amount to pay';
+    }
+
+    let qrTimer;
+    $('amountInput').addEventListener('input', () => {
+      if (visit.paymentMethod === 'razorpay') return updatePayButton();
+      clearTimeout(qrTimer);
+      qrTimer = setTimeout(refreshQr, 350);
+    });
+
+    async function refreshQr() {
+      const n = typedAmount();
+      $('upiError').textContent = '';
+      if (n === null) return ($('upiError').textContent = 'Enter a valid amount (up to ₹1,00,000).');
+      try {
+        showUpi(await api('/api/visits/' + visitId + '/upi?amount=' + n));
+      } catch (err) {
+        $('upiError').textContent = err.message;
+      }
     }
 
     function showUpi(upi) {
@@ -88,6 +134,9 @@
       $('upiName').textContent = upi.name;
       $('upiId').textContent = upi.id;
       $('upiApp').href = upi.link;
+      $('upiHint').textContent = /[?&]am=/.test(upi.link)
+        ? 'Scan with any UPI app. The amount is filled in automatically.'
+        : 'Scan with any UPI app and enter the amount in the app.';
     }
 
     $('copyUpi').addEventListener('click', async () => {
@@ -100,12 +149,13 @@
     $('paidForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       $('upiError').textContent = '';
+      if (typedAmount() === null) return ($('upiError').textContent = 'Enter a valid amount (up to ₹1,00,000).');
       $('paidBtn').disabled = true;
       try {
         await api('/api/visits/' + visitId + '/upi-paid', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ref: $('utr').value }),
+          body: JSON.stringify({ ref: $('utr').value, amount: typedAmount() }),
         });
         location.replace('/done?status=upi');
       } catch (err) {
@@ -116,8 +166,7 @@
 
     function resetButton(message) {
       $('error').textContent = message || '';
-      $('payBtn').disabled = false;
-      $('payBtn').textContent = 'Pay ₹' + visit.amount.toLocaleString('en-IN');
+      updatePayButton();
     }
 
     $('payBtn').addEventListener('click', async () => {
@@ -128,7 +177,11 @@
 
       let order;
       try {
-        order = await api('/api/visits/' + visitId + '/order', { method: 'POST' });
+        order = await api('/api/visits/' + visitId + '/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: typedAmount() }),
+        });
       } catch (err) {
         return resetButton(err.message);
       }

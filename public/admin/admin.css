@@ -44,3 +44,6 @@ td .link { color: var(--danger); font-weight: 500; }
 .pill.upi_claimed { background: #e0eaff; color: #3538cd; }
 .pay-actions { display: flex; gap: 8px; margin-top: 4px; }
 .pay-actions button { margin: 0; padding: 9px; font-size: .9rem; }
+.settings { max-width: 440px; }
+.settings h2 { margin: 0 0 4px; font-size: 1.15rem; }
+.settings .muted { color: var(--muted); margin: 0 0 6px; font-size: .93rem; }

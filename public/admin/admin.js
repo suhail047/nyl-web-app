@@ -113,6 +113,8 @@ document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () 
   document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === t));
   $('tab-visits').classList.toggle('hidden', t.dataset.tab !== 'visits');
   $('tab-patients').classList.toggle('hidden', t.dataset.tab !== 'patients');
+  $('tab-settings').classList.toggle('hidden', t.dataset.tab !== 'settings');
+  if (t.dataset.tab === 'settings') loadSettings();
   if (t.dataset.tab === 'visits') clearUnseen();
 }));
 
@@ -177,6 +179,34 @@ $('patients').addEventListener('click', async (e) => {
   state.visits = state.visits.filter((v) => String(v.patientId) !== id);
   renderVisits();
   loadPatientsQuietly();
+});
+
+async function loadSettings() {
+  const { fee } = await api('/api/admin/settings');
+  $('feeInput').value = fee > 0 ? fee : '';
+  $('settingsMsg').textContent = '';
+}
+
+$('settingsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = $('settingsMsg');
+  msg.textContent = '';
+  msg.style.color = '';
+  $('saveSettings').disabled = true;
+  try {
+    const { fee } = await api('/api/admin/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fee: $('feeInput').value }),
+    });
+    $('feeInput').value = fee > 0 ? fee : '';
+    msg.style.color = 'var(--ok)';
+    msg.textContent = fee > 0 ? `Saved. New patients will see ₹${fee.toLocaleString('en-IN')}.` : 'Saved. No fixed fee – patients enter the amount.';
+  } catch (err) {
+    msg.textContent = err.message;
+  } finally {
+    $('saveSettings').disabled = false;
+  }
 });
 
 loadAll().catch((err) => alert(err.message));

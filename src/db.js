@@ -43,6 +43,11 @@ db.exec(`
     sends_in_window INTEGER NOT NULL DEFAULT 1
   );
 
+  CREATE TABLE IF NOT EXISTS settings (
+    key    TEXT PRIMARY KEY,
+    value  TEXT
+  );
+
   CREATE TABLE IF NOT EXISTS patient_sessions (
     token_hash  TEXT PRIMARY KEY,
     phone       TEXT NOT NULL,
@@ -95,6 +100,9 @@ const q = {
   markFailed: db.prepare(`UPDATE visits SET payment_status = 'failed' WHERE id = ? AND payment_status = 'pending'`),
   visitById: db.prepare(`${VISIT_SELECT} WHERE v.id = ?`),
   visitByOrder: db.prepare(`${VISIT_SELECT} WHERE v.razorpay_order_id = ?`),
+  getSetting: db.prepare('SELECT value FROM settings WHERE key = ?'),
+  setSetting: db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'),
+  setVisitAmount: db.prepare(`UPDATE visits SET amount_paise = ? WHERE id = ? AND payment_status != 'paid'`),
   getOtp: db.prepare('SELECT * FROM otp_codes WHERE phone = ?'),
   upsertOtp: db.prepare(`
     INSERT INTO otp_codes (phone, code_hash, salt, expires_at, attempts, last_sent_at, window_start, sends_in_window)

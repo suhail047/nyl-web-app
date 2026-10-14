@@ -17,6 +17,7 @@
     <nav class="tabs">
       <button class="tab active" data-tab="visits">Submissions <span class="badge hidden" id="newCount">0</span></button>
       <button class="tab" data-tab="patients">Patients</button>
+      <button class="tab" data-tab="settings">Settings</button>
     </nav>
 
     <section id="tab-visits">
@@ -47,6 +48,17 @@
           <tbody id="patients"></tbody>
         </table>
       </div>
+    </section>
+    <section id="tab-settings" class="hidden">
+      <form class="card settings" id="settingsForm" novalidate>
+        <h2>Consultation fee</h2>
+        <p class="muted">Pre-filled on the payment page for new patients. Patients can still change the amount.
+          Leave empty for no fixed fee.</p>
+        <label for="feeInput">Default fee (₹)</label>
+        <input id="feeInput" type="text" inputmode="decimal" maxlength="9" placeholder="No fixed fee">
+        <button type="submit" id="saveSettings">Save</button>
+        <div class="error" id="settingsMsg" role="status"></div>
+      </form>
     </section>
   </div>
   <script src="/common.js"></script>

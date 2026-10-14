@@ -74,8 +74,10 @@ A plain UPI QR can't confirm payment automatically, so the patient taps **I have
 the UTR), the dashboard shows *UPI – please confirm*, and staff click **Mark paid** or **Not received**
 after checking their UPI app. A business/merchant UPI ID is more reliable than a personal one.
 
-Fee: `CONSULTATION_FEE_INR` defaults to ₹300. Set it to `0` for no fixed fee – the QR then carries no
-amount and the patient types it in.
+Fee: the default consultation fee is ₹300. Change it any time in the admin dashboard under **Settings**
+(leave it empty for no fixed fee). `CONSULTATION_FEE_INR` in `.env` only sets the starting value.
+On the payment page the fee is pre-filled but the patient can change it or clear it; the QR updates
+to match, and the dashboard shows the amount the patient says they paid.
 
 ## Razorpay setup (alternative to UPI QR)
 

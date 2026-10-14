@@ -13,9 +13,11 @@ const otp = require('./src/otp');
 const PORT = Number(process.env.PORT) || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
-// Consultation fee: ₹300 when not configured; CONSULTATION_FEE_INR=0 (or empty) means no fixed fee.
+// Default consultation fee: changed from the admin dashboard (Settings), else CONSULTATION_FEE_INR, else ₹300.
+// 0 means no fixed fee. Patients can still change the amount on the payment page.
 const FEE_ENV = process.env.CONSULTATION_FEE_INR;
-const FEE_PAISE = FEE_ENV === undefined ? 30000 : Math.max(0, Math.round((Number(FEE_ENV) || 0) * 100));
+const ENV_FEE_PAISE = FEE_ENV === undefined ? 30000 : Math.max(0, Math.round((Number(FEE_ENV) || 0) * 100));
+const MAX_AMOUNT_PAISE = 100000 * 100; // ₹1,00,000 – the usual UPI per-payment limit
 const CLINIC_NAME = process.env.CLINIC_NAME || 'NYL Clinic';
 const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
@@ -24,7 +26,7 @@ const UPI_ID = (process.env.UPI_ID || '').trim();
 const UPI_NAME = process.env.UPI_NAME || CLINIC_NAME;
 // UPI QR takes priority over Razorpay when a UPI ID is set.
 // Razorpay needs a fixed amount; with no fee set, the patient types the amount in their UPI app.
-const PAYMENT_METHOD = UPI_ID ? 'upi' : RZP_KEY_ID && RZP_KEY_SECRET && FEE_PAISE > 0 ? 'razorpay' : 'none';
+const PAYMENT_METHOD = UPI_ID ? 'upi' : RZP_KEY_ID && RZP_KEY_SECRET ? 'razorpay' : 'none';
 const RAZORPAY_ENABLED = PAYMENT_METHOD === 'razorpay';
 const OTP_ENABLED = process.env.OTP_ENABLED === 'true';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
@@ -35,6 +37,20 @@ if (PAYMENT_METHOD === 'upi') console.log(`Payments: UPI QR to ${UPI_ID}`);
 else if (PAYMENT_METHOD === 'none') console.warn('No UPI_ID or Razorpay keys set: patients will be asked to pay at the clinic.');
 if (!OTP_ENABLED) console.log('OTP is off: patients go straight from phone number to the patient list.');
 else if (otp.PROVIDER === 'console') console.warn('SMS_PROVIDER=console: OTP codes are printed here, not sent by SMS.');
+
+function currentFeePaise() {
+  const saved = q.getSetting.get('fee_paise');
+  return saved ? Number(saved.value) : ENV_FEE_PAISE;
+}
+
+// Parses a rupee amount typed by a person. Returns paise, 0 for blank, or null if invalid.
+function parseAmount(value) {
+  if (value === undefined || value === null || String(value).trim() === '') return 0;
+  const n = Number(String(value).replace(/[,₹\s]/g, ''));
+  if (!Number.isFinite(n) || n < 0) return null;
+  const paise = Math.round(n * 100);
+  return paise <= MAX_AMOUNT_PAISE ? paise : null;
+}
 
 const app = express();
 app.set('trust proxy', true);
@@ -111,14 +127,14 @@ function visitDto(v) {
   };
 }
 
-async function createRazorpayOrder(visitId) {
+async function createRazorpayOrder(visitId, amountPaise) {
   const res = await fetch('https://api.razorpay.com/v1/orders', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: 'Basic ' + Buffer.from(`${RZP_KEY_ID}:${RZP_KEY_SECRET}`).toString('base64'),
     },
-    body: JSON.stringify({ amount: FEE_PAISE, currency: 'INR', receipt: `visit_${visitId}`, notes: { visit_id: String(visitId) } }),
+    body: JSON.stringify({ amount: amountPaise, currency: 'INR', receipt: `visit_${visitId}`, notes: { visit_id: String(visitId) } }),
   });
   const body = await res.json();
   if (!res.ok) throw new Error(body?.error?.description || `Razorpay order failed (${res.status})`);
@@ -165,7 +181,7 @@ app.use(express.json({ limit: '100kb' }));
 
 // ---------- Patient-facing API ----------
 app.get('/api/config', (_req, res) => {
-  res.json({ clinicName: CLINIC_NAME, fee: FEE_PAISE / 100, paymentMethod: PAYMENT_METHOD, paymentsEnabled: PAYMENT_METHOD !== 'none', otpEnabled: OTP_ENABLED });
+  res.json({ clinicName: CLINIC_NAME, fee: currentFeePaise() / 100, paymentMethod: PAYMENT_METHOD, paymentsEnabled: PAYMENT_METHOD !== 'none', otpEnabled: OTP_ENABLED });
 });
 
 app.post('/api/otp/send', async (req, res, next) => {
@@ -255,7 +271,7 @@ app.post('/api/visits', upload.single('photo'), (req, res) => {
   }
 
   const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
-  const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, FEE_PAISE, status, PAYMENT_METHOD);
+  const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, currentFeePaise(), status, PAYMENT_METHOD);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });
 });
@@ -268,17 +284,28 @@ app.get('/api/visits/:id', async (req, res) => {
     id: v.id, patientName: v.patient_name, age: v.patient_age, gender: v.patient_gender, problems: v.problems,
     amount: v.amount_paise / 100, paymentStatus: v.payment_status, paymentMethod: PAYMENT_METHOD,
   };
-  if (PAYMENT_METHOD === 'upi') {
-    // Standard UPI payment link; any UPI app (GPay, PhonePe, Paytm, BHIM…) can scan or open it.
-    // The note (tn) shows up in the clinic's bank/UPI statement so staff can match the payment.
-    const params = { pa: UPI_ID, pn: UPI_NAME, cu: 'INR', tn: `Visit ${v.id} ${v.patient_name}`.slice(0, 50) };
-    if (v.amount_paise > 0) params.am = (v.amount_paise / 100).toFixed(2);
-    // Keep "@" in the UPI ID as-is: some UPI apps reject "%40".
-    const query = Object.entries(params).map(([k, val]) => `${k}=${encodeURIComponent(val).replace(/%40/g, '@')}`).join('&');
-    out.upi = { id: UPI_ID, name: UPI_NAME, link: `upi://pay?${query}` };
-    out.upi.qrSvg = await QRCode.toString(out.upi.link, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' });
-  }
+  if (PAYMENT_METHOD === 'upi') out.upi = await upiPayment(v, v.amount_paise);
   res.json(out);
+});
+
+// Standard UPI payment link + QR; any UPI app (GPay, PhonePe, Paytm, BHIM…) can scan or open it.
+// The note (tn) shows up in the clinic's UPI/bank statement so staff can match the payment.
+async function upiPayment(v, amountPaise) {
+  const params = { pa: UPI_ID, pn: UPI_NAME, cu: 'INR', tn: `Visit ${v.id} ${v.patient_name}`.slice(0, 50) };
+  if (amountPaise > 0) params.am = (amountPaise / 100).toFixed(2);
+  // Keep "@" in the UPI ID as-is: some UPI apps reject "%40".
+  const query = Object.entries(params).map(([k, val]) => `${k}=${encodeURIComponent(val).replace(/%40/g, '@')}`).join('&');
+  const link = `upi://pay?${query}`;
+  return { id: UPI_ID, name: UPI_NAME, link, qrSvg: await QRCode.toString(link, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }) };
+}
+
+// New QR when the patient changes the amount on the payment page.
+app.get('/api/visits/:id/upi', async (req, res) => {
+  const v = ownVisit(req);
+  const amount = parseAmount(req.query.amount);
+  if (!v || PAYMENT_METHOD !== 'upi') return res.status(400).json({ error: 'Invalid request.' });
+  if (amount === null) return res.status(400).json({ error: 'Enter a valid amount (up to ₹1,00,000).' });
+  res.json(await upiPayment(v, amount));
 });
 
 // Patient says they paid by UPI. Staff confirm it on the dashboard after checking their UPI/bank app.
@@ -287,6 +314,9 @@ app.post('/api/visits/:id/upi-paid', (req, res) => {
   if (!v || PAYMENT_METHOD !== 'upi') return res.status(400).json({ error: 'Invalid request.' });
   const ref = cleanText(req.body.ref, 40).replace(/\s/g, '');
   if (ref && !/^[A-Za-z0-9]{6,35}$/.test(ref)) return res.status(400).json({ error: 'Please check the transaction ID (UTR) – letters and numbers only.' });
+  const amount = parseAmount(req.body.amount);
+  if (amount === null) return res.status(400).json({ error: 'Enter a valid amount (up to ₹1,00,000).' });
+  if (req.body.amount !== undefined) q.setVisitAmount.run(amount, v.id); // what the patient says they paid
   if (q.markUpiClaimed.run(ref || null, v.id).changes) broadcast('visit-updated', visitDto(q.visitById.get(v.id)));
   res.json({ ok: true });
 });
@@ -298,14 +328,17 @@ app.post('/api/visits/:id/order', async (req, res, next) => {
     if (!visit) return res.status(404).json({ error: 'Visit not found.' });
     if (visit.payment_status === 'paid') return res.status(409).json({ error: 'Already paid.' });
     if (!RAZORPAY_ENABLED) return res.status(400).json({ error: 'Payments are not configured.' });
+    const amount = req.body.amount === undefined ? visit.amount_paise : parseAmount(req.body.amount);
+    if (!amount || amount < 100) return res.status(400).json({ error: 'Enter the amount to pay (at least ₹1).' });
     let order;
     try {
-      order = await createRazorpayOrder(visit.id);
+      order = await createRazorpayOrder(visit.id, amount);
     } catch (err) {
       console.error('Razorpay order creation failed:', err.message);
       return res.status(502).json({ error: 'Could not start the payment. Please check your internet connection and try again.' });
     }
     q.setVisitOrder.run(order.id, visit.id);
+    q.setVisitAmount.run(amount, visit.id);
     res.json({
       keyId: RZP_KEY_ID, orderId: order.id, amount: order.amount, currency: order.currency, name: CLINIC_NAME,
       prefill: { name: visit.patient_name, contact: `+91${visit.patient_phone}` },
@@ -360,6 +393,15 @@ app.post('/api/admin/visits/:id/payment', (req, res) => {
   if (!v) return res.status(404).json({ error: 'Visit not found.' });
   broadcast('visit-updated', visitDto(v));
   res.json(visitDto(v));
+});
+
+app.get('/api/admin/settings', (_req, res) => res.json({ fee: currentFeePaise() / 100 }));
+
+app.post('/api/admin/settings', (req, res) => {
+  const fee = parseAmount(req.body.fee);
+  if (fee === null) return res.status(400).json({ error: 'Enter a valid fee (up to ₹1,00,000), or leave it empty for no fixed fee.' });
+  q.setSetting.run('fee_paise', String(fee));
+  res.json({ fee: fee / 100 });
 });
 
 app.get('/api/admin/patients', (_req, res) => res.json(q.allPatients.all()));

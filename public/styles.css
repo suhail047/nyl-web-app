@@ -66,3 +66,10 @@ button.secondary:hover { background: #e6f2f1; }
 .hint-inline { font-weight: 400; color: var(--muted); font-size: .85rem; }
 #paidForm { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 4px; }
 @media (hover: hover) and (pointer: fine) { .mobile-only { display: none !important; } }
+.amount-edit { border-top: 1px solid var(--border); margin-top: 14px; }
+.rupee-input { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+.rupee-input:focus-within { outline: 2px solid var(--primary); border-color: var(--primary); }
+.rupee-input span { padding: 0 4px 0 14px; font-size: 1.4rem; font-weight: 700; color: var(--primary-dark); }
+.rupee-input input { border: 0; outline: none; font-size: 1.4rem; font-weight: 700; padding-left: 4px; }
+.rupee-input input:focus { outline: none; }
+.hint-left { color: var(--muted); font-size: .88rem; margin: 6px 0 0; }
