@@ -234,55 +234,45 @@ app.get('/api/patients/:id', (req, res) => {
   res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone });
 });
 
-// Saves the photo + problems immediately (so staff see it live), then creates the Razorpay order.
-app.post('/api/visits', upload.single('photo'), async (req, res, next) => {
-  try {
-    const patient = ownPatient(req, req.body.patientId);
-    const problems = cleanText(req.body.problems, 5000);
-    if (!patient || !problems || !req.file) {
-      if (req.file) fs.rm(req.file.path, () => {});
-      return res.status(400).json({ error: !patient ? 'Patient not found.' : !problems ? 'Please describe your problems.' : 'Please upload a photo.' });
-    }
-
-    const status = PAYMENTS_ENABLED ? 'pending' : 'not_configured';
-    const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, FEE_PAISE, status);
-    broadcast('visit-created', visitDto(q.visitById.get(visitId)));
-
-    if (!PAYMENTS_ENABLED) return res.status(201).json({ visitId, payment: null });
-
-    let order;
-    try {
-      order = await createRazorpayOrder(visitId);
-    } catch (err) {
-      // The photo and problems are already saved; let the patient retry just the payment.
-      console.error('Razorpay order creation failed:', err.message);
-      return res.status(201).json({ visitId, payment: null, paymentError: 'Could not start the payment. Please try again.' });
-    }
-    q.setVisitOrder.run(order.id, visitId);
-    res.status(201).json({
-      visitId,
-      payment: {
-        keyId: RZP_KEY_ID,
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        name: CLINIC_NAME,
-        prefill: { name: patient.name, contact: `+91${patient.phone}` },
-      },
-    });
-  } catch (err) {
-    next(err);
+// Saves the photo + problems immediately so staff see them live. Payment happens next, on the /pay page.
+app.post('/api/visits', upload.single('photo'), (req, res) => {
+  const patient = ownPatient(req, req.body.patientId);
+  const problems = cleanText(req.body.problems, 5000);
+  if (!patient || !problems || !req.file) {
+    if (req.file) fs.rm(req.file.path, () => {});
+    return res.status(400).json({ error: !patient ? 'Patient not found.' : !problems ? 'Please describe your problems.' : 'Please upload a photo.' });
   }
+
+  const status = PAYMENTS_ENABLED ? 'pending' : 'not_configured';
+  const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, FEE_PAISE, status);
+  broadcast('visit-created', visitDto(q.visitById.get(visitId)));
+  res.status(201).json({ visitId });
 });
 
-// Retry payment for an existing unpaid visit (e.g. the user closed the Razorpay window).
+// Summary shown on the payment page.
+app.get('/api/visits/:id', (req, res) => {
+  const v = ownVisit(req);
+  if (!v) return res.status(404).json({ error: 'Visit not found.' });
+  res.json({
+    id: v.id, patientName: v.patient_name, age: v.patient_age, gender: v.patient_gender, problems: v.problems,
+    amount: v.amount_paise / 100, paymentStatus: v.payment_status, paymentsEnabled: PAYMENTS_ENABLED,
+  });
+});
+
+// Creates a Razorpay order for the visit (called when the patient taps Pay, and again on retry).
 app.post('/api/visits/:id/order', async (req, res, next) => {
   try {
     const visit = ownVisit(req);
     if (!visit) return res.status(404).json({ error: 'Visit not found.' });
     if (visit.payment_status === 'paid') return res.status(409).json({ error: 'Already paid.' });
     if (!PAYMENTS_ENABLED) return res.status(400).json({ error: 'Payments are not configured.' });
-    const order = await createRazorpayOrder(visit.id);
+    let order;
+    try {
+      order = await createRazorpayOrder(visit.id);
+    } catch (err) {
+      console.error('Razorpay order creation failed:', err.message);
+      return res.status(502).json({ error: 'Could not start the payment. Please check your internet connection and try again.' });
+    }
     q.setVisitOrder.run(order.id, visit.id);
     res.json({
       keyId: RZP_KEY_ID, orderId: order.id, amount: order.amount, currency: order.currency, name: CLINIC_NAME,

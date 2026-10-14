@@ -76,7 +76,9 @@ const q = {
   insertVisit: db.prepare(`
     INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status)
     VALUES (?, ?, ?, ?, ?)`),
-  setVisitOrder: db.prepare('UPDATE visits SET razorpay_order_id = ? WHERE id = ?'),
+  setVisitOrder: db.prepare(`
+    UPDATE visits SET razorpay_order_id = ?, payment_status = CASE payment_status WHEN 'paid' THEN 'paid' ELSE 'pending' END
+    WHERE id = ?`),
   markPaid: db.prepare(`
     UPDATE visits SET payment_status = 'paid', razorpay_payment_id = ?, paid_at = datetime('now')
     WHERE id = ? AND payment_status != 'paid'`),

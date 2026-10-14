@@ -5,8 +5,9 @@ A small web app for patient check-in:
 1. **Phone number** – patient enters the mobile number their family is registered under (optionally
    verified with a 6-digit SMS code – see *OTP* below; off by default).
 2. **Select patient** – all names registered under that (verified) number are listed (a new name can be added).
-3. **Photo, problems & payment** – patient takes/uploads a photo, describes their problems/diseases,
-   and pays the consultation fee through **Razorpay**.
+3. **Photo & problems** – patient takes/uploads a photo and describes their problems/diseases.
+4. **Payment** – a payment page shows the summary and fee; *Pay* opens **Razorpay** (UPI, cards,
+   net banking, wallets). Without Razorpay keys this page tells the patient to pay at the clinic.
 
 The **admin dashboard** (`/admin`, password protected) shows every submission **live**: the moment a
 patient taps *Upload & Pay*, their photo, name, phone and problems appear on the dashboard (with a sound,
@@ -66,9 +67,9 @@ number per hour and 20 per IP per hour.
    `payment.captured`, `order.paid` and `payment.failed`, and put its secret in `RAZORPAY_WEBHOOK_SECRET`.
    This marks visits paid even if the patient closes the browser right after paying.
 
-Payment flow: the photo and problems are saved first (so staff see them immediately), the server creates a
-Razorpay order, Razorpay Checkout opens, and the server verifies the payment signature before marking the
-visit *Paid*. If the patient closes the payment window they get a "Try payment again" button.
+Payment flow: the photo and problems are saved first (so staff see them immediately), then the patient
+lands on the payment page. Tapping *Pay* makes the server create a Razorpay order, Razorpay Checkout opens, and the server verifies the payment signature before marking the
+visit *Paid*. If the patient closes the payment window they can simply tap *Pay* again.
 
 ## API overview
 
@@ -79,9 +80,10 @@ visit *Paid*. If the patient closes the payment window they get a "Try payment a
 | POST | `/api/logout` | End the patient session |
 | GET | `/api/patients` | Patients under the verified number |
 | POST | `/api/patients` | Register a new patient `{name, age, gender}` under the verified number |
-| POST | `/api/visits` | Multipart: `patientId`, `problems`, `photo` → saves + creates Razorpay order |
+| POST | `/api/visits` | Multipart: `patientId`, `problems`, `photo` → saves the visit |
+| GET | `/api/visits/:id` | Visit summary for the payment page |
 | POST | `/api/visits/:id/verify` | Verify Razorpay checkout signature |
-| POST | `/api/visits/:id/order` | New order to retry payment |
+| POST | `/api/visits/:id/order` | Create a Razorpay order for the visit |
 | POST | `/api/razorpay/webhook` | Razorpay webhook |
 | GET | `/api/admin/visits`, `/api/admin/patients` | Admin data (Basic auth) |
 | GET | `/api/admin/stream` | Live event stream (Basic auth) |
