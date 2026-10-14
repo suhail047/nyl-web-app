@@ -67,7 +67,7 @@ UPI_ID=nylclinic@okhdfcbank
 UPI_NAME=NYL Clinic
 ```
 
-The payment page then shows a QR code with the fee pre-filled (plus a *Pay with UPI app* button on phones).
+The payment page then shows a QR code for the amount the patient enters (plus a *Pay with UPI app* button on phones).
 The UPI note reads `Visit <number> <patient name>`, so it shows up in your UPI/bank statement.
 A plain UPI QR can't confirm payment automatically, so the patient taps **I have paid** (optionally entering
 the UTR), the dashboard shows *UPI – please confirm*, and staff click **Mark paid** or **Not received**
