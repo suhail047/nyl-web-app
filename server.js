@@ -13,10 +13,10 @@ const otp = require('./src/otp');
 const PORT = Number(process.env.PORT) || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
-// Default consultation fee: changed from the admin dashboard (Settings), else CONSULTATION_FEE_INR, else ₹300.
-// 0 means no fixed fee. Patients can still change the amount on the payment page.
+// Default consultation fee: set from the admin dashboard (Settings), else CONSULTATION_FEE_INR.
+// No fee by default (0): patients enter the amount on the payment page.
 const FEE_ENV = process.env.CONSULTATION_FEE_INR;
-const ENV_FEE_PAISE = FEE_ENV === undefined ? 30000 : Math.max(0, Math.round((Number(FEE_ENV) || 0) * 100));
+const ENV_FEE_PAISE = Math.max(0, Math.round((Number(FEE_ENV) || 0) * 100));
 const MAX_AMOUNT_PAISE = 100000 * 100; // ₹1,00,000 – the usual UPI per-payment limit
 const CLINIC_NAME = process.env.CLINIC_NAME || 'NYL Clinic';
 const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';

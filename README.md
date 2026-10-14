@@ -65,7 +65,6 @@ Set your clinic's UPI ID in `.env`:
 ```
 UPI_ID=nylclinic@okhdfcbank
 UPI_NAME=NYL Clinic
-CONSULTATION_FEE_INR=300
 ```
 
 The payment page then shows a QR code with the fee pre-filled (plus a *Pay with UPI app* button on phones).
@@ -74,10 +73,9 @@ A plain UPI QR can't confirm payment automatically, so the patient taps **I have
 the UTR), the dashboard shows *UPI – please confirm*, and staff click **Mark paid** or **Not received**
 after checking their UPI app. A business/merchant UPI ID is more reliable than a personal one.
 
-Fee: the default consultation fee is ₹300. Change it any time in the admin dashboard under **Settings**
-(leave it empty for no fixed fee). `CONSULTATION_FEE_INR` in `.env` only sets the starting value.
-On the payment page the fee is pre-filled but the patient can change it or clear it; the QR updates
-to match, and the dashboard shows the amount the patient says they paid.
+Amount: there is no default fee – the patient types the amount on the payment page and the QR updates
+to match; the dashboard shows the amount the patient says they paid. To pre-fill a fee, set one in the
+admin dashboard under **Settings** (or `CONSULTATION_FEE_INR` in `.env`); patients can still change it.
 
 ## Razorpay setup (alternative to UPI QR)
 
