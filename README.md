@@ -109,9 +109,20 @@ visit *Paid*. If the patient closes the payment window they can simply tap *Pay*
 
 ## Deploying
 
-Run behind HTTPS (required for the camera on phones and for Razorpay in live mode), e.g. on a VPS with
-nginx/Caddy, Render, Railway or Fly.io. Keep `data/` and `uploads/` on a persistent disk and back them up.
-If you use nginx, disable buffering for `/api/admin/stream` so live updates are not delayed.
+The app keeps its database and photos on disk, so the host needs a **persistent disk** (free tiers that
+wipe files on restart will lose data). It also needs HTTPS, which the hosts below provide.
+
+**Render (easiest):** push this repo to GitHub, then in Render choose *New → Blueprint* and pick the repo.
+`render.yaml` sets up a Starter web service in Singapore with a 1 GB disk at `/var/data`
+(`DB_PATH=/var/data/nyl.db`, `UPLOAD_DIR=/var/data/uploads`) and asks for `ADMIN_PASSWORD`, `CLINIC_NAME`,
+`UPI_ID` and `UPI_NAME`. Add a custom domain under the service's *Settings → Custom Domains*.
+
+**Railway / Fly.io:** same idea – attach a volume and point `DB_PATH` and `UPLOAD_DIR` at it.
+
+**Your own VPS** (e.g. DigitalOcean, Lightsail, Hostinger in Mumbai/Bangalore): install Node.js 22 LTS,
+copy the folder, `npm ci`, run it with `pm2 start npm --name nyl -- start`, and put Caddy in front
+(`yourdomain.com { reverse_proxy localhost:3000 }`) for automatic HTTPS. Back up `data/` and `uploads/`.
+If you use nginx instead, disable buffering for `/api/admin/stream` so live updates are not delayed.
 
 ## Notes / next steps
 

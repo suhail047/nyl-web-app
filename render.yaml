@@ -1,0 +1,30 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# New → Blueprint → pick this repository. Render asks for the values marked sync: false.
+services:
+  - type: web
+    name: nyl-web-app
+    runtime: node
+    plan: starter          # a persistent disk needs a paid plan; the free plan would lose photos and data
+    region: singapore      # closest Render region to India
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/config
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DB_PATH
+        value: /var/data/nyl.db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLINIC_NAME
+        sync: false
+      - key: UPI_ID
+        sync: false
+      - key: UPI_NAME
+        sync: false
