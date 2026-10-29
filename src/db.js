@@ -1,7 +1,17 @@
+const fs = require('node:fs');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'nyl.db');
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const DB_PATH = process.env.DB_PATH || path.join(DATA_DIR, 'app.db');
+
+// Earlier versions used data/nyl.db: keep using that data under the new name.
+if (!process.env.DB_PATH && !fs.existsSync(DB_PATH) && fs.existsSync(path.join(DATA_DIR, 'nyl.db'))) {
+  for (const ext of ['', '-wal', '-shm']) {
+    const old = path.join(DATA_DIR, 'nyl.db' + ext);
+    if (fs.existsSync(old)) fs.renameSync(old, DB_PATH + ext);
+  }
+}
 const db = new DatabaseSync(DB_PATH);
 
 db.exec(`
@@ -68,6 +78,8 @@ function normalizePhone(input) {
 const visitColumns = db.prepare('PRAGMA table_info(visits)').all().map((c) => c.name);
 if (!visitColumns.includes('payment_method')) db.exec('ALTER TABLE visits ADD COLUMN payment_method TEXT');
 if (!visitColumns.includes('upi_ref')) db.exec('ALTER TABLE visits ADD COLUMN upi_ref TEXT');
+// 'first' = problems the patient is facing; 'followup' = positive changes since the previous healing.
+if (!visitColumns.includes('visit_kind')) db.exec("ALTER TABLE visits ADD COLUMN visit_kind TEXT NOT NULL DEFAULT 'first'");
 
 const VISIT_SELECT = `
   SELECT v.*, p.name AS patient_name, p.phone AS patient_phone, p.age AS patient_age, p.gender AS patient_gender
@@ -84,8 +96,12 @@ const q = {
     FROM patients p LEFT JOIN visits v ON v.patient_id = p.id
     GROUP BY p.id ORDER BY p.phone, p.name`),
   insertVisit: db.prepare(`
-    INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method)
-    VALUES (?, ?, ?, ?, ?, ?)`),
+    INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method, visit_kind)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`),
+  // True when the patient already sent a photo on an earlier day (Indian time).
+  hadVisitBeforeToday: db.prepare(`
+    SELECT 1 FROM visits WHERE patient_id = ?
+      AND date(created_at, '+5 hours', '+30 minutes') < date('now', '+5 hours', '+30 minutes') LIMIT 1`),
   markUpiClaimed: db.prepare(`
     UPDATE visits SET payment_status = 'upi_claimed', upi_ref = ? WHERE id = ? AND payment_status IN ('pending', 'failed')`),
   confirmPayment: db.prepare(`

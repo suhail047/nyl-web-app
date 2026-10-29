@@ -22,7 +22,7 @@
         <input id="photo" name="photo" type="file" accept="image/*" capture="user" required>
       </label>
 
-      <label for="problems">What problems are you facing?</label>
+      <label for="problems" id="problemsLabel">What problems are you facing?</label>
       <textarea id="problems" name="problems" maxlength="5000" required placeholder="Describe your illness, symptoms, how long you've had them, any medicines you're taking…"></textarea>
 
       <div class="error" id="error" role="alert"></div>
@@ -47,6 +47,11 @@
         document.getElementById('pname').textContent = p.name;
         document.getElementById('avatar').textContent = initials(p.name);
         document.getElementById('pmeta').textContent = [p.age != null ? p.age + ' yrs' : '', p.gender].filter(Boolean).join(' · ');
+        if (p.followUp) {
+          // Second day onwards: ask how the patient is improving instead of their problems.
+          document.getElementById('problemsLabel').textContent = "What positive changes are you feeling after yesterday's healing?";
+          document.getElementById('problems').placeholder = 'For example: less pain, better sleep, more energy, feeling calmer…';
+        }
         if (!cfg.paymentsEnabled) submit.textContent = 'Upload & continue';
       } catch (err) {
         error.textContent = err.message;
@@ -66,7 +71,11 @@
       e.preventDefault();
       error.textContent = '';
       if (!photo.files[0]) return (error.textContent = 'Please add a photo.');
-      if (!document.getElementById('problems').value.trim()) return (error.textContent = 'Please describe your problems.');
+      if (!document.getElementById('problems').value.trim()) {
+        return (error.textContent = document.getElementById('problemsLabel').textContent.startsWith('What positive')
+          ? 'Please tell us about the positive changes you are feeling.'
+          : 'Please describe your problems.');
+      }
 
       const data = new FormData(form);
       data.append('patientId', patientId);

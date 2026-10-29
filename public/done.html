@@ -11,22 +11,26 @@
     <header class="brand"><div class="logo">✚</div><span data-clinic>Clinic</span></header>
     <section class="card center">
       <div class="tick">✓</div>
-      <h1 id="title">Thank you!</h1>
-      <p class="sub" id="msg">Your photo and details have reached the clinic.</p>
+      <h1>Photo successfully submitted for treatment</h1>
+      <p class="sub">Treatment will start at <strong>10 PM IST</strong>.</p>
+      <p class="sub hidden" id="upiNote">Your UPI payment will be confirmed by us shortly.</p>
+    </section>
+
+    <section class="card rules">
+      <h2>Please follow these rules</h2>
+      <ol>
+        <li>Do not hate or keep grudges against anyone.</li>
+        <li>Eat only when hungry. Stop eating when you stop feeling hungry.</li>
+        <li>Drink only when thirsty. Stop drinking when you stop feeling thirsty.</li>
+        <li>Rest when your body asks for it.</li>
+        <li>Sleep early.</li>
+      </ol>
       <a class="btn secondary" href="/">Done</a>
     </section>
   </main>
   <script src="/common.js"></script>
   <script>
-    const status = new URLSearchParams(location.search).get('status');
-    if (status === 'upi') {
-      document.getElementById('title').textContent = 'Thank you!';
-      document.getElementById('msg').textContent = 'We have received your photo and details. The clinic will confirm your UPI payment and contact you shortly.';
-    }
-    if (status === 'paid') {
-      document.getElementById('title').textContent = 'Payment successful';
-      document.getElementById('msg').textContent = 'Your payment is confirmed and your photo and details have reached the clinic. We will contact you shortly.';
-    }
+    if (new URLSearchParams(location.search).get('status') === 'upi') document.getElementById('upiNote').classList.remove('hidden');
   </script>
 </body>
 </html>

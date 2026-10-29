@@ -47,3 +47,4 @@ td .link { color: var(--danger); font-weight: 500; }
 .settings { max-width: 440px; }
 .settings h2 { margin: 0 0 4px; font-size: 1.15rem; }
 .settings .muted { color: var(--muted); margin: 0 0 6px; font-size: .93rem; }
+.visit .kind { font-weight: 600; margin-bottom: -2px; }

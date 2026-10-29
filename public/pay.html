@@ -14,11 +14,10 @@
 
     <section class="card" id="payCard">
       <h1>Payment</h1>
-      <p class="sub"><span class="badge-ok">✓ Photo &amp; details sent</span> Complete the payment to confirm your consultation.</p>
+      <p class="sub"><span class="badge-ok">✓ Photo &amp; details sent</span> Complete the payment to confirm your treatment.</p>
 
       <div class="summary">
         <div class="line"><span>Patient</span><strong id="pname">…</strong></div>
-        <div class="line"><span>Service</span><span>Consultation fee</span></div>
         <div class="problems" id="problems"></div>
       </div>
       <div class="total" id="totalRow"><span>Total</span><span class="amount" id="amount">—</span></div>
@@ -36,6 +35,8 @@
         <p class="hint" id="upiHint">Scan with any UPI app. The amount is filled in automatically.</p>
         <div class="methods"><span>Google Pay</span><span>PhonePe</span><span>Paytm</span><span>BHIM</span><span>Any UPI app</span></div>
         <a class="btn secondary mobile-only" id="upiApp" href="#">Pay with UPI app on this phone</a>
+        <p class="hint mobile-only">If the button doesn't work, take a screenshot of the QR code and open it in your
+          UPI app (Scan → choose from gallery).</p>
 
         <form id="paidForm" novalidate>
           <label for="utr">UPI transaction ID / UTR <span class="hint-inline">(optional, helps us match your payment)</span></label>
@@ -77,16 +78,14 @@
       if (visit.paymentStatus === 'upi_claimed') return location.replace('/done?status=upi');
       $('pname').textContent = visit.patientName;
       $('problems').textContent = visit.problems;
-      $('amount').textContent = visit.amount > 0 ? rupees(visit.amount) : 'As advised';
+      $('amount').textContent = visit.amount > 0 ? rupees(visit.amount) : 'Any amount';
       if (visit.paymentMethod !== 'upi' && visit.paymentMethod !== 'razorpay') return $('offline').classList.remove('hidden');
 
       // The clinic's fee is pre-filled; the patient can change it or clear it.
       $('totalRow').classList.add('hidden');
       $('amountEdit').classList.remove('hidden');
       $('amountInput').value = visit.amount > 0 ? visit.amount : '';
-      $('amountHint').textContent = visit.amount > 0
-        ? 'Consultation fee is ' + rupees(visit.amount) + '. You can change it if the clinic advised a different amount.'
-        : 'Enter the amount advised by the clinic.';
+      $('amountHint').textContent = 'Enter the amount you wish to pay.';
       if (visit.paymentMethod === 'upi') return showUpi(visit.upi);
       $('online').classList.remove('hidden');
       updatePayButton();
@@ -192,7 +191,7 @@
         amount: order.amount,
         currency: order.currency,
         name: order.name,
-        description: 'Consultation fee',
+        description: 'Treatment',
         prefill: order.prefill,
         theme: { color: '#0f766e' },
         handler: async (resp) => {

@@ -18,11 +18,12 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
 const FEE_ENV = process.env.CONSULTATION_FEE_INR;
 const ENV_FEE_PAISE = Math.max(0, Math.round((Number(FEE_ENV) || 0) * 100));
 const MAX_AMOUNT_PAISE = 100000 * 100; // ₹1,00,000 – the usual UPI per-payment limit
-const CLINIC_NAME = process.env.CLINIC_NAME || 'NYL Clinic';
+const CLINIC_NAME = process.env.CLINIC_NAME || 'Clinic';
 const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
 const RZP_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
-const UPI_ID = (process.env.UPI_ID || '').trim();
+// UPI ID that receives payments. Set UPI_ID= (empty) in .env to switch UPI off.
+const UPI_ID = (process.env.UPI_ID ?? 'suhailbinalionline-2@oksbi').trim();
 const UPI_NAME = process.env.UPI_NAME || CLINIC_NAME;
 // UPI QR takes priority over Razorpay when a UPI ID is set.
 // Razorpay needs a fixed amount; with no fee set, the patient types the amount in their UPI app.
@@ -77,11 +78,11 @@ function requireAdmin(req, res, next) {
     const i = decoded.indexOf(':');
     if (safeEqual(decoded.slice(0, i), ADMIN_USER) && safeEqual(decoded.slice(i + 1), ADMIN_PASSWORD)) return next();
   }
-  res.set('WWW-Authenticate', 'Basic realm="NYL Admin", charset="UTF-8"').status(401).send('Authentication required');
+  res.set('WWW-Authenticate', 'Basic realm="Admin", charset="UTF-8"').status(401).send('Authentication required');
 }
 
 // ---------- Patient phone sessions (set after OTP verification) ----------
-const SESSION_COOKIE = 'nyl_session';
+const SESSION_COOKIE = 'patient_session';
 
 function readCookie(req, name) {
   for (const part of (req.headers.cookie || '').split(';')) {
@@ -115,6 +116,7 @@ function visitDto(v) {
     age: v.patient_age,
     gender: v.patient_gender,
     problems: v.problems,
+    visitKind: v.visit_kind,
     photoUrl: v.photo_file ? `/uploads/${v.photo_file}` : null,
     amount: v.amount_paise / 100,
     paymentStatus: v.payment_status,
@@ -258,8 +260,12 @@ function ownVisit(req) {
 app.get('/api/patients/:id', (req, res) => {
   const p = ownPatient(req, req.params.id);
   if (!p) return res.status(404).json({ error: 'Patient not found.' });
-  res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone });
+  res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone, followUp: isFollowUp(p.id) });
 });
+
+function isFollowUp(patientId) {
+  return Boolean(q.hadVisitBeforeToday.get(patientId));
+}
 
 // Saves the photo + problems immediately so staff see them live. Payment happens next, on the /pay page.
 app.post('/api/visits', upload.single('photo'), (req, res) => {
@@ -267,11 +273,14 @@ app.post('/api/visits', upload.single('photo'), (req, res) => {
   const problems = cleanText(req.body.problems, 5000);
   if (!patient || !problems || !req.file) {
     if (req.file) fs.rm(req.file.path, () => {});
-    return res.status(400).json({ error: !patient ? 'Patient not found.' : !problems ? 'Please describe your problems.' : 'Please upload a photo.' });
+    const followUp = patient && isFollowUp(patient.id);
+    const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please describe your problems.';
+    return res.status(400).json({ error: !patient ? 'Patient not found.' : !problems ? askText : 'Please upload a photo.' });
   }
 
   const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
-  const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, currentFeePaise(), status, PAYMENT_METHOD);
+  const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, currentFeePaise(), status, PAYMENT_METHOD,
+    isFollowUp(patient.id) ? 'followup' : 'first');
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });
 });
@@ -281,7 +290,7 @@ app.get('/api/visits/:id', async (req, res) => {
   const v = ownVisit(req);
   if (!v) return res.status(404).json({ error: 'Visit not found.' });
   const out = {
-    id: v.id, patientName: v.patient_name, age: v.patient_age, gender: v.patient_gender, problems: v.problems,
+    id: v.id, patientName: v.patient_name, age: v.patient_age, gender: v.patient_gender, problems: v.problems, visitKind: v.visit_kind,
     amount: v.amount_paise / 100, paymentStatus: v.payment_status, paymentMethod: PAYMENT_METHOD,
   };
   if (PAYMENT_METHOD === 'upi') out.upi = await upiPayment(v, v.amount_paise);

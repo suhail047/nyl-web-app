@@ -7,7 +7,7 @@ fi
 node src/check-node.js || { open https://nodejs.org; read -p "Press Enter to close"; exit 1; }
 [ -f .env ] || cp .env.example .env
 [ -d node_modules ] || { echo "Installing, please wait..."; npm install || { echo "Install failed - see the messages above."; read -p "Press Enter to close"; exit 1; }; }
-[ -f data/nyl.db ] || npm run seed
+[ -f data/app.db ] || [ -f data/nyl.db ] || npm run seed
 echo
 echo "Starting... the browser will open when the app is ready."
 echo "Close this window to stop the app."

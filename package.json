@@ -1,5 +1,5 @@
 {
-  "name": "nyl-web-app",
+  "name": "patient-app",
   "version": "1.0.0",
   "description": "Patient intake: phone lookup, patient selection, photo + problems upload, Razorpay payment, live admin dashboard",
   "main": "server.js",

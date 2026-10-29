@@ -73,3 +73,7 @@ button.secondary:hover { background: #e6f2f1; }
 .rupee-input input { border: 0; outline: none; font-size: 1.4rem; font-weight: 700; padding-left: 4px; }
 .rupee-input input:focus { outline: none; }
 .hint-left { color: var(--muted); font-size: .88rem; margin: 6px 0 0; }
+.rules { margin-top: 14px; }
+.rules h2 { font-size: 1.1rem; margin: 0 0 8px; }
+.rules ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.rules li { padding-left: 4px; }

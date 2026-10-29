@@ -1,13 +1,17 @@
-# NYL Patient Intake
+# Patient Intake & Healing App
 
 A small web app for patient check-in:
 
 1. **Phone number** – patient enters the mobile number their family is registered under (optionally
    verified with a 6-digit SMS code – see *OTP* below; off by default).
 2. **Select patient** – all names registered under that (verified) number are listed (a new name can be added).
-3. **Photo & problems** – patient takes/uploads a photo and describes their problems/diseases.
-4. **Payment** – a payment page shows the summary and fee, then either a **UPI QR code** (set `UPI_ID`)
-   or **Razorpay** checkout (set Razorpay keys). With neither, the patient is asked to pay at the clinic.
+3. **Photo & problems** – patient takes/uploads a photo and describes their problems/diseases. From the
+   day after their first visit, the text box instead asks about the *positive changes they are feeling after
+   yesterday's healing* (shown as such on the dashboard).
+4. **Payment** – right after the upload, a payment page shows a **UPI QR code** (default UPI ID
+   `suhailbinalionline-2@oksbi`) with an amount box the patient fills in – no fee or minimum is shown.
+5. **Done** – "Photo successfully submitted for treatment. Treatment will start at 10 PM IST", followed by
+   the five rules for the patient to follow.
 
 The **admin dashboard** (`/admin`, password protected) shows every submission **live**: the moment a
 patient taps *Upload & Pay*, their photo, name, phone and problems appear on the dashboard (with a sound,
@@ -17,7 +21,7 @@ Staff can also add/delete patients and phone numbers there.
 ## Tech
 
 - Node.js ≥ 22.13, Express 5, Multer (uploads)
-- SQLite via Node's built-in `node:sqlite` (file: `data/nyl.db`) – no database server needed
+- SQLite via Node's built-in `node:sqlite` (file: `data/app.db`) – no database server needed
 - Photos stored in `uploads/` and served only to logged-in admins
 - Live updates via Server-Sent Events (`/api/admin/stream`)
 - Plain HTML/CSS/JS frontend (no build step), mobile-first
@@ -63,8 +67,8 @@ number per hour and 20 per IP per hour.
 Set your clinic's UPI ID in `.env`:
 
 ```
-UPI_ID=nylclinic@okhdfcbank
-UPI_NAME=NYL Clinic
+UPI_ID=suhailbinalionline-2@oksbi
+UPI_NAME=Clinic
 ```
 
 The payment page then shows a QR code for the amount the patient enters (plus a *Pay with UPI app* button on phones).
@@ -114,7 +118,7 @@ wipe files on restart will lose data). It also needs HTTPS, which the hosts belo
 
 **Render (easiest):** push this repo to GitHub, then in Render choose *New → Blueprint* and pick the repo.
 `render.yaml` sets up a Starter web service in Singapore with a 1 GB disk at `/var/data`
-(`DB_PATH=/var/data/nyl.db`, `UPLOAD_DIR=/var/data/uploads`) and asks for `ADMIN_PASSWORD`, `CLINIC_NAME`,
+(`DB_PATH=/var/data/app.db`, `UPLOAD_DIR=/var/data/uploads`) and asks for `ADMIN_PASSWORD`, `CLINIC_NAME`,
 `UPI_ID` and `UPI_NAME`. Add a custom domain under the service's *Settings → Custom Domains*.
 
 **Railway / Fly.io:** same idea – attach a volume and point `DB_PATH` and `UPLOAD_DIR` at it.
@@ -125,10 +129,10 @@ wipe files on restart will lose data). It also needs HTTPS, which the hosts belo
 sudo bash deploy/setup-vps.sh yourdomain.com     # or without a domain: sudo bash deploy/setup-vps.sh
 ```
 
-It installs Node.js 22 and Caddy (automatic HTTPS), copies the app to `/opt/nyl-web-app`, keeps data in
-`/var/lib/nyl-web-app`, asks for the clinic name / admin password / UPI ID (saved in `/etc/nyl-web-app.env`),
+It installs Node.js 22 and Caddy (automatic HTTPS), copies the app to `/opt/patient-app`, keeps data in
+`/var/lib/patient-app`, asks for the clinic name / admin password / UPI ID (saved in `/etc/patient-app.env`),
 runs the app as a `systemd` service and turns on the firewall. Run it again after uploading a new version
-to update; data and settings are kept. Logs: `sudo journalctl -u nyl-web-app -f`.
+to update; data and settings are kept. Logs: `sudo journalctl -u patient-app -f`.
 If you use nginx instead, disable buffering for `/api/admin/stream` so live updates are not delayed.
 
 ## Notes / next steps

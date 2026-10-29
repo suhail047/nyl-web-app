@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-step install / update of the NYL patient app on a fresh Ubuntu or Debian VPS (e.g. Hostinger KVM).
+# One-step install / update of the patient app on a fresh Ubuntu or Debian VPS (e.g. Hostinger KVM).
 #
 #   sudo bash deploy/setup-vps.sh yourdomain.com     # with HTTPS on your domain (recommended)
 #   sudo bash deploy/setup-vps.sh                    # no domain yet: plain http://<server-ip>
@@ -8,17 +8,17 @@
 set -euo pipefail
 
 DOMAIN="${1:-}"
-APP_DIR=/opt/nyl-web-app
-DATA_DIR=/var/lib/nyl-web-app
-ENV_FILE=/etc/nyl-web-app.env
-SERVICE=nyl-web-app
+APP_DIR=/opt/patient-app
+DATA_DIR=/var/lib/patient-app
+ENV_FILE=/etc/patient-app.env
+SERVICE=patient-app
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 say() { printf '\n\033[1;32m==> %s\033[0m\n' "$*"; }
 die() { printf '\n\033[1;31mError: %s\033[0m\n' "$*" >&2; exit 1; }
 
 [ "$(id -u)" -eq 0 ] || die "please run with sudo (or as root)."
-[ -f "$SRC_DIR/server.js" ] || die "run this from inside the unzipped nyl-web-app folder."
+[ -f "$SRC_DIR/server.js" ] || die "run this from inside the unzipped app folder."
 command -v apt-get >/dev/null || die "this script supports Ubuntu/Debian only."
 export DEBIAN_FRONTEND=noninteractive
 
@@ -50,7 +50,7 @@ if ! command -v caddy >/dev/null; then
 fi
 
 say "Copying the app to $APP_DIR"
-id nyl >/dev/null 2>&1 || useradd --system --home-dir "$DATA_DIR" --no-create-home --shell /usr/sbin/nologin nyl
+id patientapp >/dev/null 2>&1 || useradd --system --home-dir "$DATA_DIR" --no-create-home --shell /usr/sbin/nologin patientapp
 mkdir -p "$APP_DIR" "$DATA_DIR/uploads"
 if [ "$SRC_DIR" != "$APP_DIR" ]; then
   rsync -a --delete --exclude node_modules --exclude .git --exclude .env --exclude data --exclude uploads "$SRC_DIR"/ "$APP_DIR"/
@@ -58,13 +58,13 @@ fi
 cd "$APP_DIR"
 npm ci --omit=dev --no-audit --no-fund
 chown -R root:root "$APP_DIR"
-chown -R nyl:nyl "$DATA_DIR"
+chown -R patientapp:patientapp "$DATA_DIR"
 chmod 750 "$DATA_DIR"
 
 if [ ! -f "$ENV_FILE" ]; then
   say "App settings (you can change these later in $ENV_FILE)"
-  read -rp "Clinic name [NYL Clinic]: " CLINIC_NAME
-  CLINIC_NAME="${CLINIC_NAME:-NYL Clinic}"
+  read -rp "Clinic name [Clinic]: " CLINIC_NAME
+  CLINIC_NAME="${CLINIC_NAME:-Clinic}"
   while :; do
     read -rsp "Choose an admin dashboard password (8+ characters): " ADMIN_PASSWORD; echo
     read -rsp "Type it again: " ADMIN_PASSWORD2; echo
@@ -73,16 +73,16 @@ if [ ! -f "$ENV_FILE" ]; then
     elif [[ "$ADMIN_PASSWORD" == *'"'* || "$ADMIN_PASSWORD" == *'\'* ]]; then echo "Please don't use \" or \\ in the password."
     else break; fi
   done
-  read -rp "UPI ID for payments (leave empty for none): " UPI_ID
-  UPI_NAME=""
-  [ -n "$UPI_ID" ] && read -rp "Name on that UPI account [$CLINIC_NAME]: " UPI_NAME
+  read -rp "UPI ID for payments [suhailbinalionline-2@oksbi]: " UPI_ID
+  UPI_ID="${UPI_ID:-suhailbinalionline-2@oksbi}"
+  read -rp "Name on that UPI account [$CLINIC_NAME]: " UPI_NAME
   UPI_NAME="${UPI_NAME:-$CLINIC_NAME}"
   umask 077
   cat > "$ENV_FILE" <<ENV
-# Settings for the NYL patient app. After editing: sudo systemctl restart $SERVICE
+# Settings for the patient app. After editing: sudo systemctl restart $SERVICE
 HOST=127.0.0.1
 PORT=3000
-DB_PATH=$DATA_DIR/nyl.db
+DB_PATH=$DATA_DIR/app.db
 UPLOAD_DIR=$DATA_DIR/uploads
 CLINIC_NAME="$CLINIC_NAME"
 ADMIN_USER=admin
@@ -101,12 +101,12 @@ fi
 say "Setting up the background service"
 cat > /etc/systemd/system/$SERVICE.service <<UNIT
 [Unit]
-Description=NYL patient intake app
+Description=Patient intake app
 After=network.target
 
 [Service]
-User=nyl
-Group=nyl
+User=patientapp
+Group=patientapp
 WorkingDirectory=$APP_DIR
 EnvironmentFile=$ENV_FILE
 ExecStart=$NODE_BIN --disable-warning=ExperimentalWarning server.js

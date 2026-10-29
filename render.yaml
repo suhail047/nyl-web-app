@@ -2,7 +2,7 @@
 # New → Blueprint → pick this repository. Render asks for the values marked sync: false.
 services:
   - type: web
-    name: nyl-web-app
+    name: patient-app
     runtime: node
     plan: starter          # a persistent disk needs a paid plan; the free plan would lose photos and data
     region: singapore      # closest Render region to India
@@ -15,7 +15,7 @@ services:
       sizeGB: 1
     envVars:
       - key: DB_PATH
-        value: /var/data/nyl.db
+        value: /var/data/app.db
       - key: UPLOAD_DIR
         value: /var/data/uploads
       - key: ADMIN_USER
