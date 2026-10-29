@@ -63,8 +63,9 @@ chmod 750 "$DATA_DIR"
 
 if [ ! -f "$ENV_FILE" ]; then
   say "App settings (you can change these later in $ENV_FILE)"
-  read -rp "Clinic name [Clinic]: " CLINIC_NAME
-  CLINIC_NAME="${CLINIC_NAME:-Clinic}"
+  DEFAULT_NAME="Suhail's Healing"
+  read -rp "App name [$DEFAULT_NAME]: " CLINIC_NAME
+  CLINIC_NAME="${CLINIC_NAME:-$DEFAULT_NAME}"
   while :; do
     read -rsp "Choose an admin dashboard password (8+ characters): " ADMIN_PASSWORD; echo
     read -rsp "Type it again: " ADMIN_PASSWORD2; echo

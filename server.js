@@ -18,7 +18,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
 const FEE_ENV = process.env.CONSULTATION_FEE_INR;
 const ENV_FEE_PAISE = Math.max(0, Math.round((Number(FEE_ENV) || 0) * 100));
 const MAX_AMOUNT_PAISE = 100000 * 100; // ₹1,00,000 – the usual UPI per-payment limit
-const CLINIC_NAME = process.env.CLINIC_NAME || 'Clinic';
+const CLINIC_NAME = process.env.CLINIC_NAME || "Suhail's Healing";
 const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
 const RZP_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
@@ -117,6 +117,8 @@ function visitDto(v) {
     gender: v.patient_gender,
     problems: v.problems,
     visitKind: v.visit_kind,
+    treatmentsTried: v.treatments_tried,
+    currentMedicines: v.current_medicines,
     photoUrl: v.photo_file ? `/uploads/${v.photo_file}` : null,
     amount: v.amount_paise / 100,
     paymentStatus: v.payment_status,
@@ -264,23 +266,27 @@ app.get('/api/patients/:id', (req, res) => {
 });
 
 function isFollowUp(patientId) {
-  return Boolean(q.hadVisitBeforeToday.get(patientId));
+  return Boolean(q.hadRecentHealing.get(patientId));
 }
 
-// Saves the photo + problems immediately so staff see them live. Payment happens next, on the /pay page.
+// Saves the photo + answers immediately so staff see them live. Payment happens next, on the /pay page.
+// First visit (or more than a week since the last healing): problems, treatments tried, current medicines.
+// Follow-up within a week: positive changes since the last healing (sent in the `problems` field).
 app.post('/api/visits', upload.single('photo'), (req, res) => {
   const patient = ownPatient(req, req.body.patientId);
+  const followUp = Boolean(patient) && isFollowUp(patient.id);
   const problems = cleanText(req.body.problems, 5000);
+  const treatments = followUp ? null : cleanText(req.body.treatments, 3000) || null;
+  const medicines = followUp ? null : cleanText(req.body.medicines, 3000) || null;
   if (!patient || !problems || !req.file) {
     if (req.file) fs.rm(req.file.path, () => {});
-    const followUp = patient && isFollowUp(patient.id);
-    const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please describe your problems.';
+    const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please describe the problems you are facing.';
     return res.status(400).json({ error: !patient ? 'Patient not found.' : !problems ? askText : 'Please upload a photo.' });
   }
 
   const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
   const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, currentFeePaise(), status, PAYMENT_METHOD,
-    isFollowUp(patient.id) ? 'followup' : 'first');
+    followUp ? 'followup' : 'first', treatments, medicines);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });
 });
@@ -303,7 +309,7 @@ async function upiPayment(v, amountPaise) {
   const params = { pa: UPI_ID, pn: UPI_NAME, cu: 'INR', tn: `Visit ${v.id} ${v.patient_name}`.slice(0, 50) };
   if (amountPaise > 0) params.am = (amountPaise / 100).toFixed(2);
   // Keep "@" in the UPI ID as-is: some UPI apps reject "%40".
-  const query = Object.entries(params).map(([k, val]) => `${k}=${encodeURIComponent(val).replace(/%40/g, '@')}`).join('&');
+  const query = Object.entries(params).map(([k, val]) => `${k}=${encodeURIComponent(val).replace(/%40/g, '@').replace(/'/g, '%27')}`).join('&');
   const link = `upi://pay?${query}`;
   return { id: UPI_ID, name: UPI_NAME, link, qrSvg: await QRCode.toString(link, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }) };
 }

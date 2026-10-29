@@ -8,7 +8,7 @@
 </head>
 <body>
   <main class="wrap">
-    <header class="brand"><div class="logo">✚</div><span data-clinic>Clinic</span></header>
+    <header class="brand"><div class="logo">✚</div><span data-clinic>Suhail&#39;s Healing</span></header>
     <div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
     <a class="back" id="back" href="/patients">← Choose another patient</a>
 
@@ -23,7 +23,15 @@
       </label>
 
       <label for="problems" id="problemsLabel">What problems are you facing?</label>
-      <textarea id="problems" name="problems" maxlength="5000" required placeholder="Describe your illness, symptoms, how long you've had them, any medicines you're taking…"></textarea>
+      <textarea id="problems" name="problems" maxlength="5000" required placeholder="Your illness or symptoms, and how long you have had them…"></textarea>
+
+      <div id="firstVisitFields">
+        <label for="treatments">What treatments have you already tried? <span class="hint-inline">(optional)</span></label>
+        <textarea id="treatments" name="treatments" class="short" maxlength="3000" placeholder="e.g. allopathy, ayurveda, homeopathy, physiotherapy, surgery…"></textarea>
+
+        <label for="medicines">What medicines are you taking now? <span class="hint-inline">(optional)</span></label>
+        <textarea id="medicines" name="medicines" class="short" maxlength="3000" placeholder="Medicine names and how often you take them. Write “None” if you take no medicines."></textarea>
+      </div>
 
       <div class="error" id="error" role="alert"></div>
       <button type="submit" id="submit">Upload &amp; continue to payment</button>
@@ -48,9 +56,10 @@
         document.getElementById('avatar').textContent = initials(p.name);
         document.getElementById('pmeta').textContent = [p.age != null ? p.age + ' yrs' : '', p.gender].filter(Boolean).join(' · ');
         if (p.followUp) {
-          // Second day onwards: ask how the patient is improving instead of their problems.
-          document.getElementById('problemsLabel').textContent = "What positive changes are you feeling after yesterday's healing?";
+          // Last healing was within the past week: ask how the patient is improving instead.
+          document.getElementById('problemsLabel').textContent = 'What positive changes are you feeling after your last healing?';
           document.getElementById('problems').placeholder = 'For example: less pain, better sleep, more energy, feeling calmer…';
+          document.getElementById('firstVisitFields').remove();
         }
         if (!cfg.paymentsEnabled) submit.textContent = 'Upload & continue';
       } catch (err) {
@@ -74,7 +83,7 @@
       if (!document.getElementById('problems').value.trim()) {
         return (error.textContent = document.getElementById('problemsLabel').textContent.startsWith('What positive')
           ? 'Please tell us about the positive changes you are feeling.'
-          : 'Please describe your problems.');
+          : 'Please describe the problems you are facing.');
       }
 
       const data = new FormData(form);

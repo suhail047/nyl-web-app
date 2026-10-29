@@ -16,8 +16,13 @@ function visitCard(v, fresh) {
     <div class="body">
       <div class="row"><span class="name">${esc(v.patientName)}</span><span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}</span></div>
       <div class="muted">${esc(fmtPhone(v.phone))}${v.age != null ? ' · ' + esc(v.age) + ' yrs' : ''}${v.gender ? ' · ' + esc(v.gender) : ''}</div>
-      <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Problems'}</div>
+      <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Problems faced'}</div>
       <div class="problems">${esc(v.problems)}</div>
+      ${v.visitKind !== 'followup' ? `
+        <div class="muted kind">Treatments tried</div>
+        <div class="problems">${esc(v.treatmentsTried || '—')}</div>
+        <div class="muted kind">Medicines taking now</div>
+        <div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
       <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
       ${v.paymentMethod === 'upi' && v.paymentStatus !== 'paid' ? `<div class="muted">UPI note to look for: <b>Visit ${v.id}</b></div>` : ''}
@@ -35,7 +40,7 @@ function renderVisits(freshId) {
   const status = $('statusFilter').value;
   const shown = state.visits.filter((v) =>
     (!status || v.paymentStatus === status) &&
-    (!term || [v.patientName, v.phone, v.problems].some((f) => String(f).toLowerCase().includes(term))));
+    (!term || [v.patientName, v.phone, v.problems, v.treatmentsTried, v.currentMedicines].some((f) => String(f).toLowerCase().includes(term))));
   $('visits').innerHTML = shown.map((v) => visitCard(v, v.id === freshId)).join('');
   $('visitsEmpty').classList.toggle('hidden', shown.length > 0);
 }

@@ -79,6 +79,8 @@ const visitColumns = db.prepare('PRAGMA table_info(visits)').all().map((c) => c.
 if (!visitColumns.includes('payment_method')) db.exec('ALTER TABLE visits ADD COLUMN payment_method TEXT');
 if (!visitColumns.includes('upi_ref')) db.exec('ALTER TABLE visits ADD COLUMN upi_ref TEXT');
 // 'first' = problems the patient is facing; 'followup' = positive changes since the previous healing.
+if (!visitColumns.includes('treatments_tried')) db.exec('ALTER TABLE visits ADD COLUMN treatments_tried TEXT');
+if (!visitColumns.includes('current_medicines')) db.exec('ALTER TABLE visits ADD COLUMN current_medicines TEXT');
 if (!visitColumns.includes('visit_kind')) db.exec("ALTER TABLE visits ADD COLUMN visit_kind TEXT NOT NULL DEFAULT 'first'");
 
 const VISIT_SELECT = `
@@ -96,12 +98,15 @@ const q = {
     FROM patients p LEFT JOIN visits v ON v.patient_id = p.id
     GROUP BY p.id ORDER BY p.phone, p.name`),
   insertVisit: db.prepare(`
-    INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method, visit_kind)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`),
+    INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method, visit_kind,
+                        treatments_tried, current_medicines)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`),
   // True when the patient already sent a photo on an earlier day (Indian time).
-  hadVisitBeforeToday: db.prepare(`
+  // A follow-up: the patient's last healing was on an earlier day, no more than 7 days ago (Indian time).
+  hadRecentHealing: db.prepare(`
     SELECT 1 FROM visits WHERE patient_id = ?
-      AND date(created_at, '+5 hours', '+30 minutes') < date('now', '+5 hours', '+30 minutes') LIMIT 1`),
+      AND date(created_at, '+5 hours', '+30 minutes') <  date('now', '+5 hours', '+30 minutes')
+      AND date(created_at, '+5 hours', '+30 minutes') >= date('now', '+5 hours', '+30 minutes', '-7 days') LIMIT 1`),
   markUpiClaimed: db.prepare(`
     UPDATE visits SET payment_status = 'upi_claimed', upi_ref = ? WHERE id = ? AND payment_status IN ('pending', 'failed')`),
   confirmPayment: db.prepare(`

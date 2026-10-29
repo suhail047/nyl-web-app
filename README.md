@@ -1,13 +1,14 @@
-# Patient Intake & Healing App
+# Suhail's Healing
 
 A small web app for patient check-in:
 
 1. **Phone number** – patient enters the mobile number their family is registered under (optionally
    verified with a 6-digit SMS code – see *OTP* below; off by default).
 2. **Select patient** – all names registered under that (verified) number are listed (a new name can be added).
-3. **Photo & problems** – patient takes/uploads a photo and describes their problems/diseases. From the
-   day after their first visit, the text box instead asks about the *positive changes they are feeling after
-   yesterday's healing* (shown as such on the dashboard).
+3. **Photo & questions** – patient takes/uploads a photo. On the first visit they answer: problems faced,
+   treatments already tried, and medicines they are taking now. If their last healing was on an earlier day
+   within the past 7 days, they are instead asked about the *positive changes they are feeling after their
+   last healing*. After more than a week without a healing, the first-visit questions are asked again.
 4. **Payment** – right after the upload, a payment page shows a **UPI QR code** (default UPI ID
    `suhailbinalionline-2@oksbi`) with an amount box the patient fills in – no fee or minimum is shown.
 5. **Done** – "Photo successfully submitted for treatment. Treatment will start at 10 PM IST", followed by
@@ -68,7 +69,7 @@ Set your clinic's UPI ID in `.env`:
 
 ```
 UPI_ID=suhailbinalionline-2@oksbi
-UPI_NAME=Clinic
+UPI_NAME=Suhail's Healing
 ```
 
 The payment page then shows a QR code for the amount the patient enters (plus a *Pay with UPI app* button on phones).
