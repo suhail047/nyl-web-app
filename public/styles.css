@@ -83,3 +83,5 @@ textarea.short { min-height: 90px; }
 .instructions p { margin: 6px 0 0; }
 .instructions small { color: var(--muted); }
 .instructions.left { text-align: left; margin-top: 14px; }
+.consent { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: .92rem; margin: 18px 0 0; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); cursor: pointer; }
+.consent input { width: 20px; height: 20px; flex: 0 0 auto; margin: 1px 0 0; accent-color: var(--primary); }

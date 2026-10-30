@@ -117,6 +117,7 @@ function visitDto(v) {
     gender: v.patient_gender,
     problems: v.problems,
     visitKind: v.visit_kind,
+    consentAt: v.consent_at,
     treatmentsTried: v.treatments_tried,
     currentMedicines: v.current_medicines,
     photoUrl: v.photo_file ? `/uploads/${v.photo_file}` : null,
@@ -278,8 +279,10 @@ app.post('/api/visits', upload.single('photo'), (req, res) => {
   const problems = cleanText(req.body.problems, 5000);
   const treatments = followUp ? null : cleanText(req.body.treatments, 3000) || null;
   const medicines = followUp ? null : cleanText(req.body.medicines, 3000) || null;
-  if (!patient || !problems || !req.file) {
+  const consented = req.body.consent === 'yes';
+  if (!patient || !problems || !req.file || !consented) {
     if (req.file) fs.rm(req.file.path, () => {});
+    if (patient && problems && req.file) return res.status(400).json({ error: 'Please tick the consent box to continue.' });
     const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please describe the problems you are facing.';
     return res.status(400).json({ error: !patient ? 'Patient not found.' : !problems ? askText : 'Please upload a photo.' });
   }

@@ -81,6 +81,7 @@ if (!visitColumns.includes('upi_ref')) db.exec('ALTER TABLE visits ADD COLUMN up
 // 'first' = problems the patient is facing; 'followup' = positive changes since the previous healing.
 if (!visitColumns.includes('treatments_tried')) db.exec('ALTER TABLE visits ADD COLUMN treatments_tried TEXT');
 if (!visitColumns.includes('current_medicines')) db.exec('ALTER TABLE visits ADD COLUMN current_medicines TEXT');
+if (!visitColumns.includes('consent_at')) db.exec('ALTER TABLE visits ADD COLUMN consent_at TEXT');
 if (!visitColumns.includes('visit_kind')) db.exec("ALTER TABLE visits ADD COLUMN visit_kind TEXT NOT NULL DEFAULT 'first'");
 
 const VISIT_SELECT = `
@@ -99,8 +100,8 @@ const q = {
     GROUP BY p.id ORDER BY p.phone, p.name`),
   insertVisit: db.prepare(`
     INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method, visit_kind,
-                        treatments_tried, current_medicines)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+                        treatments_tried, current_medicines, consent_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`),
   // True when the patient already sent a photo on an earlier day (Indian time).
   // A follow-up: the patient's last healing was on an earlier day, no more than 7 days ago (Indian time).
   hadRecentHealing: db.prepare(`

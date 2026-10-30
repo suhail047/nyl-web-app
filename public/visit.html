@@ -42,6 +42,12 @@
         <textarea id="medicines" name="medicines" class="short" maxlength="3000" placeholder="Medicine names and how often you take them. Write “None” if you take no medicines."></textarea>
       </div>
 
+      <label class="consent">
+        <input type="checkbox" id="consent" name="consent" value="yes" required>
+        <span>I agree to share my photo and these details with <span data-clinic>Suhail&#39;s Healing</span> for my
+          healing. I understand that this healing does not replace medical treatment, and I will not stop any
+          medicine or treatment advised by my doctor.</span>
+      </label>
       <div class="error" id="error" role="alert"></div>
       <button type="submit" id="submit">Upload &amp; continue to payment</button>
     </form>
@@ -94,6 +100,7 @@
           ? 'Please tell us about the positive changes you are feeling.'
           : 'Please describe the problems you are facing.');
       }
+      if (!document.getElementById('consent').checked) return (error.textContent = 'Please tick the consent box to continue.');
 
       const data = new FormData(form);
       data.append('patientId', patientId);

@@ -23,6 +23,7 @@ function visitCard(v, fresh) {
         <div class="problems">${esc(v.treatmentsTried || '—')}</div>
         <div class="muted kind">Medicines taking now</div>
         <div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
+      ${v.consentAt ? '<div class="muted">✓ Consent given</div>' : ''}
       <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
       ${v.paymentMethod === 'upi' && v.paymentStatus !== 'paid' ? `<div class="muted">UPI note to look for: <b>Visit ${v.id}</b></div>` : ''}
