@@ -84,18 +84,19 @@ dashboard under **Settings** (leave it empty to pre-fill nothing), or with `CONS
 
 ## Healing plan and Progress tab
 
-Every patient follows the same plan, counted per healing session (one photo upload per day):
+Every patient follows the same plan, counted in healing **sessions** (one photo upload per session; currently
+one session a day). They are called sessions rather than days so the plan can later move to more than one a day.
 
-- **12-day course** – Day 1 … Day 12, one healing a day.
-- Then **weekly healing for 12 weeks** – Week 1 … Week 12.
-- Then another 12-day course, then 12 weeks weekly, and so on.
-- If a patient's last healing was **more than 2 weeks (14 days) ago**, their next upload starts a new 12-day
-  course at Day 1, and they answer the first-visit questions again.
-- For some patients you can choose **"Another 12 days"** after a 12-day course (Progress tab). It applies
-  once; after that course the patient goes back to weekly. **"Restart at Day 1"** starts a new 12-day course
-  from the patient's next visit (e.g. after a long break).
+- **12-session course** – Session 1 … Session 12, one a day.
+- Then **12 weekly sessions** – Weekly session 1 … 12, one a week.
+- Then another 12-session course, then 12 weekly sessions, and so on.
+- If a patient's last healing was **more than 2 weeks (14 days) ago**, their next upload starts a new
+  12-session course at Session 1, and they answer the first-visit questions again.
+- For some patients you can choose **"Another 12 sessions"** after a 12-session course (Progress tab). It
+  applies once; after that course the patient goes back to weekly. **"Restart at Session 1"** starts a new
+  12-session course from the patient's next visit.
 
-The patient's confirmation page shows today's session ("Day 3 of 12") and when to send the next photo
+The patient's confirmation page shows this session ("Session 3 of 12") and when to send the next photo
 (tomorrow, or next week's date in the weekly phase). The first-visit questions (problems, treatments,
 medicines) are asked on a patient's first day and again after a gap of more than 2 weeks; otherwise they
 are asked about positive changes since their last healing.

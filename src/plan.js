@@ -1,12 +1,13 @@
-// Healing plan: a 12-day daily course, then weekly healing for 12 weeks, then another 12-day course, and so on.
-// After a daily course the admin can choose "another 12 days" instead of weekly (patients.next_block = 'daily'),
-// or restart a patient at Day 1 of a new course from their next visit (next_block = 'restart').
+// Healing plan: a 12-session course (one session a day), then 12 weekly sessions, then another 12-session course,
+// and so on. After a 12-session course the admin can choose "another 12 sessions" instead of weekly
+// (patients.next_block = 'daily'), or restart a patient at Session 1 from their next visit (next_block = 'restart').
 // Sessions are counted per upload (one per Indian calendar day), so a skipped day does not break the count.
+// They are called sessions, not days, so the plan can later move to more than one session a day.
 const { db, q } = require('./db');
 
 const SESSIONS = 12;
 const DAY_MS = 86400000;
-const RESTART_AFTER_DAYS = 14; // a gap of more than two weeks starts a new 12-day course at Day 1
+const RESTART_AFTER_DAYS = 14; // a gap of more than two weeks starts a new 12-session course at Session 1
 
 // "YYYY-MM-DD" in Indian time, for a UTC "YYYY-MM-DD HH:MM:SS" database timestamp or a Date.
 function istDay(value = new Date()) {
@@ -41,7 +42,7 @@ function nextStep(prev, nextBlock, today = istDay()) {
 }
 
 function label(phase, session) {
-  return phase === 'weekly' ? `Week ${session} of ${SESSIONS}` : `Day ${session} of ${SESSIONS}`;
+  return phase === 'weekly' ? `Weekly session ${session} of ${SESSIONS}` : `Session ${session} of ${SESSIONS}`;
 }
 
 // What comes after this visit, for the patient's confirmation page and the admin's Progress view.
@@ -50,11 +51,11 @@ function upcoming(visit, nextBlock) {
   const step = nextStep(visit, nextBlock, addDays(day, 1));
   const gap = step.phase === 'weekly' || (visit.phase === 'weekly' && step.session === 1) ? 7 : 1;
   const finished = visit.session_no === SESSIONS
-    ? (visit.phase === 'weekly' ? 'Your 12 weeks of weekly healing are complete.' : 'Your 12-day healing course is complete.')
+    ? (visit.phase === 'weekly' ? 'Your 12 weekly sessions are complete.' : 'Your 12-session healing course is complete.')
     : null;
   const next = step.phase === 'weekly' && step.session === 1
-    ? 'Next: weekly healing for 12 weeks'
-    : step.session === 1 ? 'Next: a new 12-day healing course' : null;
+    ? 'Next: 12 weekly sessions, one a week'
+    : step.session === 1 ? 'Next: a new 12-session healing course' : null;
   return { label: label(step.phase, step.session), date: addDays(day, gap), gap, finished, next, phase: step.phase };
 }
 

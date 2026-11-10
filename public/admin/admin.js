@@ -96,14 +96,14 @@ async function openProgress(patientId) {
   if (window.matchMedia('(max-width: 760px)').matches) $('progressMain').scrollIntoView({ behavior: 'smooth' });
 }
 
-// Heading for each block, numbered per type in time order, e.g. "12-day course #2".
+// Heading for each block, numbered per type in time order, e.g. "12-session course #2".
 function blockTitles(visits) {
   const titles = {};
   const count = { daily: 0, weekly: 0 };
   for (const v of visits) {
     if (v.blockNo == null || titles[v.blockNo]) continue;
     const n = ++count[v.phase];
-    titles[v.blockNo] = v.phase === 'weekly' ? `Weekly healing – 12 weeks${n > 1 ? ' #' + n : ''}` : `12-day course #${n}`;
+    titles[v.blockNo] = v.phase === 'weekly' ? `Weekly sessions – 12 weeks${n > 1 ? ' #' + n : ''}` : `12-session course #${n}`;
   }
   return titles;
 }
@@ -131,16 +131,16 @@ async function loadProgress() {
       </div>
     </div>
     <div class="plan-card card">
-      <label for="nextBlock">${last?.phase === 'weekly' ? 'After the next 12-day course' : 'After the current 12-day course'}</label>
+      <label for="nextBlock">${last?.phase === 'weekly' ? 'After the next 12-session course' : 'After the current 12-session course'}</label>
       <div class="plan-row">
         <select id="nextBlock" data-patient="${p.id}">
-          <option value="" ${nextChoice === '' ? 'selected' : ''}>Weekly healing for 12 weeks (usual)</option>
-          <option value="daily" ${nextChoice === 'daily' ? 'selected' : ''}>Another 12 days</option>
-          <option value="restart" ${nextChoice === 'restart' ? 'selected' : ''}>Restart at Day 1 from the next visit</option>
+          <option value="" ${nextChoice === '' ? 'selected' : ''}>12 weekly sessions (usual)</option>
+          <option value="daily" ${nextChoice === 'daily' ? 'selected' : ''}>Another 12 sessions</option>
+          <option value="restart" ${nextChoice === 'restart' ? 'selected' : ''}>Restart at Session 1 from the next visit</option>
         </select>
         <span class="muted" id="planSaved"></span>
       </div>
-      <p class="muted small">The plan: 12 days → 12 weeks weekly → 12 days → … "Another 12 days" applies once, after the
+      <p class="muted small">The plan: 12 sessions → 12 weekly sessions → 12 sessions → … "Another 12 sessions" applies once, after the
         current course; after that the patient goes back to weekly healing.</p>
     </div>`;
   if (!visits.length) {
@@ -153,7 +153,7 @@ async function loadProgress() {
   $('progressMain').innerHTML = head + '<ol class="timeline">' + newest.map((v, i) => {
     const day = istDay(v.createdAt);
     const newBlock = i === 0 || v.blockNo !== newest[i - 1].blockNo;
-    const tag = v.sessionNo ? (v.phase === 'weekly' ? `Week ${v.sessionNo}` : `Day ${v.sessionNo}`) : '';
+    const tag = v.sessionNo ? `Session ${v.sessionNo}` : '';
     return `
     ${newBlock ? `<li class="course-break">${esc(titles[v.blockNo] || 'Healing')}</li>` : ''}
     <li class="entry">

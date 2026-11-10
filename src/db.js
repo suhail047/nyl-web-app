@@ -86,7 +86,7 @@ if (!visitColumns.includes('consent_at')) db.exec('ALTER TABLE visits ADD COLUMN
 for (const [col, type] of [['phase', 'TEXT'], ['session_no', 'INTEGER'], ['block_no', 'INTEGER']]) {
   if (!visitColumns.includes(col)) db.exec(`ALTER TABLE visits ADD COLUMN ${col} ${type}`);
 }
-// What follows the current 12-day course: NULL = weekly (default), 'daily' = another 12 days, 'restart' = Day 1 next visit.
+// What follows the current 12-session course: NULL = weekly (default), 'daily' = another 12 sessions, 'restart' = Session 1 next visit.
 if (!db.prepare('PRAGMA table_info(patients)').all().some((c) => c.name === 'next_block')) {
   db.exec('ALTER TABLE patients ADD COLUMN next_block TEXT');
 }
@@ -111,7 +111,7 @@ const q = {
                         treatments_tried, current_medicines, consent_at, phase, session_no, block_no)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`),
   // A follow-up: the patient's last healing was on an earlier day, at most 14 days ago (Indian time).
-  // After a longer gap they start again at Day 1 and answer the first-visit questions again.
+  // After a longer gap they start again at Session 1 and answer the first-visit questions again.
   hadVisitBeforeToday: db.prepare(`
     SELECT 1 FROM visits WHERE patient_id = ?
       AND date(created_at, '+5 hours', '+30 minutes') <  date('now', '+5 hours', '+30 minutes')

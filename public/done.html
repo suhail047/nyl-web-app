@@ -50,7 +50,7 @@
       api('/api/visits/' + encodeURIComponent(params.get('visit'))).then((v) => {
         if (!v.plan) return;
         const p = v.plan.upcoming;
-        $('planBadge').textContent = 'Today: ' + v.plan.today + (v.plan.phase === 'weekly' ? ' (weekly healing)' : ' (12-day course)');
+        $('planBadge').textContent = 'Today: ' + v.plan.today + (v.plan.phase === 'weekly' ? '' : ' (12-session course)');
         $('planBadge').classList.remove('hidden');
         const when = new Date(p.date + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
         $('nextTitle').textContent = p.finished || 'Your next healing';
