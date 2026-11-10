@@ -140,4 +140,4 @@ const q = {
   recentVisits: db.prepare(`${VISIT_SELECT} ORDER BY v.id DESC LIMIT ?`),
 };
 
-module.exports = { db, q, normalizePhone };
+module.exports = { db, q, normalizePhone, DB_PATH };

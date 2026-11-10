@@ -82,6 +82,17 @@ Amount: ₹300 is pre-filled on the payment page and the patient can change it; 
 and the dashboard shows the amount the patient says they paid. Change the pre-filled amount in the admin
 dashboard under **Settings** (leave it empty to pre-fill nothing), or with `CONSULTATION_FEE_INR` in `.env`.
 
+## Backups (Excel)
+
+Admin dashboard → **Settings → Backups**:
+
+- **Download Excel now** gives a workbook with two sheets – *Patients* and *Visits* (answers, amount,
+  payment status, consent time; times in IST). Photos are not included.
+- A backup is saved automatically every night at **11:30 PM IST** to `backups/` next to the database
+  (`data/backups/` locally, `/var/lib/patient-app/backups/` on the VPS) and kept for 365 days. If the server
+  was off at 11:30 PM, the missed day's backup is written when it starts again. Set `BACKUP_DIR` to change
+  the folder. Download them from the same page to keep copies off the server.
+
 ## Razorpay setup (alternative to UPI QR)
 
 1. In the Razorpay Dashboard → *Account & Settings → API Keys*, generate keys (use **Test mode** first)

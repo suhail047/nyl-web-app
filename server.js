@@ -9,6 +9,7 @@ const multer = require('multer');
 const QRCode = require('qrcode');
 const { q, normalizePhone } = require('./src/db');
 const otp = require('./src/otp');
+const backup = require('./src/backup');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
@@ -413,6 +414,24 @@ app.post('/api/admin/visits/:id/payment', (req, res) => {
   res.json(visitDto(v));
 });
 
+// Excel backup of patients and visits (no photos).
+app.get('/api/admin/export', async (_req, res, next) => {
+  try {
+    const buf = await backup.exportBuffer();
+    res.attachment(`patients-${backup.istDate()}.xlsx`).type('xlsx').send(Buffer.from(buf));
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/admin/backups', (_req, res) => res.json(backup.listBackups()));
+
+app.get('/api/admin/backups/:name', (req, res) => {
+  const file = backup.backupPath(req.params.name);
+  if (!file || !fs.existsSync(file)) return res.status(404).json({ error: 'Backup not found.' });
+  res.download(file);
+});
+
 app.get('/api/admin/settings', (_req, res) => res.json({ fee: currentFeePaise() / 100 }));
 
 app.post('/api/admin/settings', (req, res) => {
@@ -446,6 +465,8 @@ app.use((err, _req, res, _next) => {
   if (err.retryAfter) res.set('Retry-After', String(err.retryAfter));
   res.status(err.status || 500).json({ error: err.status ? err.message : 'Something went wrong. Please try again.', retryAfter: err.retryAfter });
 });
+
+backup.startDailyBackups();
 
 app.listen(PORT, process.env.HOST || undefined, () => {
   console.log(`Patient app:     http://localhost:${PORT}`);

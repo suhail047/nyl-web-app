@@ -192,6 +192,15 @@ async function loadSettings() {
   const { fee } = await api('/api/admin/settings');
   $('feeInput').value = fee > 0 ? fee : '';
   $('settingsMsg').textContent = '';
+  loadBackups();
+}
+
+async function loadBackups() {
+  const list = await api('/api/admin/backups');
+  $('backupList').innerHTML = list.length
+    ? list.slice(0, 60).map((b) => `<li><a href="/api/admin/backups/${encodeURIComponent(b.name)}" download>${esc(new Date(b.date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }))}</a>
+        <span class="muted">${Math.max(1, Math.round(b.size / 1024))} KB</span></li>`).join('')
+    : '<li class="muted">The first daily backup will appear here after 11:30 PM tonight.</li>';
 }
 
 $('settingsForm').addEventListener('submit', async (e) => {

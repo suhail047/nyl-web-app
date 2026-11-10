@@ -15,6 +15,7 @@
     "seed": "node --disable-warning=ExperimentalWarning src/seed.js"
   },
   "dependencies": {
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "multer": "^2.0.2",
     "qrcode": "^1.5.4"
