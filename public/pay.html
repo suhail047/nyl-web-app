@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
   <title>Payment</title>
   <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 </head>
 <body>
   <main class="wrap">
-    <header class="brand"><div class="logo">☯</div><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
+    <header class="brand"><img class="logo" src="/logo.svg" alt=""><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
     <div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
 
     <section class="card" id="payCard">
@@ -193,7 +194,7 @@
         name: order.name,
         description: 'Treatment',
         prefill: order.prefill,
-        theme: { color: '#8f00ff' },
+        theme: { color: '#15803d' },
         handler: async (resp) => {
           $('payBtn').textContent = 'Confirming payment…';
           try {

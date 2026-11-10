@@ -1,13 +1,13 @@
 :root {
-  --bg: #f5edff; --card: #ffffff; --text: #1f1030; --muted: #625878; --border: #e2d1fb;
-  --primary: #8f00ff; --primary-dark: #6400b8; --tint: #efe2ff; --tint-soft: #f8f2ff; --danger: #b42318; --ok: #067647; --warn: #b54708;
+  --bg: #f0f7f1; --card: #ffffff; --text: #14251a; --muted: #566b5c; --border: #d3e6d8;
+  --primary: #15803d; --primary-dark: #105c2c; --tint: #e2f2e6; --tint-soft: #f3faf4; --danger: #b42318; --ok: #067647; --warn: #b54708;
   --radius: 14px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
 .wrap { max-width: 480px; margin: 0 auto; padding: 24px 16px 48px; }
 header.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-weight: 700; font-size: 1.1rem; }
-header.brand .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--primary); color: #fff; display: grid; place-items: center; }
+header.brand .logo { width: 40px; height: 40px; display: block; }
 .steps { display: flex; gap: 6px; margin-bottom: 20px; }
 .steps span { flex: 1; height: 5px; border-radius: 4px; background: var(--border); }
 .steps span.on { background: var(--primary); }
