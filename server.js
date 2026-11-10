@@ -275,7 +275,7 @@ app.get('/api/patients/:id', (req, res) => {
 });
 
 function isFollowUp(patientId) {
-  return Boolean(q.hadVisitBeforeToday.get(patientId));
+  return Boolean(q.hadRecentSession.get(patientId));
 }
 
 // Saves the photo + answers immediately so staff see them live. Payment happens next, on the /pay page.

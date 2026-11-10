@@ -1,7 +1,7 @@
 // Healing plan: a 12-session course (one session a day), then 12 weekly sessions, then another 12-session course,
 // and so on. After a 12-session course the admin can choose "another 12 sessions" instead of weekly
 // (patients.next_block = 'daily'), or restart a patient at Session 1 from their next visit (next_block = 'restart').
-// Sessions are counted per upload (one per Indian calendar day), so a skipped day does not break the count.
+// Every upload is the next session (even several on one day), so a skipped day does not break the count.
 // They are called sessions, not days, so the plan can later move to more than one session a day.
 const { db, q } = require('./db');
 
@@ -27,7 +27,6 @@ function addDays(day, n) {
 function nextStep(prev, nextBlock, today = istDay()) {
   if (!prev || !prev.session_no) return { phase: 'daily', session: 1, block: 1 };
   const same = { phase: prev.phase, session: prev.session_no, block: prev.block_no };
-  if (istDay(prev.created_at) === today) return same; // a second upload on the same day is the same session
   if (daysBetween(istDay(prev.created_at), today) > RESTART_AFTER_DAYS) {
     return { phase: 'daily', session: 1, block: prev.block_no + 1, consumed: nextBlock === 'restart' };
   }
