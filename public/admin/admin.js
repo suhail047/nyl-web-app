@@ -29,6 +29,7 @@ function visitCard(v, fresh) {
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
       ${v.paymentMethod === 'upi' && v.paymentStatus !== 'paid' ? `<div class="muted">UPI note to look for: <b>Visit ${v.id}</b></div>` : ''}
       ${v.upiRef ? `<div class="muted">UTR given by patient: <b>${esc(v.upiRef)}</b></div>` : ''}
+      <div><button type="button" class="link link-danger" data-remove="${v.id}" data-label="${esc(v.planLabel || 'this session')} for ${esc(v.patientName)}">Remove this session</button></div>
       ${v.paymentStatus !== 'paid' ? `<div class="pay-actions">
         <button type="button" data-pay="confirm" data-id="${v.id}">✓ Mark paid</button>
         ${v.paymentStatus === 'upi_claimed' ? `<button type="button" class="secondary" data-pay="reject" data-id="${v.id}">Not received</button>` : ''}
@@ -166,10 +167,24 @@ async function loadProgress() {
         ${v.visitKind !== 'followup' ? `
           <div class="muted kind">Treatments tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
           <div class="muted kind">Medicines taking now</div><div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
+        <div><button type="button" class="link link-danger" data-remove="${v.id}" data-label="${esc(tag)} on ${esc(fmtDay(day))}">Remove this session</button></div>
       </div>
     </li>`;
   }).join('') + '</ol>';
 }
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-remove]');
+  if (!btn) return;
+  if (!confirm(`Remove ${btn.dataset.label}?\n\nThe photo and answers for this session will be deleted. Later sessions in the same course move up by one.`)) return;
+  btn.disabled = true;
+  try {
+    await api('/api/admin/visits/' + btn.dataset.remove, { method: 'DELETE' });
+  } catch (err) {
+    alert(err.message);
+    btn.disabled = false;
+  }
+});
 
 document.addEventListener('change', async (e) => {
   if (e.target.id !== 'nextBlock') return;
@@ -243,6 +258,13 @@ function connect() {
   });
   es.addEventListener('patient-added', loadPatientsQuietly);
   es.addEventListener('patient-deleted', loadPatientsQuietly);
+  es.addEventListener('visit-deleted', (e) => {
+    const { id, patientId } = JSON.parse(e.data);
+    state.visits = state.visits.filter((x) => x.id !== id);
+    renderVisits();
+    loadPatientsQuietly();
+    if (patientId === progress.patientId) loadProgress();
+  });
 }
 
 async function loadPatientsQuietly() {
