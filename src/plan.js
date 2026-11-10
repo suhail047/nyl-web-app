@@ -6,7 +6,7 @@ const { db, q } = require('./db');
 
 const SESSIONS = 12;
 const DAY_MS = 86400000;
-const RESTART_AFTER_DAYS = 21; // a gap of more than three weeks starts a new 12-day course at Day 1
+const RESTART_AFTER_DAYS = 14; // a gap of more than two weeks starts a new 12-day course at Day 1
 
 // "YYYY-MM-DD" in Indian time, for a UTC "YYYY-MM-DD HH:MM:SS" database timestamp or a Date.
 function istDay(value = new Date()) {

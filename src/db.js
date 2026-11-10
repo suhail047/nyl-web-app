@@ -110,14 +110,12 @@ const q = {
     INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method, visit_kind,
                         treatments_tried, current_medicines, consent_at, phase, session_no, block_no)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`),
-  // True when the patient already sent a photo on an earlier day (Indian time).
-  // A follow-up: the patient's last healing was on an earlier day, no more than 7 days ago (Indian time).
-  // A follow-up: the patient's last healing was on an earlier day, at most 21 days ago (Indian time).
+  // A follow-up: the patient's last healing was on an earlier day, at most 14 days ago (Indian time).
   // After a longer gap they start again at Day 1 and answer the first-visit questions again.
   hadVisitBeforeToday: db.prepare(`
     SELECT 1 FROM visits WHERE patient_id = ?
       AND date(created_at, '+5 hours', '+30 minutes') <  date('now', '+5 hours', '+30 minutes')
-      AND date(created_at, '+5 hours', '+30 minutes') >= date('now', '+5 hours', '+30 minutes', '-21 days') LIMIT 1`),
+      AND date(created_at, '+5 hours', '+30 minutes') >= date('now', '+5 hours', '+30 minutes', '-14 days') LIMIT 1`),
   lastVisitOfPatient: db.prepare('SELECT * FROM visits WHERE patient_id = ? ORDER BY id DESC LIMIT 1'),
   setNextBlock: db.prepare('UPDATE patients SET next_block = ? WHERE id = ?'),
   markUpiClaimed: db.prepare(`
