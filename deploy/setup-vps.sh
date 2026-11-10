@@ -63,7 +63,7 @@ chmod 750 "$DATA_DIR"
 
 if [ ! -f "$ENV_FILE" ]; then
   say "App settings (you can change these later in $ENV_FILE)"
-  DEFAULT_NAME="Qi Meridian Healing"
+  DEFAULT_NAME="Suhail's Meridian Healing"
   read -rp "App name [$DEFAULT_NAME]: " CLINIC_NAME
   CLINIC_NAME="${CLINIC_NAME:-$DEFAULT_NAME}"
   while :; do
