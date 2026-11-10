@@ -1,4 +1,4 @@
-// Excel backups of patients and visits (no photos): on demand from the dashboard, and daily at 11:30 PM IST.
+// Excel backups of patients and sessions (no photos): on demand from the dashboard, and daily at 11:30 PM IST.
 const fs = require('node:fs');
 const path = require('node:path');
 const ExcelJS = require('exceljs');
@@ -28,8 +28,8 @@ async function buildWorkbook() {
     { header: 'Age', key: 'age', width: 7 },
     { header: 'Gender', key: 'gender', width: 10 },
     { header: 'Registered (IST)', key: 'registered', width: 18 },
-    { header: 'Visits', key: 'visits', width: 8 },
-    { header: 'Last visit (IST)', key: 'last_visit', width: 18 },
+    { header: 'Sessions', key: 'visits', width: 9 },
+    { header: 'Last session (IST)', key: 'last_visit', width: 18 },
   ];
   patients.addRows(db.prepare(`
     SELECT p.id, p.phone, p.name, p.age, p.gender, ${IST('p.created_at')} AS registered,
@@ -37,14 +37,14 @@ async function buildWorkbook() {
     FROM patients p LEFT JOIN visits v ON v.patient_id = p.id
     GROUP BY p.id ORDER BY p.phone, p.name`).all());
 
-  const visits = wb.addWorksheet('Visits', { views: [{ state: 'frozen', ySplit: 1 }] });
+  const visits = wb.addWorksheet('Sessions', { views: [{ state: 'frozen', ySplit: 1 }] });
   visits.columns = [
-    { header: 'Visit ID', key: 'id', width: 9 },
+    { header: 'Ref no.', key: 'id', width: 9 },
     { header: 'Date (IST)', key: 'date', width: 18 },
     { header: 'Patient ID', key: 'patient_id', width: 11 },
     { header: 'Patient name', key: 'name', width: 24 },
     { header: 'Phone', key: 'phone', width: 14 },
-    { header: 'Visit type', key: 'kind', width: 12 },
+    { header: 'Session type', key: 'kind', width: 13 },
     { header: 'Healing plan', key: 'plan', width: 14 },
     { header: 'Course no.', key: 'block_no', width: 10 },
     { header: 'Problems / positive changes', key: 'problems', width: 50 },
@@ -65,7 +65,7 @@ async function buildWorkbook() {
     FROM visits v JOIN patients p ON p.id = v.patient_id ORDER BY p.phone, p.name, v.id`).all();
   visits.addRows(rows.map((r) => ({
     ...r,
-    kind: r.visit_kind === 'followup' ? 'Follow-up' : 'First visit',
+    kind: r.visit_kind === 'followup' ? 'Follow-up' : 'First session',
     plan: r.session_no ? plan.label(r.phase, r.session_no) : null,
     amount: r.amount_paise ? r.amount_paise / 100 : null,
     status: STATUS[r.payment_status] || r.payment_status,

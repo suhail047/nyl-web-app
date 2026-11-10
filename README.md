@@ -5,10 +5,10 @@ A small web app for patient check-in:
 1. **Phone number** – patient enters the mobile number their family is registered under (optionally
    verified with a 6-digit SMS code – see *OTP* below; off by default).
 2. **Select patient** – all names registered under that (verified) number are listed (a new name can be added).
-3. **Photo & questions** – patient takes/uploads a photo. On the first visit they answer: problems faced,
+3. **Photo & questions** – patient takes/uploads a photo. On the first session they answer: problems faced,
    treatments already tried, and medicines they are taking now. If their last healing was on an earlier day
    within the past 7 days, they are instead asked about the *positive changes they are feeling after their
-   last healing*. After more than a week without a healing, the first-visit questions are asked again.
+   last healing*. After more than two weeks without a session, the first-session questions are asked again.
 4. **Payment** – right after the upload, a payment page shows a **UPI QR code** (default UPI ID
    `suhailbinalionline-2@oksbi`) with an amount box the patient fills in – no fee or minimum is shown.
 5. **Done** – "Photo successfully submitted for treatment. Treatment will start at 10 PM IST", followed by
@@ -45,7 +45,7 @@ Without Razorpay keys the app still works; submissions are recorded with status 
 
 **OTP is off by default.** When turned on, patient names are only shown after the phone number is verified with a one-time code. Once verified,
 the browser stays signed in for 12 hours (HttpOnly cookie); every patient API checks that the patient or
-visit belongs to the verified number.
+session belongs to the verified number.
 
 Configure in `.env`:
 
@@ -73,7 +73,7 @@ UPI_NAME=Suhail's Meridian Healing
 ```
 
 The payment page then shows a QR code for the amount the patient enters (plus a *Pay with UPI app* button on phones).
-The UPI note reads `Visit <number> <patient name>`, so it shows up in your UPI/bank statement.
+The UPI note reads `Ref <number> <patient name>`, so it shows up in your UPI/bank statement.
 A plain UPI QR can't confirm payment automatically, so the patient taps **I have paid** (optionally entering
 the UTR), the dashboard shows *UPI – please confirm*, and staff click **Mark paid** or **Not received**
 after checking their UPI app. A business/merchant UPI ID is more reliable than a personal one.
@@ -91,13 +91,13 @@ even if a patient uploads more than once a day (sessions may later be morning, n
 - Then **12 weekly sessions** – Weekly session 1 … 12, one a week.
 - Then another 12-session course, then 12 weekly sessions, and so on.
 - If a patient's last healing was **more than 2 weeks (14 days) ago**, their next upload starts a new
-  12-session course at Session 1, and they answer the first-visit questions again.
+  12-session course at Session 1, and they answer the first-session questions again.
 - For some patients you can choose **"Another 12 sessions"** after a 12-session course (Progress tab). It
   applies once; after that course the patient goes back to weekly. **"Restart at Session 1"** starts a new
-  12-session course from the patient's next visit.
+  12-session course from the patient's next upload.
 
 The patient's confirmation page shows this session ("Session 3 of 12") and asks them to send a new photo
-before their next session (with next week's date in the weekly phase). The first-visit questions (problems,
+before their next session before 10 PM IST (with next week's date in the weekly phase). The first-session questions (problems,
 treatments, medicines) are asked on a patient's first upload and again after a gap of more than 2 weeks;
 otherwise they are asked about positive changes since their last healing.
 
@@ -109,7 +109,7 @@ and the payment status. The timeline updates live when the patient submits.
 
 Admin dashboard → **Settings → Backups**:
 
-- **Download Excel now** gives a workbook with two sheets – *Patients* and *Visits* (answers, amount,
+- **Download Excel now** gives a workbook with two sheets – *Patients* and *Sessions* (answers, amount,
   payment status, consent time; times in IST). Photos are not included.
 - A backup is saved automatically every night at **11:30 PM IST** to `backups/` next to the database
   (`data/backups/` locally, `/var/lib/patient-app/backups/` on the VPS) and kept for 365 days. If the server
@@ -123,11 +123,11 @@ Admin dashboard → **Settings → Backups**:
 2. Set `CONSULTATION_FEE_INR` to the fee.
 3. Recommended: add a webhook pointing to `https://<your-domain>/api/razorpay/webhook` for the events
    `payment.captured`, `order.paid` and `payment.failed`, and put its secret in `RAZORPAY_WEBHOOK_SECRET`.
-   This marks visits paid even if the patient closes the browser right after paying.
+   This marks sessions paid even if the patient closes the browser right after paying.
 
 Payment flow: the photo and problems are saved first (so staff see them immediately), then the patient
 lands on the payment page. Tapping *Pay* makes the server create a Razorpay order, Razorpay Checkout opens, and the server verifies the payment signature before marking the
-visit *Paid*. If the patient closes the payment window they can simply tap *Pay* again.
+session *Paid*. If the patient closes the payment window they can simply tap *Pay* again.
 
 ## API overview
 
@@ -138,10 +138,10 @@ visit *Paid*. If the patient closes the payment window they can simply tap *Pay*
 | POST | `/api/logout` | End the patient session |
 | GET | `/api/patients` | Patients under the verified number |
 | POST | `/api/patients` | Register a new patient `{name, age, gender}` under the verified number |
-| POST | `/api/visits` | Multipart: `patientId`, `problems`, `photo` → saves the visit |
-| GET | `/api/visits/:id` | Visit summary for the payment page |
+| POST | `/api/visits` | Multipart: `patientId`, `problems`, `photo` → saves the session |
+| GET | `/api/visits/:id` | Session summary for the payment page |
 | POST | `/api/visits/:id/verify` | Verify Razorpay checkout signature |
-| POST | `/api/visits/:id/order` | Create a Razorpay order for the visit |
+| POST | `/api/visits/:id/order` | Create a Razorpay order for the session |
 | POST | `/api/razorpay/webhook` | Razorpay webhook |
 | GET | `/api/admin/visits`, `/api/admin/patients` | Admin data (Basic auth) |
 | GET | `/api/admin/stream` | Live event stream (Basic auth) |

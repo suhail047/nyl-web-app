@@ -27,7 +27,7 @@ function visitCard(v, fresh) {
       ${v.consentAt ? '<div class="muted">✓ Consent given</div>' : ''}
       <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
-      ${v.paymentMethod === 'upi' && v.paymentStatus !== 'paid' ? `<div class="muted">UPI note to look for: <b>Visit ${v.id}</b></div>` : ''}
+      ${v.paymentMethod === 'upi' && v.paymentStatus !== 'paid' ? `<div class="muted">UPI note to look for: <b>Ref ${v.id}</b></div>` : ''}
       ${v.upiRef ? `<div class="muted">UTR given by patient: <b>${esc(v.upiRef)}</b></div>` : ''}
       ${v.paymentStatus !== 'paid' ? `<div class="pay-actions">
         <button type="button" data-pay="confirm" data-id="${v.id}">✓ Mark paid</button>
@@ -84,7 +84,7 @@ function renderProgressList() {
   $('progressList').innerHTML = shown.map((p) => `
     <li><button type="button" class="${p.id === progress.patientId ? 'active' : ''}" data-progress="${p.id}">
       <span class="pname">${esc(p.name)}</span>
-      <span class="muted">${esc(fmtPhone(p.phone))} · ${p.visit_count || 0} visit${p.visit_count === 1 ? '' : 's'}${p.last_visit ? ' · last ' + esc(fmtDay(istDay(p.last_visit))) : ''}</span>
+      <span class="muted">${esc(fmtPhone(p.phone))} · ${p.visit_count || 0} session${p.visit_count === 1 ? '' : 's'}${p.last_visit ? ' · last ' + esc(fmtDay(istDay(p.last_visit))) : ''}</span>
     </button></li>`).join('') || '<li class="muted">No patients found.</li>';
 }
 
@@ -125,7 +125,7 @@ async function loadProgress() {
       <div><h2>${esc(p.name)}</h2>
         <div class="muted">${esc(fmtPhone(p.phone))}${p.age != null ? ' · ' + esc(p.age) + ' yrs' : ''}${p.gender ? ' · ' + esc(p.gender) : ''}</div></div>
       <div class="stats">
-        <span><b>${visits.length}</b> healing${visits.length === 1 ? '' : 's'}</span>
+        <span><b>${visits.length}</b> session${visits.length === 1 ? '' : 's'}</span>
         ${last?.planLabel ? `<span>Now: <b>${esc(last.planLabel)}</b></span>` : ''}
         ${upcoming ? `<span>Next: <b>${esc(upcoming.label)}</b> · ${esc(fmtDay(upcoming.date))}</span>` : ''}
       </div>
@@ -136,7 +136,7 @@ async function loadProgress() {
         <select id="nextBlock" data-patient="${p.id}">
           <option value="" ${nextChoice === '' ? 'selected' : ''}>12 weekly sessions (usual)</option>
           <option value="daily" ${nextChoice === 'daily' ? 'selected' : ''}>Another 12 sessions</option>
-          <option value="restart" ${nextChoice === 'restart' ? 'selected' : ''}>Restart at Session 1 from the next visit</option>
+          <option value="restart" ${nextChoice === 'restart' ? 'selected' : ''}>Restart at Session 1 from the next upload</option>
         </select>
         <span class="muted" id="planSaved"></span>
       </div>

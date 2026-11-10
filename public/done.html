@@ -56,8 +56,8 @@
         $('nextTitle').textContent = p.finished || 'Your next healing';
         $('nextText').textContent = (p.finished && p.next ? p.next + '. ' : '') +
           (p.gap === 1
-            ? 'Please send a new photo before your next healing session (' + p.label + ').'
-            : 'Please send a new photo next week, on ' + when + ' (' + p.label + ').');
+            ? 'Please send a new photo before 10 PM IST for your next session (' + p.label + ').'
+            : 'Please send a new photo next week, on ' + when + ', before 10 PM IST (' + p.label + ').');
         $('nextBox').classList.remove('hidden');
       }).catch(() => {});
     }

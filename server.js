@@ -279,8 +279,8 @@ function isFollowUp(patientId) {
 }
 
 // Saves the photo + answers immediately so staff see them live. Payment happens next, on the /pay page.
-// First visit (or more than a week since the last healing): problems, treatments tried, current medicines.
-// Follow-up within a week: positive changes since the last healing (sent in the `problems` field).
+// First session (or more than two weeks since the last one): problems, treatments tried, current medicines.
+// Otherwise: positive changes since the last healing (sent in the `problems` field).
 app.post('/api/visits', upload.single('photo'), (req, res) => {
   const patient = ownPatient(req, req.body.patientId);
   const followUp = Boolean(patient) && isFollowUp(patient.id);
@@ -326,7 +326,7 @@ app.get('/api/visits/:id', async (req, res) => {
 // Standard UPI payment link + QR; any UPI app (GPay, PhonePe, Paytm, BHIM…) can scan or open it.
 // The note (tn) shows up in the clinic's UPI/bank statement so staff can match the payment.
 async function upiPayment(v, amountPaise) {
-  const params = { pa: UPI_ID, pn: UPI_NAME, cu: 'INR', tn: `Visit ${v.id} ${v.patient_name}`.slice(0, 50) };
+  const params = { pa: UPI_ID, pn: UPI_NAME, cu: 'INR', tn: `Ref ${v.id} ${v.patient_name}`.slice(0, 50) };
   if (amountPaise > 0) params.am = (amountPaise / 100).toFixed(2);
   // Keep "@" in the UPI ID as-is: some UPI apps reject "%40".
   const query = Object.entries(params).map(([k, val]) => `${k}=${encodeURIComponent(val).replace(/%40/g, '@').replace(/'/g, '%27')}`).join('&');
