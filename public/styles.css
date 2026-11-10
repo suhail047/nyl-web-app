@@ -88,3 +88,4 @@ textarea.short { min-height: 90px; }
 .example { margin: 10px 0 8px; }
 .example img { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 auto; border-radius: 10px; }
 .example figcaption { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 4px; }
+.consent ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
