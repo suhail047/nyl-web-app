@@ -102,11 +102,6 @@ const q = {
   insertPatient: db.prepare('INSERT INTO patients (phone, name, age, gender) VALUES (?, ?, ?, ?)'),
   photosForPatient: db.prepare('SELECT photo_file FROM visits WHERE patient_id = ? AND photo_file IS NOT NULL'),
   deletePatient: db.prepare('DELETE FROM patients WHERE id = ?'),
-  deleteVisit: db.prepare('DELETE FROM visits WHERE id = ?'),
-  // After removing a session, later sessions in the same course move up by one.
-  shiftLaterSessions: db.prepare(`
-    UPDATE visits SET session_no = session_no - 1
-    WHERE patient_id = ? AND block_no = ? AND id > ? AND session_no > 1`),
   allPatients: db.prepare(`
     SELECT p.*, COUNT(v.id) AS visit_count, MAX(v.created_at) AS last_visit
     FROM patients p LEFT JOIN visits v ON v.patient_id = p.id

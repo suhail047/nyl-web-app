@@ -488,17 +488,6 @@ app.delete('/api/admin/patients/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-// Remove one session (e.g. an upload sent twice by mistake) and its photo.
-app.delete('/api/admin/visits/:id', (req, res) => {
-  const v = q.visitById.get(Number(req.params.id));
-  if (!v) return res.status(404).json({ error: 'Session not found.' });
-  q.deleteVisit.run(v.id);
-  if (v.block_no != null) q.shiftLaterSessions.run(v.patient_id, v.block_no, v.id);
-  if (v.photo_file) fs.rm(path.join(UPLOAD_DIR, v.photo_file), () => {});
-  broadcast('visit-deleted', { id: v.id, patientId: v.patient_id });
-  res.json({ ok: true });
-});
-
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 // ---------- Errors ----------
