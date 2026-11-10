@@ -64,7 +64,7 @@ button.secondary:hover { background: var(--tint); }
 .upi-id strong { color: var(--text); }
 .hint { text-align: center; color: var(--muted); font-size: .9rem; margin: 10px 0 0; }
 .hint-inline { font-weight: 400; color: var(--muted); font-size: .85rem; }
-#paidForm { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 4px; }
+#paidForm { margin-top: 6px; }
 @media (hover: hover) and (pointer: fine) { .mobile-only { display: none !important; } }
 .amount-edit { border-top: 1px solid var(--border); margin-top: 14px; }
 .rupee-input { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
