@@ -82,6 +82,13 @@ Amount: ₹300 is pre-filled on the payment page and the patient can change it; 
 and the dashboard shows the amount the patient says they paid. Change the pre-filled amount in the admin
 dashboard under **Settings** (leave it empty to pre-fill nothing), or with `CONSULTATION_FEE_INR` in `.env`.
 
+## Progress tab
+
+Admin dashboard → **Progress**: pick a patient (or click a name on a submission card, or *Progress* in the
+Patients tab) to see every visit as a timeline – Day 1, Day 2… with the photo, what they wrote and the
+payment status. Days count from the first visit of the current healing course; after more than a week
+without a healing a new course starts at Day 1 again. The timeline updates live when the patient submits.
+
 ## Backups (Excel)
 
 Admin dashboard → **Settings → Backups**:

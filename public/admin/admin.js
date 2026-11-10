@@ -14,7 +14,7 @@ function visitCard(v, fresh) {
   return `<article class="visit${fresh ? ' fresh' : ''}" data-id="${v.id}">
     <a class="photo" href="${esc(v.photoUrl)}" target="_blank" rel="noopener">${v.photoUrl ? `<img src="${esc(v.photoUrl)}" alt="Photo of ${esc(v.patientName)}" loading="lazy">` : ''}</a>
     <div class="body">
-      <div class="row"><span class="name">${esc(v.patientName)}</span><span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}</span></div>
+      <div class="row"><button type="button" class="name link-plain" data-progress="${v.patientId}" title="See progress">${esc(v.patientName)}</button><span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}</span></div>
       <div class="muted">${esc(fmtPhone(v.phone))}${v.age != null ? ' · ' + esc(v.age) + ' yrs' : ''}${v.gender ? ' · ' + esc(v.gender) : ''}</div>
       <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Problems faced'}</div>
       <div class="problems">${esc(v.problems)}</div>
@@ -57,9 +57,99 @@ function renderPatients() {
     return `<tr class="${first ? 'group-start' : ''}">
       <td>${first ? esc(fmtPhone(p.phone)) : ''}</td><td>${esc(p.name)}</td><td>${p.age ?? '—'}</td><td>${esc(p.gender || '—')}</td>
       <td>${p.visit_count ?? 0}</td><td>${esc(fmtDate(p.last_visit))}</td><td>${esc(fmtDate(p.created_at))}</td>
+      <td><button class="link link-ok" data-progress="${p.id}">Progress</button></td>
       <td><button class="link" data-del="${p.id}">Delete</button></td></tr>`;
-  }).join('') || '<tr><td colspan="8" class="empty">No patients yet.</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="empty">No patients yet.</td></tr>';
+  renderProgressList();
 }
+
+// ---------- Progress (one patient's healing day by day) ----------
+const progress = { patientId: null };
+
+// "YYYY-MM-DD" in Indian time for a UTC timestamp from the database.
+function istDay(s) {
+  return new Date(new Date(s.replace(' ', 'T') + 'Z').getTime() + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
+}
+function fmtDay(day) {
+  return new Date(day + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+}
+
+function renderProgressList() {
+  const term = $('progressSearch').value.trim().toLowerCase();
+  const digits = term.replace(/\D/g, '');
+  const shown = state.patients
+    .filter((p) => !term || p.name.toLowerCase().includes(term) || (digits && p.phone.includes(digits)))
+    .sort((a, b) => (b.last_visit || '').localeCompare(a.last_visit || '') || a.name.localeCompare(b.name));
+  $('progressList').innerHTML = shown.map((p) => `
+    <li><button type="button" class="${p.id === progress.patientId ? 'active' : ''}" data-progress="${p.id}">
+      <span class="pname">${esc(p.name)}</span>
+      <span class="muted">${esc(fmtPhone(p.phone))} · ${p.visit_count || 0} visit${p.visit_count === 1 ? '' : 's'}${p.last_visit ? ' · last ' + esc(fmtDay(istDay(p.last_visit))) : ''}</span>
+    </button></li>`).join('') || '<li class="muted">No patients found.</li>';
+}
+
+async function openProgress(patientId) {
+  progress.patientId = Number(patientId);
+  document.querySelector('.tab[data-tab=progress]').click();
+  renderProgressList();
+  await loadProgress();
+  if (window.matchMedia('(max-width: 760px)').matches) $('progressMain').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function loadProgress() {
+  if (!progress.patientId) return;
+  let data;
+  try {
+    data = await api(`/api/admin/patients/${progress.patientId}/visits`);
+  } catch (err) {
+    $('progressMain').innerHTML = `<p class="empty">${esc(err.message)}</p>`;
+    return;
+  }
+  const { patient: p, visits } = data;
+  // Day 1 is the visit that started the current healing course (a "first visit"); later visits count from it.
+  let courseStart = null;
+  let courses = 0;
+  const entries = visits.map((v) => {
+    const day = istDay(v.createdAt);
+    const newCourse = v.visitKind !== 'followup' || !courseStart;
+    if (newCourse) { courseStart = day; courses++; }
+    const dayNo = Math.round((Date.parse(day) - Date.parse(courseStart)) / 86400000) + 1;
+    return { v, day, dayNo, newCourse };
+  });
+  const head = `
+    <div class="progress-head card">
+      <div><h2>${esc(p.name)}</h2>
+        <div class="muted">${esc(fmtPhone(p.phone))}${p.age != null ? ' · ' + esc(p.age) + ' yrs' : ''}${p.gender ? ' · ' + esc(p.gender) : ''}</div></div>
+      <div class="stats">
+        <span><b>${visits.length}</b> visit${visits.length === 1 ? '' : 's'}</span>
+        ${entries.length ? `<span>Current healing: <b>Day ${entries[entries.length - 1].dayNo}</b></span>` : ''}
+        ${courses > 1 ? `<span><b>${courses}</b> healing courses</span>` : ''}
+      </div>
+    </div>`;
+  if (!entries.length) {
+    $('progressMain').innerHTML = head + '<p class="empty">No photos submitted yet.</p>';
+    return;
+  }
+  $('progressMain').innerHTML = head + '<ol class="timeline">' + entries.map(({ v, day, dayNo, newCourse }, i) => `
+    ${newCourse && i > 0 ? '<li class="course-break">New healing course – more than a week since the last healing</li>' : ''}
+    <li class="entry">
+      <div class="when"><span class="dayno">Day ${dayNo}</span><span class="muted">${esc(fmtDay(day))}</span></div>
+      <a class="thumb" href="${esc(v.photoUrl)}" target="_blank" rel="noopener">${v.photoUrl ? `<img src="${esc(v.photoUrl)}" alt="Photo on day ${dayNo}" loading="lazy">` : ''}</a>
+      <div class="what">
+        <div class="row"><span class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Problems faced'}</span>
+          <span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}${v.amount > 0 ? ' · ₹' + esc(v.amount.toLocaleString('en-IN')) : ''}</span></div>
+        <div class="problems">${esc(v.problems)}</div>
+        ${v.visitKind !== 'followup' ? `
+          <div class="muted kind">Treatments tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
+          <div class="muted kind">Medicines taking now</div><div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
+      </div>
+    </li>`).join('') + '</ol>';
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-progress]');
+  if (btn) openProgress(btn.dataset.progress);
+});
+$('progressSearch').addEventListener('input', renderProgressList);
 
 async function loadAll() {
   const [visits, patients] = await Promise.all([api('/api/admin/visits'), api('/api/admin/patients')]);
@@ -100,12 +190,14 @@ function connect() {
     renderVisits(v.id);
     notify(v);
     loadPatientsQuietly();
+    if (v.patientId === progress.patientId) loadProgress();
   });
   es.addEventListener('visit-updated', (e) => {
     const v = JSON.parse(e.data);
     const i = state.visits.findIndex((x) => x.id === v.id);
     if (i >= 0) state.visits[i] = v; else state.visits.unshift(v);
     renderVisits(v.id);
+    if (v.patientId === progress.patientId) loadProgress();
   });
   es.addEventListener('patient-added', loadPatientsQuietly);
   es.addEventListener('patient-deleted', loadPatientsQuietly);
@@ -120,6 +212,7 @@ document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () 
   document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === t));
   $('tab-visits').classList.toggle('hidden', t.dataset.tab !== 'visits');
   $('tab-patients').classList.toggle('hidden', t.dataset.tab !== 'patients');
+  $('tab-progress').classList.toggle('hidden', t.dataset.tab !== 'progress');
   $('tab-settings').classList.toggle('hidden', t.dataset.tab !== 'settings');
   if (t.dataset.tab === 'settings') loadSettings();
   if (t.dataset.tab === 'visits') clearUnseen();

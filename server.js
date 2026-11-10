@@ -441,6 +441,13 @@ app.post('/api/admin/settings', (req, res) => {
   res.json({ fee: fee / 100 });
 });
 
+// One patient's visits, oldest first, for the Progress view.
+app.get('/api/admin/patients/:id/visits', (req, res) => {
+  const p = q.patientById.get(Number(req.params.id));
+  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  res.json({ patient: p, visits: q.visitsByPatient.all(p.id).map(visitDto) });
+});
+
 app.get('/api/admin/patients', (_req, res) => res.json(q.allPatients.all()));
 
 app.post('/api/admin/patients', createPatient);

@@ -138,6 +138,7 @@ const q = {
   deleteSession: db.prepare('DELETE FROM patient_sessions WHERE token_hash = ?'),
   purgeSessions: db.prepare('DELETE FROM patient_sessions WHERE expires_at <= ?'),
   recentVisits: db.prepare(`${VISIT_SELECT} ORDER BY v.id DESC LIMIT ?`),
+  visitsByPatient: db.prepare(`${VISIT_SELECT} WHERE v.patient_id = ? ORDER BY v.id`),
 };
 
 module.exports = { db, q, normalizePhone, DB_PATH };

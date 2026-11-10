@@ -17,6 +17,7 @@
 
     <nav class="tabs">
       <button class="tab active" data-tab="visits">Submissions <span class="badge hidden" id="newCount">0</span></button>
+      <button class="tab" data-tab="progress">Progress</button>
       <button class="tab" data-tab="patients">Patients</button>
       <button class="tab" data-tab="settings">Settings</button>
     </nav>
@@ -33,6 +34,18 @@
       <p class="empty hidden" id="visitsEmpty">No submissions yet. New uploads will appear here instantly.</p>
     </section>
 
+    <section id="tab-progress" class="hidden">
+      <div class="progress-layout">
+        <aside class="progress-side">
+          <input id="progressSearch" type="search" placeholder="Search name or phone…">
+          <ul class="progress-list" id="progressList"></ul>
+        </aside>
+        <div class="progress-main" id="progressMain">
+          <p class="empty">Choose a patient to see their progress day by day.</p>
+        </div>
+      </div>
+    </section>
+
     <section id="tab-patients" class="hidden">
       <form class="card add-patient" id="addPatient" novalidate>
         <input id="apPhone" type="tel" placeholder="Mobile number" required>
@@ -45,7 +58,7 @@
       <div class="toolbar"><input id="patientSearch" type="search" placeholder="Search name or phone…"></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Phone</th><th>Name</th><th>Age</th><th>Gender</th><th>Visits</th><th>Last visit</th><th>Registered</th><th></th></tr></thead>
+          <thead><tr><th>Phone</th><th>Name</th><th>Age</th><th>Gender</th><th>Visits</th><th>Last visit</th><th>Registered</th><th></th><th></th></tr></thead>
           <tbody id="patients"></tbody>
         </table>
       </div>
