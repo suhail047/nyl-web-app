@@ -89,13 +89,16 @@ Every patient follows the same plan, counted per healing session (one photo uplo
 - **12-day course** – Day 1 … Day 12, one healing a day.
 - Then **weekly healing for 12 weeks** – Week 1 … Week 12.
 - Then another 12-day course, then 12 weeks weekly, and so on.
+- If a patient's last healing was **more than 3 weeks (21 days) ago**, their next upload starts a new 12-day
+  course at Day 1, and they answer the first-visit questions again.
 - For some patients you can choose **"Another 12 days"** after a 12-day course (Progress tab). It applies
   once; after that course the patient goes back to weekly. **"Restart at Day 1"** starts a new 12-day course
   from the patient's next visit (e.g. after a long break).
 
 The patient's confirmation page shows today's session ("Day 3 of 12") and when to send the next photo
 (tomorrow, or next week's date in the weekly phase). The first-visit questions (problems, treatments,
-medicines) are asked only on a patient's first day; after that they are asked about positive changes.
+medicines) are asked on a patient's first day and again after a gap of more than 3 weeks; otherwise they
+are asked about positive changes since their last healing.
 
 Admin dashboard → **Progress**: pick a patient (or click a name on a submission card, or *Progress* in the
 Patients table) to see every healing, newest first, grouped by course – with the photo, what they wrote

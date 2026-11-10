@@ -6,11 +6,16 @@ const { db, q } = require('./db');
 
 const SESSIONS = 12;
 const DAY_MS = 86400000;
+const RESTART_AFTER_DAYS = 21; // a gap of more than three weeks starts a new 12-day course at Day 1
 
 // "YYYY-MM-DD" in Indian time, for a UTC "YYYY-MM-DD HH:MM:SS" database timestamp or a Date.
 function istDay(value = new Date()) {
   const t = value instanceof Date ? value.getTime() : Date.parse(String(value).replace(' ', 'T') + 'Z');
   return new Date(t + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+function daysBetween(a, b) {
+  return Math.round((Date.parse(b) - Date.parse(a)) / DAY_MS);
 }
 
 function addDays(day, n) {
@@ -22,6 +27,9 @@ function nextStep(prev, nextBlock, today = istDay()) {
   if (!prev || !prev.session_no) return { phase: 'daily', session: 1, block: 1 };
   const same = { phase: prev.phase, session: prev.session_no, block: prev.block_no };
   if (istDay(prev.created_at) === today) return same; // a second upload on the same day is the same session
+  if (daysBetween(istDay(prev.created_at), today) > RESTART_AFTER_DAYS) {
+    return { phase: 'daily', session: 1, block: prev.block_no + 1, consumed: nextBlock === 'restart' };
+  }
   if (nextBlock === 'restart') return { phase: 'daily', session: 1, block: prev.block_no + 1, consumed: true };
   if (prev.session_no < SESSIONS) return { ...same, session: prev.session_no + 1 };
   if (prev.phase === 'daily') {
@@ -66,4 +74,4 @@ function backfill() {
   }
 }
 
-module.exports = { SESSIONS, istDay, addDays, nextStep, label, upcoming, backfill };
+module.exports = { SESSIONS, RESTART_AFTER_DAYS, istDay, addDays, nextStep, label, upcoming, backfill };
