@@ -90,3 +90,4 @@ textarea.short { min-height: 90px; }
 .example figcaption { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 4px; }
 .consent ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
 .rupee-input input::placeholder { color: #a9bcae; }
+.plan-badge { display: inline-block; background: var(--tint); color: var(--primary-dark); font-weight: 700; border-radius: 999px; padding: 4px 14px; margin: 0 0 10px; }

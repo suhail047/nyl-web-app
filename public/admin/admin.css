@@ -96,3 +96,10 @@ td .link.link-ok { color: var(--primary); }
   .tab { padding: 10px 10px; }
   .timeline .entry { grid-template-columns: 76px 110px 1fr; }
 }
+.plan-tag { display: inline-block; background: var(--tint); color: var(--primary-dark); font-weight: 700; font-size: .82rem; border-radius: 999px; padding: 2px 10px; }
+.plan-card { margin-top: 12px; padding: 14px 18px; }
+.plan-card label { margin-top: 0; }
+.plan-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.plan-row select { width: auto; min-width: 280px; max-width: 100%; }
+.plan-card .small { font-size: .85rem; margin: 8px 0 0; }
+.timeline .course-break { font-weight: 700; color: var(--primary-dark); border-top: 2px dashed var(--border); padding-top: 10px; }

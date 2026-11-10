@@ -55,7 +55,7 @@
 
       <div id="offline" class="hidden">
         <p class="notice">Online payment is not set up yet. Your details have been received — please pay at the clinic.</p>
-        <a class="btn" href="/done?status=submitted">Finish</a>
+        <a class="btn" id="finishLink" href="/done?status=submitted">Finish</a>
       </div>
     </section>
   </main>
@@ -73,11 +73,12 @@
         $('error').textContent = err.message;
         return;
       }
-      if (visit.paymentStatus === 'paid') return location.replace('/done?status=paid');
-      if (visit.paymentStatus === 'upi_claimed') return location.replace('/done?status=upi');
+      if (visit.paymentStatus === 'paid') return location.replace('/done?status=paid&visit=' + visitId);
+      if (visit.paymentStatus === 'upi_claimed') return location.replace('/done?status=upi&visit=' + visitId);
       $('pname').textContent = visit.patientName;
       $('problems').textContent = visit.problems;
       $('amount').textContent = visit.amount > 0 ? rupees(visit.amount) : 'Any amount';
+      $('finishLink').href = '/done?status=submitted&visit=' + visitId;
       if (visit.paymentMethod !== 'upi' && visit.paymentMethod !== 'razorpay') return $('offline').classList.remove('hidden');
 
       // The clinic's fee is pre-filled; the patient can change it or clear it.
@@ -155,7 +156,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: typedAmount() }),
         });
-        location.replace('/done?status=upi');
+        location.replace('/done?status=upi&visit=' + visitId);
       } catch (err) {
         $('upiError').textContent = err.message;
         $('paidBtn').disabled = false;
@@ -201,7 +202,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(resp),
             });
-            location.replace('/done?status=paid');
+            location.replace('/done?status=paid&visit=' + visitId);
           } catch (err) {
             resetButton(err.message);
           }

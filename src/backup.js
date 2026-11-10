@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const ExcelJS = require('exceljs');
 const { db, DB_PATH } = require('./db');
+const plan = require('./plan');
 
 const BACKUP_DIR = process.env.BACKUP_DIR || path.join(path.dirname(DB_PATH), 'backups');
 const KEEP_DAYS = 365;
@@ -44,6 +45,8 @@ async function buildWorkbook() {
     { header: 'Patient name', key: 'name', width: 24 },
     { header: 'Phone', key: 'phone', width: 14 },
     { header: 'Visit type', key: 'kind', width: 12 },
+    { header: 'Healing plan', key: 'plan', width: 14 },
+    { header: 'Course no.', key: 'block_no', width: 10 },
     { header: 'Problems / positive changes', key: 'problems', width: 50 },
     { header: 'Treatments tried', key: 'treatments_tried', width: 36 },
     { header: 'Medicines taking now', key: 'current_medicines', width: 36 },
@@ -56,13 +59,14 @@ async function buildWorkbook() {
     { header: 'Consent given (IST)', key: 'consent_at', width: 18 },
   ];
   const rows = db.prepare(`
-    SELECT v.id, ${IST('v.created_at')} AS date, v.patient_id, p.name, p.phone, v.visit_kind, v.problems,
+    SELECT v.id, ${IST('v.created_at')} AS date, v.patient_id, p.name, p.phone, v.visit_kind, v.phase, v.session_no, v.block_no, v.problems,
            v.treatments_tried, v.current_medicines, v.amount_paise, v.payment_status, v.payment_method, v.upi_ref,
            v.razorpay_payment_id, ${IST('v.paid_at')} AS paid_at, ${IST('v.consent_at')} AS consent_at
-    FROM visits v JOIN patients p ON p.id = v.patient_id ORDER BY v.id`).all();
+    FROM visits v JOIN patients p ON p.id = v.patient_id ORDER BY p.phone, p.name, v.id`).all();
   visits.addRows(rows.map((r) => ({
     ...r,
     kind: r.visit_kind === 'followup' ? 'Follow-up' : 'First visit',
+    plan: r.session_no ? plan.label(r.phase, r.session_no) : null,
     amount: r.amount_paise ? r.amount_paise / 100 : null,
     status: STATUS[r.payment_status] || r.payment_status,
   })));

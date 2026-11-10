@@ -13,11 +13,16 @@
     <section class="card center">
       <div class="tick">✓</div>
       <h1>Photo successfully submitted for treatment</h1>
+      <p class="plan-badge hidden" id="planBadge"></p>
       <p class="sub">Treatment will start at <strong>10 PM IST</strong>.</p>
       <div class="instructions left">
         <strong>When the healing starts at 10 PM</strong>
         <p>Sit or lie down comfortably in the same spot where you were sitting when your photo was taken,
           close your eyes and relax.</p>
+      </div>
+      <div class="instructions left hidden" id="nextBox">
+        <strong id="nextTitle"></strong>
+        <p id="nextText"></p>
       </div>
       <p class="sub hidden" id="upiNote">Your UPI payment will be confirmed by us shortly.</p>
     </section>
@@ -36,7 +41,24 @@
   </main>
   <script src="/common.js"></script>
   <script>
-    if (new URLSearchParams(location.search).get('status') === 'upi') document.getElementById('upiNote').classList.remove('hidden');
+    const params = new URLSearchParams(location.search);
+    const $ = (id) => document.getElementById(id);
+    if (params.get('status') === 'upi') $('upiNote').classList.remove('hidden');
+
+    // Where the patient is in their healing plan, and when to send the next photo.
+    if (params.get('visit')) {
+      api('/api/visits/' + encodeURIComponent(params.get('visit'))).then((v) => {
+        if (!v.plan) return;
+        const p = v.plan.upcoming;
+        $('planBadge').textContent = 'Today: ' + v.plan.today + (v.plan.phase === 'weekly' ? ' (weekly healing)' : ' (12-day course)');
+        $('planBadge').classList.remove('hidden');
+        const when = new Date(p.date + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+        $('nextTitle').textContent = p.finished || 'Your next healing';
+        $('nextText').textContent = (p.finished && p.next ? p.next + '. ' : '') +
+          'Please send a new photo ' + (p.gap === 1 ? 'tomorrow, ' : 'next week, on ') + when + ', before 10 PM IST (' + p.label + ').';
+        $('nextBox').classList.remove('hidden');
+      }).catch(() => {});
+    }
   </script>
 </body>
 </html>

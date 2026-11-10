@@ -82,6 +82,14 @@ if (!visitColumns.includes('upi_ref')) db.exec('ALTER TABLE visits ADD COLUMN up
 if (!visitColumns.includes('treatments_tried')) db.exec('ALTER TABLE visits ADD COLUMN treatments_tried TEXT');
 if (!visitColumns.includes('current_medicines')) db.exec('ALTER TABLE visits ADD COLUMN current_medicines TEXT');
 if (!visitColumns.includes('consent_at')) db.exec('ALTER TABLE visits ADD COLUMN consent_at TEXT');
+// Healing plan position: phase 'daily' | 'weekly', session 1–12 within the block, block = course number.
+for (const [col, type] of [['phase', 'TEXT'], ['session_no', 'INTEGER'], ['block_no', 'INTEGER']]) {
+  if (!visitColumns.includes(col)) db.exec(`ALTER TABLE visits ADD COLUMN ${col} ${type}`);
+}
+// What follows the current 12-day course: NULL = weekly (default), 'daily' = another 12 days, 'restart' = Day 1 next visit.
+if (!db.prepare('PRAGMA table_info(patients)').all().some((c) => c.name === 'next_block')) {
+  db.exec('ALTER TABLE patients ADD COLUMN next_block TEXT');
+}
 if (!visitColumns.includes('visit_kind')) db.exec("ALTER TABLE visits ADD COLUMN visit_kind TEXT NOT NULL DEFAULT 'first'");
 
 const VISIT_SELECT = `
@@ -100,14 +108,16 @@ const q = {
     GROUP BY p.id ORDER BY p.phone, p.name`),
   insertVisit: db.prepare(`
     INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method, visit_kind,
-                        treatments_tried, current_medicines, consent_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`),
+                        treatments_tried, current_medicines, consent_at, phase, session_no, block_no)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`),
   // True when the patient already sent a photo on an earlier day (Indian time).
   // A follow-up: the patient's last healing was on an earlier day, no more than 7 days ago (Indian time).
-  hadRecentHealing: db.prepare(`
+  // True when the patient already sent a photo on an earlier day (Indian time).
+  hadVisitBeforeToday: db.prepare(`
     SELECT 1 FROM visits WHERE patient_id = ?
-      AND date(created_at, '+5 hours', '+30 minutes') <  date('now', '+5 hours', '+30 minutes')
-      AND date(created_at, '+5 hours', '+30 minutes') >= date('now', '+5 hours', '+30 minutes', '-7 days') LIMIT 1`),
+      AND date(created_at, '+5 hours', '+30 minutes') < date('now', '+5 hours', '+30 minutes') LIMIT 1`),
+  lastVisitOfPatient: db.prepare('SELECT * FROM visits WHERE patient_id = ? ORDER BY id DESC LIMIT 1'),
+  setNextBlock: db.prepare('UPDATE patients SET next_block = ? WHERE id = ?'),
   markUpiClaimed: db.prepare(`
     UPDATE visits SET payment_status = 'upi_claimed', upi_ref = ? WHERE id = ? AND payment_status IN ('pending', 'failed')`),
   confirmPayment: db.prepare(`

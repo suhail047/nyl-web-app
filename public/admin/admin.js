@@ -16,6 +16,7 @@ function visitCard(v, fresh) {
     <div class="body">
       <div class="row"><button type="button" class="name link-plain" data-progress="${v.patientId}" title="See progress">${esc(v.patientName)}</button><span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}</span></div>
       <div class="muted">${esc(fmtPhone(v.phone))}${v.age != null ? ' · ' + esc(v.age) + ' yrs' : ''}${v.gender ? ' · ' + esc(v.gender) : ''}</div>
+      ${v.planLabel ? `<div><span class="plan-tag">${esc(v.planLabel)}</span></div>` : ''}
       <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Problems faced'}</div>
       <div class="problems">${esc(v.problems)}</div>
       ${v.visitKind !== 'followup' ? `
@@ -95,6 +96,18 @@ async function openProgress(patientId) {
   if (window.matchMedia('(max-width: 760px)').matches) $('progressMain').scrollIntoView({ behavior: 'smooth' });
 }
 
+// Heading for each block, numbered per type in time order, e.g. "12-day course #2".
+function blockTitles(visits) {
+  const titles = {};
+  const count = { daily: 0, weekly: 0 };
+  for (const v of visits) {
+    if (v.blockNo == null || titles[v.blockNo]) continue;
+    const n = ++count[v.phase];
+    titles[v.blockNo] = v.phase === 'weekly' ? `Weekly healing – 12 weeks${n > 1 ? ' #' + n : ''}` : `12-day course #${n}`;
+  }
+  return titles;
+}
+
 async function loadProgress() {
   if (!progress.patientId) return;
   let data;
@@ -104,36 +117,48 @@ async function loadProgress() {
     $('progressMain').innerHTML = `<p class="empty">${esc(err.message)}</p>`;
     return;
   }
-  const { patient: p, visits } = data;
-  // Day 1 is the visit that started the current healing course (a "first visit"); later visits count from it.
-  let courseStart = null;
-  let courses = 0;
-  const entries = visits.map((v) => {
-    const day = istDay(v.createdAt);
-    const newCourse = v.visitKind !== 'followup' || !courseStart;
-    if (newCourse) { courseStart = day; courses++; }
-    const dayNo = Math.round((Date.parse(day) - Date.parse(courseStart)) / 86400000) + 1;
-    return { v, day, dayNo, newCourse };
-  });
+  const { patient: p, visits, upcoming } = data;
+  const last = visits[visits.length - 1];
+  const nextChoice = p.next_block || '';
   const head = `
     <div class="progress-head card">
       <div><h2>${esc(p.name)}</h2>
         <div class="muted">${esc(fmtPhone(p.phone))}${p.age != null ? ' · ' + esc(p.age) + ' yrs' : ''}${p.gender ? ' · ' + esc(p.gender) : ''}</div></div>
       <div class="stats">
-        <span><b>${visits.length}</b> visit${visits.length === 1 ? '' : 's'}</span>
-        ${entries.length ? `<span>Current healing: <b>Day ${entries[entries.length - 1].dayNo}</b></span>` : ''}
-        ${courses > 1 ? `<span><b>${courses}</b> healing courses</span>` : ''}
+        <span><b>${visits.length}</b> healing${visits.length === 1 ? '' : 's'}</span>
+        ${last?.planLabel ? `<span>Now: <b>${esc(last.planLabel)}</b></span>` : ''}
+        ${upcoming ? `<span>Next: <b>${esc(upcoming.label)}</b> · ${esc(fmtDay(upcoming.date))}</span>` : ''}
       </div>
+    </div>
+    <div class="plan-card card">
+      <label for="nextBlock">${last?.phase === 'weekly' ? 'After the next 12-day course' : 'After the current 12-day course'}</label>
+      <div class="plan-row">
+        <select id="nextBlock" data-patient="${p.id}">
+          <option value="" ${nextChoice === '' ? 'selected' : ''}>Weekly healing for 12 weeks (usual)</option>
+          <option value="daily" ${nextChoice === 'daily' ? 'selected' : ''}>Another 12 days</option>
+          <option value="restart" ${nextChoice === 'restart' ? 'selected' : ''}>Restart at Day 1 from the next visit</option>
+        </select>
+        <span class="muted" id="planSaved"></span>
+      </div>
+      <p class="muted small">The plan: 12 days → 12 weeks weekly → 12 days → … "Another 12 days" applies once, after the
+        current course; after that the patient goes back to weekly healing.</p>
     </div>`;
-  if (!entries.length) {
+  if (!visits.length) {
     $('progressMain').innerHTML = head + '<p class="empty">No photos submitted yet.</p>';
     return;
   }
-  $('progressMain').innerHTML = head + '<ol class="timeline">' + entries.map(({ v, day, dayNo, newCourse }, i) => `
-    ${newCourse && i > 0 ? '<li class="course-break">New healing course – more than a week since the last healing</li>' : ''}
+  // Newest first, grouped under a heading per course.
+  const titles = blockTitles(visits);
+  const newest = [...visits].reverse();
+  $('progressMain').innerHTML = head + '<ol class="timeline">' + newest.map((v, i) => {
+    const day = istDay(v.createdAt);
+    const newBlock = i === 0 || v.blockNo !== newest[i - 1].blockNo;
+    const tag = v.sessionNo ? (v.phase === 'weekly' ? `Week ${v.sessionNo}` : `Day ${v.sessionNo}`) : '';
+    return `
+    ${newBlock ? `<li class="course-break">${esc(titles[v.blockNo] || 'Healing')}</li>` : ''}
     <li class="entry">
-      <div class="when"><span class="dayno">Day ${dayNo}</span><span class="muted">${esc(fmtDay(day))}</span></div>
-      <a class="thumb" href="${esc(v.photoUrl)}" target="_blank" rel="noopener">${v.photoUrl ? `<img src="${esc(v.photoUrl)}" alt="Photo on day ${dayNo}" loading="lazy">` : ''}</a>
+      <div class="when"><span class="dayno">${esc(tag)}</span><span class="muted">of 12</span><span class="muted">${esc(fmtDay(day))}</span></div>
+      <a class="thumb" href="${esc(v.photoUrl)}" target="_blank" rel="noopener">${v.photoUrl ? `<img src="${esc(v.photoUrl)}" alt="Photo, ${esc(tag)}" loading="lazy">` : ''}</a>
       <div class="what">
         <div class="row"><span class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Problems faced'}</span>
           <span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}${v.amount > 0 ? ' · ₹' + esc(v.amount.toLocaleString('en-IN')) : ''}</span></div>
@@ -142,8 +167,25 @@ async function loadProgress() {
           <div class="muted kind">Treatments tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
           <div class="muted kind">Medicines taking now</div><div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
       </div>
-    </li>`).join('') + '</ol>';
+    </li>`;
+  }).join('') + '</ol>';
 }
+
+document.addEventListener('change', async (e) => {
+  if (e.target.id !== 'nextBlock') return;
+  $('planSaved').textContent = 'Saving…';
+  try {
+    await api(`/api/admin/patients/${e.target.dataset.patient}/plan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nextBlock: e.target.value || null }),
+    });
+    await loadProgress();
+    $('planSaved').textContent = '✓ Saved';
+  } catch (err) {
+    $('planSaved').textContent = err.message;
+  }
+});
 
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-progress]');

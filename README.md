@@ -82,12 +82,24 @@ Amount: ₹300 is pre-filled on the payment page and the patient can change it; 
 and the dashboard shows the amount the patient says they paid. Change the pre-filled amount in the admin
 dashboard under **Settings** (leave it empty to pre-fill nothing), or with `CONSULTATION_FEE_INR` in `.env`.
 
-## Progress tab
+## Healing plan and Progress tab
+
+Every patient follows the same plan, counted per healing session (one photo upload per day):
+
+- **12-day course** – Day 1 … Day 12, one healing a day.
+- Then **weekly healing for 12 weeks** – Week 1 … Week 12.
+- Then another 12-day course, then 12 weeks weekly, and so on.
+- For some patients you can choose **"Another 12 days"** after a 12-day course (Progress tab). It applies
+  once; after that course the patient goes back to weekly. **"Restart at Day 1"** starts a new 12-day course
+  from the patient's next visit (e.g. after a long break).
+
+The patient's confirmation page shows today's session ("Day 3 of 12") and when to send the next photo
+(tomorrow, or next week's date in the weekly phase). The first-visit questions (problems, treatments,
+medicines) are asked only on a patient's first day; after that they are asked about positive changes.
 
 Admin dashboard → **Progress**: pick a patient (or click a name on a submission card, or *Progress* in the
-Patients tab) to see every visit as a timeline – Day 1, Day 2… with the photo, what they wrote and the
-payment status. Days count from the first visit of the current healing course; after more than a week
-without a healing a new course starts at Day 1 again. The timeline updates live when the patient submits.
+Patients table) to see every healing, newest first, grouped by course – with the photo, what they wrote
+and the payment status. The timeline updates live when the patient submits.
 
 ## Backups (Excel)
 

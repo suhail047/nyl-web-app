@@ -10,6 +10,9 @@ const QRCode = require('qrcode');
 const { q, normalizePhone } = require('./src/db');
 const otp = require('./src/otp');
 const backup = require('./src/backup');
+const plan = require('./src/plan');
+
+plan.backfill();
 
 const PORT = Number(process.env.PORT) || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
@@ -118,6 +121,10 @@ function visitDto(v) {
     gender: v.patient_gender,
     problems: v.problems,
     visitKind: v.visit_kind,
+    phase: v.phase,
+    sessionNo: v.session_no,
+    blockNo: v.block_no,
+    planLabel: v.session_no ? plan.label(v.phase, v.session_no) : null,
     consentAt: v.consent_at,
     treatmentsTried: v.treatments_tried,
     currentMedicines: v.current_medicines,
@@ -268,7 +275,7 @@ app.get('/api/patients/:id', (req, res) => {
 });
 
 function isFollowUp(patientId) {
-  return Boolean(q.hadRecentHealing.get(patientId));
+  return Boolean(q.hadVisitBeforeToday.get(patientId));
 }
 
 // Saves the photo + answers immediately so staff see them live. Payment happens next, on the /pay page.
@@ -289,8 +296,10 @@ app.post('/api/visits', upload.single('photo'), (req, res) => {
   }
 
   const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
+  const step = plan.nextStep(q.lastVisitOfPatient.get(patient.id), patient.next_block);
   const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, currentFeePaise(), status, PAYMENT_METHOD,
-    followUp ? 'followup' : 'first', treatments, medicines);
+    followUp ? 'followup' : 'first', treatments, medicines, step.phase, step.session, step.block);
+  if (step.consumed) q.setNextBlock.run(null, patient.id);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });
 });
@@ -303,6 +312,13 @@ app.get('/api/visits/:id', async (req, res) => {
     id: v.id, patientName: v.patient_name, age: v.patient_age, gender: v.patient_gender, problems: v.problems, visitKind: v.visit_kind,
     amount: v.amount_paise / 100, paymentStatus: v.payment_status, paymentMethod: PAYMENT_METHOD,
   };
+  if (v.session_no) {
+    out.plan = {
+      today: plan.label(v.phase, v.session_no),
+      phase: v.phase,
+      upcoming: plan.upcoming(v, q.patientById.get(v.patient_id)?.next_block),
+    };
+  }
   if (PAYMENT_METHOD === 'upi') out.upi = await upiPayment(v, v.amount_paise);
   res.json(out);
 });
@@ -445,7 +461,18 @@ app.post('/api/admin/settings', (req, res) => {
 app.get('/api/admin/patients/:id/visits', (req, res) => {
   const p = q.patientById.get(Number(req.params.id));
   if (!p) return res.status(404).json({ error: 'Patient not found.' });
-  res.json({ patient: p, visits: q.visitsByPatient.all(p.id).map(visitDto) });
+  const last = q.lastVisitOfPatient.get(p.id);
+  res.json({ patient: p, visits: q.visitsByPatient.all(p.id).map(visitDto), upcoming: last?.session_no ? plan.upcoming(last, p.next_block) : null });
+});
+
+// What follows the patient's current 12-day course: weekly (default), another 12 days, or restart at Day 1.
+app.post('/api/admin/patients/:id/plan', (req, res) => {
+  const p = q.patientById.get(Number(req.params.id));
+  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  const choice = req.body.nextBlock;
+  if (![null, 'daily', 'restart'].includes(choice ?? null)) return res.status(400).json({ error: 'Unknown plan choice.' });
+  q.setNextBlock.run(choice ?? null, p.id);
+  res.json({ ok: true });
 });
 
 app.get('/api/admin/patients', (_req, res) => res.json(q.allPatients.all()));
