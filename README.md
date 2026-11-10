@@ -1,4 +1,4 @@
-# Suhail's Healing
+# Qi Meridian Healing
 
 A small web app for patient check-in:
 
@@ -69,7 +69,7 @@ Set your clinic's UPI ID in `.env`:
 
 ```
 UPI_ID=suhailbinalionline-2@oksbi
-UPI_NAME=Suhail's Healing
+UPI_NAME=Qi Meridian Healing
 ```
 
 The payment page then shows a QR code for the amount the patient enters (plus a *Pay with UPI app* button on phones).
