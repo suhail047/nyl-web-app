@@ -18,6 +18,8 @@ services:
         value: /var/data/app.db
       - key: UPLOAD_DIR
         value: /var/data/uploads
+      - key: TRUST_PROXY   # Render puts one proxy in front of the app
+        value: "1"
       - key: ADMIN_USER
         value: admin
       - key: ADMIN_PASSWORD

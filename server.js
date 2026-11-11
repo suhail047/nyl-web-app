@@ -58,7 +58,52 @@ function parseAmount(value) {
 }
 
 const app = express();
-app.set('trust proxy', true);
+// Requests reach the app through a reverse proxy (Caddy on the same server by default). Only trust
+// X-Forwarded-* headers from it, so visitors cannot fake their IP address to dodge the rate limits.
+const TRUST_PROXY = process.env.TRUST_PROXY || 'loopback';
+app.set('trust proxy', /^\d+$/.test(TRUST_PROXY) ? Number(TRUST_PROXY) : TRUST_PROXY === 'true' ? true : TRUST_PROXY);
+app.disable('x-powered-by');
+
+// ---------- Security headers ----------
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'same-origin',
+    'Permissions-Policy': 'geolocation=(), microphone=()',
+  });
+  if (req.secure) res.set('Strict-Transport-Security', 'max-age=31536000');
+  next();
+});
+
+// ---------- Simple per-IP rate limits (in memory) ----------
+function rateLimit(name, max, windowMs, message) {
+  const hits = new Map();
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, h] of hits) if (now - h.start > windowMs) hits.delete(ip);
+  }, windowMs).unref();
+  return (req, res, next) => {
+    const now = Date.now();
+    const h = hits.get(req.ip);
+    if (!h || now - h.start > windowMs) hits.set(req.ip, { start: now, count: 1 });
+    else if (++h.count > max) return res.status(429).json({ error: message || 'Too many requests. Please try again later.' });
+    next();
+  };
+}
+const HOUR = 3600 * 1000;
+const limitLookups = rateLimit('lookups', 60, HOUR, 'Too many attempts. Please try again in an hour.');
+const limitUploads = rateLimit('uploads', 30, HOUR, 'Too many uploads. Please try again in an hour.');
+const limitNewPatients = rateLimit('patients', 20, HOUR, 'Too many new patients added. Please try again in an hour.');
+
+// ---------- Block cross-site form posts (CSRF) ----------
+// Browsers send an Origin header with POST/DELETE; it must be this site. (Razorpay's webhook is exempt.)
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET' || req.method === 'HEAD' || req.path === '/razorpay/webhook') return next();
+  const origin = req.get('origin');
+  if (origin && origin !== `${req.protocol}://${req.get('host')}`) return res.status(403).json({ error: 'Cross-site request blocked.' });
+  next();
+});
 
 // ---------- Live updates to the admin dashboard (Server-Sent Events) ----------
 const liveClients = new Set();
@@ -75,12 +120,39 @@ function safeEqual(a, b) {
   return ba.length === bb.length && crypto.timingSafeEqual(ba, bb);
 }
 
+// Admin login: 10 wrong passwords from one IP within 15 minutes locks that IP out for 15 minutes.
+const adminFailures = new Map();
+const ADMIN_LOCK_MS = 15 * 60 * 1000;
+const WEAK_ADMIN_PASSWORD = ADMIN_PASSWORD === 'change-me' || ADMIN_PASSWORD.length < 8;
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, f] of adminFailures) if (now - f.start > ADMIN_LOCK_MS) adminFailures.delete(ip);
+}, ADMIN_LOCK_MS).unref();
+
+function isLocalRequest(req) {
+  return ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.ip);
+}
+
 function requireAdmin(req, res, next) {
+  // With the default or a short password the dashboard only opens on the server's own computer.
+  if (WEAK_ADMIN_PASSWORD && !isLocalRequest(req)) {
+    return res.status(403).send('Set a strong ADMIN_PASSWORD (8+ characters) on the server to use the admin dashboard.');
+  }
+  const failures = adminFailures.get(req.ip);
+  if (failures && failures.count >= 10 && Date.now() - failures.start < ADMIN_LOCK_MS) {
+    return res.status(429).send('Too many wrong passwords. Try again in 15 minutes.');
+  }
   const [scheme, encoded] = (req.headers.authorization || '').split(' ');
   if (scheme === 'Basic' && encoded) {
     const decoded = Buffer.from(encoded, 'base64').toString();
     const i = decoded.indexOf(':');
-    if (safeEqual(decoded.slice(0, i), ADMIN_USER) && safeEqual(decoded.slice(i + 1), ADMIN_PASSWORD)) return next();
+    if (safeEqual(decoded.slice(0, i), ADMIN_USER) && safeEqual(decoded.slice(i + 1), ADMIN_PASSWORD)) {
+      adminFailures.delete(req.ip);
+      return next();
+    }
+    const f = adminFailures.get(req.ip);
+    if (!f || Date.now() - f.start > ADMIN_LOCK_MS) adminFailures.set(req.ip, { start: Date.now(), count: 1 });
+    else f.count++;
   }
   res.set('WWW-Authenticate', 'Basic realm="Admin", charset="UTF-8"').status(401).send('Authentication required');
 }
@@ -102,7 +174,9 @@ function startSession(req, res, phone) {
 }
 
 function requirePatient(req, res, next) {
-  req.phone = otp.sessionPhone(readCookie(req, SESSION_COOKIE));
+  const token = readCookie(req, SESSION_COOKIE);
+  req.phone = otp.sessionPhone(token);
+  req.sessionKey = otp.sessionKey(token);
   if (!req.phone) return res.status(401).json({ error: 'Please verify your mobile number first.', needsLogin: true });
   next();
 }
@@ -160,6 +234,18 @@ function markVisitPaid(visit, paymentId) {
 
 // ---------- Uploads ----------
 const ALLOWED_TYPES = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/heic': '.heic', 'image/heif': '.heif' };
+// The browser-reported file type can be faked, so also check the file's first bytes.
+function looksLikePhoto(file) {
+  const fd = fs.openSync(file, 'r');
+  const b = Buffer.alloc(12);
+  fs.readSync(fd, b, 0, 12, 0);
+  fs.closeSync(fd);
+  return (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) // JPEG
+    || b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) // PNG
+    || (b.toString('latin1', 0, 4) === 'RIFF' && b.toString('latin1', 8, 12) === 'WEBP') // WEBP
+    || b.toString('latin1', 4, 8) === 'ftyp'; // HEIC / HEIF
+}
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: UPLOAD_DIR,
@@ -197,7 +283,7 @@ app.get('/api/config', (_req, res) => {
   res.json({ clinicName: CLINIC_NAME, fee: currentFeePaise() / 100, paymentMethod: PAYMENT_METHOD, paymentsEnabled: PAYMENT_METHOD !== 'none', otpEnabled: OTP_ENABLED });
 });
 
-app.post('/api/otp/send', async (req, res, next) => {
+app.post('/api/otp/send', limitLookups, async (req, res, next) => {
   try {
     const phone = normalizePhone(req.body.phone);
     if (!phone) return res.status(400).json({ error: 'Enter a valid 10-digit mobile number.' });
@@ -253,7 +339,7 @@ function createPatient(req, res) {
   res.status(201).json(patient);
 }
 
-app.post('/api/patients', (req, res) => {
+app.post('/api/patients', limitNewPatients, (req, res) => {
   req.body.phone = req.phone;
   createPatient(req, res);
 });
@@ -263,9 +349,11 @@ function ownPatient(req, id) {
   return p && p.phone === req.phone ? p : null;
 }
 
+// A visit can only be read or paid from the browser session that created it, so knowing a family's
+// phone number is not enough to see their earlier answers.
 function ownVisit(req) {
   const v = q.visitById.get(Number(req.params.id));
-  return v && v.patient_phone === req.phone ? v : null;
+  return v && v.patient_phone === req.phone && v.session_key && v.session_key === req.sessionKey ? v : null;
 }
 
 app.get('/api/patients/:id', (req, res) => {
@@ -281,7 +369,11 @@ function isFollowUp(patientId) {
 // Saves the photo + answers immediately so staff see them live. Payment happens next, on the /pay page.
 // First session (or more than two weeks since the last one): problems, treatments tried, current medicines.
 // Otherwise: positive changes since the last healing (sent in the `problems` field).
-app.post('/api/visits', upload.single('photo'), (req, res) => {
+app.post('/api/visits', limitUploads, upload.single('photo'), (req, res) => {
+  if (req.file && !looksLikePhoto(req.file.path)) {
+    fs.rm(req.file.path, () => {});
+    return res.status(400).json({ error: 'Please upload a JPG, PNG, WEBP or HEIC photo.' });
+  }
   const patient = ownPatient(req, req.body.patientId);
   const followUp = Boolean(patient) && isFollowUp(patient.id);
   const problems = cleanText(req.body.problems, 5000);
@@ -298,7 +390,7 @@ app.post('/api/visits', upload.single('photo'), (req, res) => {
   const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
   const step = plan.nextStep(q.lastVisitOfPatient.get(patient.id), patient.next_block);
   const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, currentFeePaise(), status, PAYMENT_METHOD,
-    followUp ? 'followup' : 'first', treatments, medicines, step.phase, step.session, step.block);
+    followUp ? 'followup' : 'first', treatments, medicines, step.phase, step.session, step.block, req.sessionKey);
   if (step.consumed) q.setNextBlock.run(null, patient.id);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });

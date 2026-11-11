@@ -146,6 +146,23 @@ session *Paid*. If the patient closes the payment window they can simply tap *Pa
 | GET | `/api/admin/visits`, `/api/admin/patients` | Admin data (Basic auth) |
 | GET | `/api/admin/stream` | Live event stream (Basic auth) |
 
+## Security
+
+- **Admin dashboard** (`/admin`, photos, backups) needs the admin password over HTTPS. 10 wrong passwords
+  from one IP lock it out for 15 minutes. With the default or a short password (< 8 characters) the
+  dashboard only opens on the server itself.
+- **Patients** only see the names under the phone number they entered, and can only read or pay the
+  sessions they submitted from the same browser – knowing someone's number does not reveal their answers.
+  With OTP off, anyone who knows a number can still see the *names* registered under it; turn on OTP
+  (`OTP_ENABLED=true`) if that matters.
+- **Uploads** must really be JPG/PNG/WEBP/HEIC images (checked by content, max 15 MB) and are stored under
+  random names; they are only served to the admin.
+- **Rate limits** per IP: 60 phone look-ups, 20 new patients and 30 uploads per hour.
+- Cross-site form posts are rejected, and the usual security headers are set (nosniff, no framing, HSTS).
+- `TRUST_PROXY` (default `loopback`, for Caddy on the same server; `1` on Render) controls which proxy's
+  forwarded IP address is trusted.
+- Keep `.env`, `data/` (database and backups) and `uploads/` private – they are excluded from git.
+
 ## Deploying
 
 The app keeps its database and photos on disk, so the host needs a **persistent disk** (free tiers that

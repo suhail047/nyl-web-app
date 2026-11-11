@@ -82,6 +82,8 @@ if (!visitColumns.includes('upi_ref')) db.exec('ALTER TABLE visits ADD COLUMN up
 if (!visitColumns.includes('treatments_tried')) db.exec('ALTER TABLE visits ADD COLUMN treatments_tried TEXT');
 if (!visitColumns.includes('current_medicines')) db.exec('ALTER TABLE visits ADD COLUMN current_medicines TEXT');
 if (!visitColumns.includes('consent_at')) db.exec('ALTER TABLE visits ADD COLUMN consent_at TEXT');
+// Hash of the patient session (browser) that created the visit: only that browser can read it back.
+if (!visitColumns.includes('session_key')) db.exec('ALTER TABLE visits ADD COLUMN session_key TEXT');
 // Healing plan position: phase 'daily' | 'weekly', session 1–12 within the block, block = course number.
 for (const [col, type] of [['phase', 'TEXT'], ['session_no', 'INTEGER'], ['block_no', 'INTEGER']]) {
   if (!visitColumns.includes(col)) db.exec(`ALTER TABLE visits ADD COLUMN ${col} ${type}`);
@@ -108,8 +110,8 @@ const q = {
     GROUP BY p.id ORDER BY p.phone, p.name`),
   insertVisit: db.prepare(`
     INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method, visit_kind,
-                        treatments_tried, current_medicines, consent_at, phase, session_no, block_no)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`),
+                        treatments_tried, current_medicines, consent_at, phase, session_no, block_no, session_key)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)`),
   // A follow-up: the patient's last session was at most 14 days ago (Indian time), including earlier today.
   // After a longer gap they start again at Session 1 and answer the first-visit questions again.
   hadRecentSession: db.prepare(`

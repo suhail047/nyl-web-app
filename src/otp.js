@@ -119,4 +119,9 @@ function endSession(token) {
   if (token) q.deleteSession.run(hash(token));
 }
 
-module.exports = { PROVIDER, sendOtp, verifyOtp, createSession, sessionPhone, endSession };
+// Stable, non-reversible id for a session token (stored with the visits that session creates).
+function sessionKey(token) {
+  return token ? hash(token) : null;
+}
+
+module.exports = { PROVIDER, sendOtp, verifyOtp, createSession, sessionPhone, endSession, sessionKey };
