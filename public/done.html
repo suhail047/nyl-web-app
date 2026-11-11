@@ -40,6 +40,7 @@
         <li>Rest when your body asks for it.</li>
         <li>Sleep early.</li>
       </ol>
+      <a class="btn hidden" id="myProgress" href="#">See my progress</a>
       <a class="btn secondary" href="/">Done</a>
     </section>
 
@@ -56,6 +57,8 @@
       api('/api/visits/' + encodeURIComponent(params.get('visit'))).then((v) => {
         if (!v.plan) return;
         const p = v.plan.upcoming;
+        $('myProgress').href = '/my-progress?patient=' + v.patientId;
+        $('myProgress').classList.remove('hidden');
         $('planBadge').textContent = v.plan.today + (v.plan.phase === 'weekly' ? '' : ' · 12-session course');
         $('planBadge').classList.remove('hidden');
         const when = new Date(p.date + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });

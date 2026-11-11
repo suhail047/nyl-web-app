@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#15803d">
+  <title>My Progress</title>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand"><img class="logo" src="/logo.svg" alt=""><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
+    <a class="back" href="/patients">← Back</a>
+
+    <section class="card">
+      <h1 id="pname">My progress</h1>
+      <div class="progress-summary" id="summary"><p class="sub">Loading…</p></div>
+      <a class="btn" id="sendPhoto" href="#">Send today's photo</a>
+    </section>
+
+    <section class="card my-sessions hidden" id="historyCard">
+      <h2>My sessions</h2>
+      <ol class="my-timeline" id="history"></ol>
+    </section>
+    <div class="error" id="error" role="alert"></div>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const patientId = new URLSearchParams(location.search).get('patient');
+    const fmt = (day, opts) => new Date(day + 'T00:00:00Z').toLocaleDateString('en-IN', { timeZone: 'UTC', ...opts });
+
+    (async () => {
+      if (!patientId) return (location.href = '/');
+      $('sendPhoto').href = '/visit?patient=' + encodeURIComponent(patientId);
+      let d;
+      try {
+        d = await api('/api/patients/' + encodeURIComponent(patientId) + '/progress');
+      } catch (err) {
+        $('summary').innerHTML = '';
+        $('error').textContent = err.message;
+        return;
+      }
+      $('pname').textContent = d.name;
+      if (!d.sessions.length) {
+        $('summary').innerHTML = '<p class="sub">You have not started yet. Send your first photo to begin your 12-session healing course.</p>';
+        $('sendPhoto').textContent = 'Send my first photo';
+        return;
+      }
+      const up = d.upcoming;
+      const next = up
+        ? (up.gap === 1 ? 'Before 10 PM IST' : fmt(up.date, { weekday: 'long', day: 'numeric', month: 'long' }) + ', before 10 PM IST')
+        : '';
+      $('summary').innerHTML = `
+        <div class="stat"><span class="num">${d.sessions.length}</span><span>session${d.sessions.length === 1 ? '' : 's'} done</span></div>
+        <div class="stat"><span class="label">Now</span><b>${esc(d.current || '')}</b><span class="muted">${d.phase === 'weekly' ? 'Weekly sessions' : '12-session course'}</span></div>
+        ${up ? `<div class="stat"><span class="label">Next</span><b>${esc(up.label)}</b><span class="muted">${esc(next)}</span></div>` : ''}
+        ${up && up.finished ? `<p class="notice">${esc(up.finished)} ${esc(up.next || '')}</p>` : ''}`;
+
+      // Newest first, grouped by course.
+      const items = [...d.sessions].reverse();
+      const courseNo = {};
+      const count = { daily: 0, weekly: 0 };
+      for (const s of d.sessions) if (s.block != null && !courseNo[s.block]) courseNo[s.block] = ++count[s.phase];
+      $('history').innerHTML = items.map((s, i) => `
+        ${i === 0 || s.block !== items[i - 1].block
+          ? `<li class="course">${s.phase === 'weekly' ? 'Weekly sessions' : '12-session course #' + courseNo[s.block]}</li>` : ''}
+        <li class="row-item"><span class="tick-dot">✓</span><span><b>${esc((s.label || '').replace(/ of 12$/, ''))}</b>
+          <span class="muted"> · ${esc(fmt(s.date, { weekday: 'short', day: 'numeric', month: 'short' }))}</span>
+          ${d.showAnswers && s.text ? `<span class="answer">${esc(s.text)}</span>` : ''}</span></li>`).join('');
+      $('historyCard').classList.remove('hidden');
+    })();
+  </script>
+</body>
+</html>

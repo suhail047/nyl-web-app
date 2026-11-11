@@ -18,7 +18,8 @@
     <a class="back" id="back" href="/patients">← Choose another patient</a>
 
     <form class="card" id="visitForm" novalidate>
-      <div class="who" style="margin-bottom:16px"><span class="avatar" id="avatar"></span><div><h1 id="pname" style="margin:0">…</h1><span class="meta" id="pmeta" style="color:var(--muted)"></span></div></div>
+      <div class="who" style="margin-bottom:16px"><span class="avatar" id="avatar"></span><div><h1 id="pname" style="margin:0">…</h1><span class="meta" id="pmeta" style="color:var(--muted)"></span>
+        <div><a class="small-link" id="progressLink" href="#">See my progress →</a></div></div></div>
 
       <label>Your photo</label>
       <div class="instructions">
@@ -86,6 +87,7 @@
       try {
         const [p, cfg] = await Promise.all([api('/api/patients/' + encodeURIComponent(patientId)), getConfig()]);
         document.getElementById('pname').textContent = p.name;
+        document.getElementById('progressLink').href = '/my-progress?patient=' + p.id;
         document.getElementById('avatar').textContent = initials(p.name);
         document.getElementById('pmeta').textContent = [p.age != null ? p.age + ' yrs' : '', p.gender].filter(Boolean).join(' · ');
         if (p.followUp) {

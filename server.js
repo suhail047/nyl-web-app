@@ -368,6 +368,29 @@ app.get('/api/patients/:id', (req, res) => {
   res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone, followUp: isFollowUp(p.id) });
 });
 
+// The patient's own progress: sessions done and what comes next. Earlier answers are only included when
+// OTP is on, because without it anyone who knows the phone number could open this page.
+app.get('/api/patients/:id/progress', (req, res) => {
+  const p = ownPatient(req, req.params.id);
+  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  const visits = q.visitsByPatient.all(p.id);
+  const last = visits[visits.length - 1];
+  res.json({
+    name: p.name,
+    showAnswers: OTP_ENABLED,
+    current: last?.session_no ? plan.label(last.phase, last.session_no) : null,
+    phase: last?.phase || null,
+    upcoming: last?.session_no ? plan.upcoming(last, p.next_block) : null,
+    sessions: visits.map((v) => ({
+      date: plan.istDay(v.created_at),
+      label: v.session_no ? plan.label(v.phase, v.session_no) : null,
+      phase: v.phase,
+      block: v.block_no,
+      ...(OTP_ENABLED ? { kind: v.visit_kind, text: v.problems } : {}),
+    })),
+  });
+});
+
 function isFollowUp(patientId) {
   return Boolean(q.hadRecentSession.get(patientId));
 }
@@ -407,7 +430,7 @@ app.get('/api/visits/:id', async (req, res) => {
   const v = ownVisit(req);
   if (!v) return res.status(404).json({ error: 'Visit not found.' });
   const out = {
-    id: v.id, patientName: v.patient_name, age: v.patient_age, gender: v.patient_gender, problems: v.problems, visitKind: v.visit_kind,
+    id: v.id, patientId: v.patient_id, patientName: v.patient_name, age: v.patient_age, gender: v.patient_gender, problems: v.problems, visitKind: v.visit_kind,
     amount: v.amount_paise / 100, paymentStatus: v.payment_status, paymentMethod: PAYMENT_METHOD,
   };
   if (v.session_no) {
