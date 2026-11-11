@@ -35,3 +35,8 @@ async function logout() {
 function fmtPhone(p) {
   return '+91 ' + p.slice(0, 5) + ' ' + p.slice(5);
 }
+
+// Installable app: register the service worker (needed for "Add to Home screen" / "Install app").
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}

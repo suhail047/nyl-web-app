@@ -91,3 +91,8 @@ textarea.short { min-height: 90px; }
 .consent ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
 .rupee-input input::placeholder { color: #a9bcae; }
 .plan-badge { display: inline-block; background: var(--tint); color: var(--primary-dark); font-weight: 700; border-radius: 999px; padding: 4px 14px; margin: 0 0 10px; }
+.install { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 14px 16px; }
+.install img { border-radius: 10px; flex: 0 0 auto; }
+.install div { flex: 1; }
+.install .muted { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+.install button { width: auto; margin: 0; padding: 10px 16px; }

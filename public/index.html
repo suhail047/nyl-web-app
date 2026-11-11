@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/styles.css">
   <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#15803d">
+  <meta name="apple-mobile-web-app-title" content="Meridian Healing">
   <title>Patient Check-in</title>
 </head>
 <body>
@@ -36,6 +40,15 @@
         <span><button type="button" class="link" id="resend" disabled>Resend code</button> <span id="timer"></span></span>
       </div>
     </form>
+
+    <section class="card install hidden" id="installCard">
+      <img src="/icons/icon-192.png" alt="" width="44" height="44">
+      <div>
+        <strong>Add the app to your phone</strong>
+        <p class="muted" id="installText">Open it from your home screen next time.</p>
+      </div>
+      <button type="button" id="installBtn" class="hidden">Install</button>
+    </section>
 
     <section class="card rules">
       <h2>Rules to follow during your healing</h2>
@@ -155,6 +168,26 @@
       $('phoneForm').classList.remove('hidden');
       $('phone').focus();
     });
+
+    // "Install app" on Android; a short tip on iPhone (Safari has no install button).
+    const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    let installEvent;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      installEvent = e;
+      if (!standalone) { $('installCard').classList.remove('hidden'); $('installBtn').classList.remove('hidden'); }
+    });
+    $('installBtn').addEventListener('click', async () => {
+      if (!installEvent) return;
+      installEvent.prompt();
+      await installEvent.userChoice;
+      installEvent = null;
+      $('installCard').classList.add('hidden');
+    });
+    if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+      $('installText').textContent = 'Tap the Share button, then "Add to Home Screen".';
+      $('installCard').classList.remove('hidden');
+    }
 
     // Android Chrome: read the code straight from the SMS when supported.
     if ('OTPCredential' in window) {
