@@ -77,7 +77,8 @@ if [ ! -f "$ENV_FILE" ]; then
   read -rp "UPI ID for payments [suhailbinalionline-2@oksbi]: " UPI_ID
   UPI_ID="${UPI_ID:-suhailbinalionline-2@oksbi}"
   read -rp "Name on that UPI account [$CLINIC_NAME]: " UPI_NAME
-  read -rp "Contact phone/WhatsApp for patients (optional): " CONTACT_PHONE
+  read -rp "Contact phone/WhatsApp for patients [+91 86067 57805]: " CONTACT_PHONE
+  CONTACT_PHONE="${CONTACT_PHONE:-+91 86067 57805}"
   read -rp "Contact email for patients (optional): " CONTACT_EMAIL
   UPI_NAME="${UPI_NAME:-$CLINIC_NAME}"
   umask 077

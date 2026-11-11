@@ -31,7 +31,7 @@ const RZP_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 const UPI_ID = (process.env.UPI_ID ?? 'suhailbinalionline-2@oksbi').trim();
 const UPI_NAME = process.env.UPI_NAME || CLINIC_NAME;
 // Shown on the privacy policy page so patients know how to reach you.
-const CONTACT_PHONE = (process.env.CONTACT_PHONE || '').trim();
+const CONTACT_PHONE = (process.env.CONTACT_PHONE || '+91 86067 57805').trim();
 const CONTACT_EMAIL = (process.env.CONTACT_EMAIL || '').trim();
 // UPI QR takes priority over Razorpay when a UPI ID is set.
 // Razorpay needs a fixed amount; with no fee set, the patient types the amount in their UPI app.

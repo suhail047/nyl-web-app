@@ -127,7 +127,11 @@
     }
     getConfig().then((c) => {
       const parts = [];
-      if (c.contactPhone) parts.push('Phone / WhatsApp: <a href="tel:' + esc(c.contactPhone) + '">' + esc(c.contactPhone) + '</a>');
+      if (c.contactPhone) {
+        const digits = c.contactPhone.replace(/[^\d+]/g, '');
+        parts.push('Phone / WhatsApp: <a href="tel:' + esc(digits) + '">' + esc(c.contactPhone) + '</a>' +
+          ' (<a href="https://wa.me/' + esc(digits.replace(/^\+/, '')) + '" target="_blank" rel="noopener">WhatsApp</a>)');
+      }
       if (c.contactEmail) parts.push('Email: <a href="mailto:' + esc(c.contactEmail) + '">' + esc(c.contactEmail) + '</a>');
       if (parts.length) document.getElementById('contact').innerHTML = parts.join('<br>');
       const partsMl = parts.map((x) => x.replace('Phone / WhatsApp:', 'ഫോൺ / WhatsApp:').replace('Email:', 'ഇമെയിൽ:'));
