@@ -77,9 +77,6 @@ if [ ! -f "$ENV_FILE" ]; then
   read -rp "UPI ID for payments [suhailbinalionline-2@oksbi]: " UPI_ID
   UPI_ID="${UPI_ID:-suhailbinalionline-2@oksbi}"
   read -rp "Name on that UPI account [$CLINIC_NAME]: " UPI_NAME
-  read -rp "Contact phone/WhatsApp for patients [+91 86067 57805]: " CONTACT_PHONE
-  CONTACT_PHONE="${CONTACT_PHONE:-+91 86067 57805}"
-  read -rp "Contact email for patients (optional): " CONTACT_EMAIL
   UPI_NAME="${UPI_NAME:-$CLINIC_NAME}"
   umask 077
   cat > "$ENV_FILE" <<ENV
@@ -93,8 +90,6 @@ ADMIN_USER=admin
 ADMIN_PASSWORD="$ADMIN_PASSWORD"
 UPI_ID="$UPI_ID"
 UPI_NAME="$UPI_NAME"
-CONTACT_PHONE="$CONTACT_PHONE"
-CONTACT_EMAIL="$CONTACT_EMAIL"
 PUBLIC_URL="${DOMAIN:+https://$DOMAIN}"
 # WhatsApp reminders (optional, see README): token, phone number ID, approved template
 WHATSAPP_TOKEN=

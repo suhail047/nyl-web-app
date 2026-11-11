@@ -58,11 +58,7 @@
       <p>For a patient under 18, a parent or guardian should send the photo and details and give consent.</p>
 
       <h2>Your rights</h2>
-      <p>You can ask us to show you the information we hold about you, correct it, delete it, or stop using it.
-        Contact us using the details below.</p>
-
-      <h2>Contact us</h2>
-      <p id="contact">Please contact us through the clinic.</p>
+      <p>You can ask us to show you the information we hold about you, correct it, delete it, or stop using it.</p>
     </article>
 
     <article class="card policy hidden" id="policy-ml" lang="ml">
@@ -111,10 +107,7 @@
 
       <h2>നിങ്ങളുടെ അവകാശങ്ങൾ</h2>
       <p>ഞങ്ങൾ സൂക്ഷിക്കുന്ന നിങ്ങളുടെ വിവരങ്ങൾ കാണിക്കാനോ, തിരുത്താനോ, ഇല്ലാതാക്കാനോ, ഉപയോഗിക്കുന്നത് നിർത്താനോ
-        നിങ്ങൾക്ക് ആവശ്യപ്പെടാം. താഴെയുള്ള വിവരങ്ങൾ ഉപയോഗിച്ച് ഞങ്ങളെ ബന്ധപ്പെടുക.</p>
-
-      <h2>ബന്ധപ്പെടാൻ</h2>
-      <p id="contact-ml">ക്ലിനിക്ക് വഴി ഞങ്ങളെ ബന്ധപ്പെടുക.</p>
+        നിങ്ങൾക്ക് ആവശ്യപ്പെടാം.</p>
       <p class="muted small-note">ഈ മലയാളം പതിപ്പ് സൗകര്യത്തിനുവേണ്ടിയുള്ളതാണ്. സംശയമുണ്ടെങ്കിൽ ഇംഗ്ലീഷ് പതിപ്പാണ് ആധാരം.</p>
     </article>
   </main>
@@ -125,18 +118,6 @@
       document.getElementById('policy-en').classList.add('hidden');
       document.getElementById('policy-ml').classList.remove('hidden');
     }
-    getConfig().then((c) => {
-      const parts = [];
-      if (c.contactPhone) {
-        const digits = c.contactPhone.replace(/[^\d+]/g, '');
-        parts.push('Phone / WhatsApp: <a href="tel:' + esc(digits) + '">' + esc(c.contactPhone) + '</a>' +
-          ' (<a href="https://wa.me/' + esc(digits.replace(/^\+/, '')) + '" target="_blank" rel="noopener">WhatsApp</a>)');
-      }
-      if (c.contactEmail) parts.push('Email: <a href="mailto:' + esc(c.contactEmail) + '">' + esc(c.contactEmail) + '</a>');
-      if (parts.length) document.getElementById('contact').innerHTML = parts.join('<br>');
-      const partsMl = parts.map((x) => x.replace('Phone / WhatsApp:', 'ഫോൺ / WhatsApp:').replace('Email:', 'ഇമെയിൽ:'));
-      if (parts.length) document.getElementById('contact-ml').innerHTML = partsMl.join('<br>');
-    }).catch(() => {});
   </script>
 </body>
 </html>

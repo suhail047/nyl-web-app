@@ -30,9 +30,6 @@ const RZP_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 // UPI ID that receives payments. Set UPI_ID= (empty) in .env to switch UPI off.
 const UPI_ID = (process.env.UPI_ID ?? 'suhailbinalionline-2@oksbi').trim();
 const UPI_NAME = process.env.UPI_NAME || CLINIC_NAME;
-// Shown on the privacy policy page so patients know how to reach you.
-const CONTACT_PHONE = (process.env.CONTACT_PHONE || '+91 86067 57805').trim();
-const CONTACT_EMAIL = (process.env.CONTACT_EMAIL || '').trim();
 // UPI QR takes priority over Razorpay when a UPI ID is set.
 // Razorpay needs a fixed amount; with no fee set, the patient types the amount in their UPI app.
 const PAYMENT_METHOD = UPI_ID ? 'upi' : RZP_KEY_ID && RZP_KEY_SECRET ? 'razorpay' : 'none';
@@ -287,7 +284,7 @@ app.use(express.json({ limit: '100kb' }));
 app.get('/api/config', (_req, res) => {
   res.json({
     clinicName: CLINIC_NAME, fee: currentFeePaise() / 100, paymentMethod: PAYMENT_METHOD, paymentsEnabled: PAYMENT_METHOD !== 'none',
-    otpEnabled: OTP_ENABLED, contactPhone: CONTACT_PHONE, contactEmail: CONTACT_EMAIL,
+    otpEnabled: OTP_ENABLED,
   });
 });
 

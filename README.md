@@ -135,7 +135,7 @@ Each patient gets at most one reminder a day; failed sends are shown in the Remi
 - **Photos are shrunk** in the browser to at most 1600 px before upload.
 - **My progress** – patients can see the sessions they've done and what's next (their earlier answers are only
   shown when OTP is on).
-- **Privacy policy** at `/privacy`, with contact details from `CONTACT_PHONE` / `CONTACT_EMAIL`.
+- **Privacy policy** at `/privacy` (English and Malayalam).
 - **Your notes** – a private notes box per patient in the admin Progress tab (included in the Excel backup).
 
 ## Backups (Excel)
