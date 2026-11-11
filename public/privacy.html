@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#15803d">
+  <title>Privacy Policy</title>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand"><img class="logo" src="/logo.svg" alt=""><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
+    <a class="back" href="/">← Back</a>
+    <article class="card policy">
+      <h1>Privacy policy</h1>
+      <p class="muted">Last updated: 11 November 2026</p>
+
+      <p>This page explains what information <span data-clinic>Suhail&#39;s Meridian Healing</span> ("we") collects
+        through this app, why, and how we look after it.</p>
+
+      <h2>What we collect</h2>
+      <ul>
+        <li><b>Your mobile number</b>, and the <b>name, age and gender</b> of each patient registered under it.</li>
+        <li><b>Photos</b> you send for each healing session.</li>
+        <li><b>Your answers</b>: the problems you face, treatments you have tried, medicines you take, and the
+          changes you feel after each healing.</li>
+        <li><b>Payment details</b>: the amount and whether it was paid. UPI payments are handled by your UPI app
+          and bank – we never see your bank account or UPI PIN.</li>
+        <li><b>Your consent</b>, and the date and time you gave it.</li>
+        <li>A small cookie that keeps you signed in on your phone for 12 hours, and your internet address, used
+          only to protect the app against misuse.</li>
+      </ul>
+
+      <h2>Why we use it</h2>
+      <ul>
+        <li>To give you your healing sessions and follow your progress.</li>
+        <li>To confirm your payments.</li>
+        <li>To remind you about your sessions on your registered mobile number (for example on WhatsApp).</li>
+      </ul>
+
+      <h2>Who can see it</h2>
+      <p>Only Suhail and authorised staff, through a password-protected dashboard. We do not sell your
+        information, and we never share or publish your photos or answers. We use trusted service providers
+        to run the app – the company that hosts our server, and WhatsApp for reminders – and they may only
+        use your information to provide that service to us.</p>
+
+      <h2>How we protect it</h2>
+      <p>The app uses a secure (HTTPS) connection, photos and answers are stored on a private server, and the
+        dashboard is protected by a password. Backups are kept so your records are not lost.</p>
+
+      <h2>How long we keep it</h2>
+      <p>We keep your information while you are receiving healing. You can ask us to delete it at any time.</p>
+
+      <h2>Children</h2>
+      <p>For a patient under 18, a parent or guardian should send the photo and details and give consent.</p>
+
+      <h2>Your rights</h2>
+      <p>You can ask us to show you the information we hold about you, correct it, delete it, or stop using it.
+        Contact us using the details below.</p>
+
+      <h2>Contact us</h2>
+      <p id="contact">Please contact us through the clinic.</p>
+    </article>
+  </main>
+  <script src="/common.js"></script>
+  <script>
+    getConfig().then((c) => {
+      const parts = [];
+      if (c.contactPhone) parts.push('Phone / WhatsApp: <a href="tel:' + esc(c.contactPhone) + '">' + esc(c.contactPhone) + '</a>');
+      if (c.contactEmail) parts.push('Email: <a href="mailto:' + esc(c.contactEmail) + '">' + esc(c.contactEmail) + '</a>');
+      if (parts.length) document.getElementById('contact').innerHTML = parts.join('<br>');
+    }).catch(() => {});
+  </script>
+</body>
+</html>

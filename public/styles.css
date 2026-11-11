@@ -96,3 +96,10 @@ textarea.short { min-height: 90px; }
 .install div { flex: 1; }
 .install .muted { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
 .install button { width: auto; margin: 0; padding: 10px 16px; }
+.policy h2 { font-size: 1.05rem; margin: 20px 0 6px; }
+.policy p, .policy li { font-size: .95rem; }
+.policy ul { padding-left: 20px; display: grid; gap: 6px; }
+.policy .muted { color: var(--muted); margin-top: 0; }
+.footer-links { text-align: center; margin: 18px 0 0; font-size: .9rem; }
+.footer-links a, .small-link { color: var(--primary); }
+.small-link { display: inline-block; margin-top: 6px; font-size: .88rem; }
