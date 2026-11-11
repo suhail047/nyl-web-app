@@ -16,36 +16,37 @@
     <header class="brand"><img class="logo" src="/logo.svg" alt=""><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
     <section class="card center">
       <div class="tick">✓</div>
-      <h1>Photo successfully submitted for treatment</h1>
+      <h1 data-t>Photo successfully submitted for treatment</h1>
       <p class="plan-badge hidden" id="planBadge"></p>
-      <p class="sub">Treatment will start at <strong>10 PM IST</strong>.</p>
+      <p class="sub" data-t-key="treatmentTime">Treatment will start at <strong>10 PM IST</strong>.</p>
       <div class="instructions left">
-        <strong>When the healing starts at 10 PM</strong>
-        <p>Sit or lie down comfortably in the same spot where you were sitting when your photo was taken,
+        <strong data-t>When the healing starts at 10 PM</strong>
+        <p data-t>Sit or lie down comfortably in the same spot where you were sitting when your photo was taken,
           close your eyes and relax.</p>
       </div>
       <div class="instructions left hidden" id="nextBox">
         <strong id="nextTitle"></strong>
         <p id="nextText"></p>
       </div>
-      <p class="sub hidden" id="upiNote">Your UPI payment will be confirmed by us shortly.</p>
+      <p class="sub hidden" id="upiNote" data-t>Your UPI payment will be confirmed by us shortly.</p>
     </section>
 
     <section class="card rules">
-      <h2>Please follow these rules</h2>
+      <h2 data-t>Please follow these rules</h2>
       <ol>
-        <li>Do not hate or keep grudges against anyone.</li>
-        <li>Eat only when hungry. Stop eating when you stop feeling hungry.</li>
-        <li>Drink only when thirsty. Stop drinking when you stop feeling thirsty.</li>
-        <li>Rest when your body asks for it.</li>
-        <li>Sleep early.</li>
+        <li data-t>Do not hate or keep grudges against anyone.</li>
+        <li data-t>Eat only when hungry. Stop eating when you stop feeling hungry.</li>
+        <li data-t>Drink only when thirsty. Stop drinking when you stop feeling thirsty.</li>
+        <li data-t>Rest when your body asks for it.</li>
+        <li data-t>Sleep early.</li>
       </ol>
-      <a class="btn hidden" id="myProgress" href="#">See my progress</a>
-      <a class="btn secondary" href="/">Done</a>
+      <a class="btn hidden" id="myProgress" href="#" data-t>See my progress</a>
+      <a class="btn secondary" href="/" data-t>Done</a>
     </section>
 
-    <p class="footer-links"><a href="/privacy">Privacy policy</a></p>
+    <p class="footer-links"><a href="/privacy" data-t>Privacy policy</a></p>
   </main>
+  <script src="/i18n.js"></script>
   <script src="/common.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
@@ -59,14 +60,14 @@
         const p = v.plan.upcoming;
         $('myProgress').href = '/my-progress?patient=' + v.patientId;
         $('myProgress').classList.remove('hidden');
-        $('planBadge').textContent = v.plan.today + (v.plan.phase === 'weekly' ? '' : ' · 12-session course');
+        $('planBadge').textContent = v.plan.phase === 'weekly' ? t(v.plan.today) : t('{label} · 12-session course', { label: t(v.plan.today) });
         $('planBadge').classList.remove('hidden');
-        const when = new Date(p.date + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
-        $('nextTitle').textContent = p.finished || 'Your next healing';
-        $('nextText').textContent = (p.finished && p.next ? p.next + '. ' : '') +
+        const when = new Date(p.date + 'T00:00:00Z').toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+        $('nextTitle').textContent = p.finished ? t(p.finished) : t('Your next healing');
+        $('nextText').textContent = (p.finished && p.next ? t(p.next) + '. ' : '') +
           (p.gap === 1
-            ? 'Please send a new photo before 10 PM IST for your next session (' + p.label + ').'
-            : 'Please send a new photo next week, on ' + when + ', before 10 PM IST (' + p.label + ').');
+            ? t('Please send a new photo before 10 PM IST for your next session ({label}).', { label: t(p.label) })
+            : t('Please send a new photo next week, on {date}, before 10 PM IST ({label}).', { date: when, label: t(p.label) }));
         $('nextBox').classList.remove('hidden');
       }).catch(() => {});
     }

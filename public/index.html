@@ -17,52 +17,53 @@
     <div class="steps"><span class="on"></span><span></span><span></span><span></span></div>
 
     <form class="card" id="phoneForm" novalidate>
-      <h1>Welcome</h1>
-      <p class="sub">Enter the mobile number.</p>
-      <label for="phone">Mobile number</label>
+      <h1 data-t>Welcome</h1>
+      <p class="sub" data-t>Enter the mobile number.</p>
+      <label for="phone" data-t>Mobile number</label>
       <div class="phone-row">
         <input class="cc" value="+91" disabled aria-label="Country code">
         <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98765 43210" required autofocus>
       </div>
       <div class="error" id="phoneError" role="alert"></div>
-      <button type="submit" id="sendBtn">Continue</button>
+      <button type="submit" id="sendBtn" data-t>Continue</button>
     </form>
 
     <form class="card hidden" id="otpForm" novalidate>
-      <h1>Enter verification code</h1>
+      <h1 data-t>Enter verification code</h1>
       <p class="sub">We sent a 6-digit code by SMS to <strong id="sentTo"></strong>.</p>
-      <label for="code">Verification code</label>
+      <label for="code" data-t>Verification code</label>
       <input id="code" class="otp-input" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" placeholder="••••••" required>
       <div class="error" id="otpError" role="alert"></div>
-      <button type="submit" id="verifyBtn">Verify &amp; continue</button>
+      <button type="submit" id="verifyBtn" data-t>Verify &amp; continue</button>
       <div class="row-between">
-        <button type="button" class="link" id="changeNumber">Change number</button>
-        <span><button type="button" class="link" id="resend" disabled>Resend code</button> <span id="timer"></span></span>
+        <button type="button" class="link" id="changeNumber" data-t>Change number</button>
+        <span><button type="button" class="link" id="resend" disabled data-t>Resend code</button> <span id="timer"></span></span>
       </div>
     </form>
 
     <section class="card install hidden" id="installCard">
       <img src="/icons/icon-192.png" alt="" width="44" height="44">
       <div>
-        <strong>Add the app to your phone</strong>
-        <p class="muted" id="installText">Open it from your home screen next time.</p>
+        <strong data-t>Add the app to your phone</strong>
+        <p class="muted" id="installText" data-t>Open it from your home screen next time.</p>
       </div>
-      <button type="button" id="installBtn" class="hidden">Install</button>
+      <button type="button" id="installBtn" class="hidden" data-t>Install</button>
     </section>
 
     <section class="card rules">
-      <h2>Rules to follow during your healing</h2>
+      <h2 data-t>Rules to follow during your healing</h2>
       <ol>
-        <li>Do not hate or keep grudges against anyone.</li>
-        <li>Eat only when hungry. Stop eating when you stop feeling hungry.</li>
-        <li>Drink only when thirsty. Stop drinking when you stop feeling thirsty.</li>
-        <li>Rest when your body asks for it.</li>
-        <li>Sleep early.</li>
+        <li data-t>Do not hate or keep grudges against anyone.</li>
+        <li data-t>Eat only when hungry. Stop eating when you stop feeling hungry.</li>
+        <li data-t>Drink only when thirsty. Stop drinking when you stop feeling thirsty.</li>
+        <li data-t>Rest when your body asks for it.</li>
+        <li data-t>Sleep early.</li>
       </ol>
     </section>
 
-    <p class="footer-links"><a href="/privacy">Privacy policy</a></p>
+    <p class="footer-links"><a href="/privacy" data-t>Privacy policy</a></p>
   </main>
+  <script src="/i18n.js"></script>
   <script src="/common.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -131,7 +132,7 @@
       e.preventDefault();
       $('otpError').textContent = '';
       const code = $('code').value.replace(/\D/g, '');
-      if (code.length !== 6) return ($('otpError').textContent = 'Enter the 6-digit code.');
+      if (code.length !== 6) return ($('otpError').textContent = t('Enter the 6-digit code.'));
       $('verifyBtn').disabled = true;
       try {
         await api('/api/otp/verify', {
@@ -187,7 +188,7 @@
       $('installCard').classList.add('hidden');
     });
     if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
-      $('installText').textContent = 'Tap the Share button, then "Add to Home Screen".';
+      $('installText').textContent = t('Tap the Share button, then "Add to Home Screen".');
       $('installCard').classList.remove('hidden');
     }
 

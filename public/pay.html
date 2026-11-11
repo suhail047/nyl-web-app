@@ -18,16 +18,16 @@
     <div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
 
     <section class="card" id="payCard">
-      <h1>Payment</h1>
-      <p class="sub"><span class="badge-ok">✓ Photo &amp; details sent</span> Complete the payment to confirm your treatment.</p>
+      <h1 data-t>Payment</h1>
+      <p class="sub"><span class="badge-ok" data-t>✓ Photo &amp; details sent</span> <span data-t>Complete the payment to confirm your treatment.</span></p>
 
       <div class="summary">
-        <div class="line"><span>Patient</span><strong id="pname">…</strong></div>
+        <div class="line"><span data-t>Patient</span><strong id="pname">…</strong></div>
         <div class="problems" id="problems"></div>
       </div>
-      <div class="total" id="totalRow"><span>Total</span><span class="amount" id="amount">—</span></div>
+      <div class="total" id="totalRow"><span data-t>Total</span><span class="amount" id="amount">—</span></div>
       <div class="amount-edit hidden" id="amountEdit">
-        <label for="amountInput">Amount to pay</label>
+        <label for="amountInput" data-t>Amount to pay</label>
         <div class="rupee-input"><span>₹</span><input id="amountInput" type="text" inputmode="decimal" autocomplete="off" maxlength="9" placeholder="300"></div>
         <p class="hint-left" id="amountHint"></p>
       </div>
@@ -35,17 +35,17 @@
       <div id="upi" class="hidden">
         <div class="qr-box">
           <div class="qr" id="qr" role="img" aria-label="UPI QR code"></div>
-          <div class="upi-id">Pay to <strong id="upiName"></strong><br><span id="upiId"></span> <button type="button" class="link" id="copyUpi">Copy</button></div>
+          <div class="upi-id"><span data-t>Pay to</span> <strong id="upiName"></strong><br><span id="upiId"></span> <button type="button" class="link" id="copyUpi" data-t>Copy</button></div>
         </div>
-        <p class="hint" id="upiHint">Scan with any UPI app. The amount is filled in automatically.</p>
-        <div class="methods"><span>Google Pay</span><span>PhonePe</span><span>Paytm</span><span>BHIM</span><span>Any UPI app</span></div>
-        <a class="btn secondary mobile-only" id="upiApp" href="#">Pay with UPI app on this phone</a>
-        <p class="hint mobile-only">If the button doesn't work, take a screenshot of the QR code and open it in your
+        <p class="hint" id="upiHint" data-t>Scan with any UPI app. The amount is filled in automatically.</p>
+        <div class="methods"><span>Google Pay</span><span>PhonePe</span><span>Paytm</span><span>BHIM</span><span data-t>Any UPI app</span></div>
+        <a class="btn secondary mobile-only" id="upiApp" href="#" data-t>Pay with UPI app on this phone</a>
+        <p class="hint mobile-only" data-t>If the button doesn't work, take a screenshot of the QR code and open it in your
           UPI app (Scan → choose from gallery).</p>
 
         <form id="paidForm" novalidate>
           <div class="error" id="upiError" role="alert"></div>
-          <button type="submit" id="paidBtn">I have paid</button>
+          <button type="submit" id="paidBtn" data-t>I have paid</button>
         </form>
       </div>
 
@@ -53,16 +53,17 @@
         <div class="methods"><span>UPI</span><span>Google Pay</span><span>PhonePe</span><span>Cards</span><span>Net banking</span><span>Wallets</span></div>
         <div class="error" id="error" role="alert"></div>
         <button type="button" id="payBtn" disabled>Pay</button>
-        <p class="secure">🔒 Secure payment by Razorpay</p>
+        <p class="secure" data-t>🔒 Secure payment by Razorpay</p>
       </div>
 
 
       <div id="offline" class="hidden">
-        <p class="notice">Online payment is not set up yet. Your details have been received — please pay at the clinic.</p>
-        <a class="btn" id="finishLink" href="/done?status=submitted">Finish</a>
+        <p class="notice" data-t>Online payment is not set up yet. Your details have been received — please pay at the clinic.</p>
+        <a class="btn" id="finishLink" href="/done?status=submitted" data-t>Finish</a>
       </div>
     </section>
   </main>
+  <script src="/i18n.js"></script>
   <script src="/common.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -81,7 +82,7 @@
       if (visit.paymentStatus === 'upi_claimed') return location.replace('/done?status=upi&visit=' + visitId);
       $('pname').textContent = visit.patientName;
       $('problems').textContent = visit.problems;
-      $('amount').textContent = visit.amount > 0 ? rupees(visit.amount) : 'Any amount';
+      $('amount').textContent = visit.amount > 0 ? rupees(visit.amount) : t('Any amount');
       $('finishLink').href = '/done?status=submitted&visit=' + visitId;
       if (visit.paymentMethod !== 'upi' && visit.paymentMethod !== 'razorpay') return $('offline').classList.remove('hidden');
 
@@ -89,7 +90,7 @@
       $('totalRow').classList.add('hidden');
       $('amountEdit').classList.remove('hidden');
       $('amountInput').value = visit.amount > 0 ? visit.amount : '';
-      $('amountHint').textContent = 'Enter the amount you wish to pay.';
+      $('amountHint').textContent = t('Enter the amount you wish to pay.');
       if (visit.paymentMethod === 'upi') return showUpi(visit.upi);
       $('online').classList.remove('hidden');
       updatePayButton();
@@ -110,7 +111,7 @@
     function updatePayButton() {
       const n = typedAmount();
       $('payBtn').disabled = !n || n < 1;
-      $('payBtn').textContent = n && n >= 1 ? 'Pay ' + rupees(n) : 'Enter an amount to pay';
+      $('payBtn').textContent = n && n >= 1 ? t('Pay {amount}', { amount: rupees(n) }) : t('Enter an amount to pay');
     }
 
     let qrTimer;
@@ -123,7 +124,7 @@
     async function refreshQr() {
       const n = typedAmount();
       $('upiError').textContent = '';
-      if (n === null) return ($('upiError').textContent = 'Enter a valid amount (up to ₹1,00,000).');
+      if (n === null) return ($('upiError').textContent = t('Enter a valid amount (up to ₹1,00,000).'));
       try {
         showUpi(await api('/api/visits/' + visitId + '/upi?amount=' + n));
       } catch (err) {
@@ -138,21 +139,21 @@
       $('upiId').textContent = upi.id;
       $('upiApp').href = upi.link;
       $('upiHint').textContent = /[?&]am=/.test(upi.link)
-        ? 'Scan with any UPI app. The amount is filled in automatically.'
-        : 'Scan with any UPI app and enter the amount in the app.';
+        ? t('Scan with any UPI app. The amount is filled in automatically.')
+        : t('Scan with any UPI app and enter the amount in the app.');
     }
 
     $('copyUpi').addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(visit.upi.id);
-        $('copyUpi').textContent = 'Copied';
+        $('copyUpi').textContent = t('Copied');
       } catch {}
     });
 
     $('paidForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       $('upiError').textContent = '';
-      if (typedAmount() === null) return ($('upiError').textContent = 'Enter a valid amount (up to ₹1,00,000).');
+      if (typedAmount() === null) return ($('upiError').textContent = t('Enter a valid amount (up to ₹1,00,000).'));
       $('paidBtn').disabled = true;
       try {
         await api('/api/visits/' + visitId + '/upi-paid', {
@@ -175,8 +176,8 @@
     $('payBtn').addEventListener('click', async () => {
       $('error').textContent = '';
       $('payBtn').disabled = true;
-      $('payBtn').textContent = 'Opening payment…';
-      if (!window.Razorpay) return resetButton('Could not load the payment window. Check your internet connection and try again.');
+      $('payBtn').textContent = t('Opening payment…');
+      if (!window.Razorpay) return resetButton(t('Could not load the payment window. Check your internet connection and try again.'));
 
       let order;
       try {
@@ -199,7 +200,7 @@
         prefill: order.prefill,
         theme: { color: '#15803d' },
         handler: async (resp) => {
-          $('payBtn').textContent = 'Confirming payment…';
+          $('payBtn').textContent = t('Confirming payment…');
           try {
             await api('/api/visits/' + visitId + '/verify', {
               method: 'POST',
@@ -211,7 +212,7 @@
             resetButton(err.message);
           }
         },
-        modal: { ondismiss: () => resetButton('Payment was not completed. Tap the button to try again.') },
+        modal: { ondismiss: () => resetButton(t('Payment was not completed. Tap the button to try again.')) },
       });
       rzp.on('payment.failed', () => fetch('/api/visits/' + visitId + '/failed', { method: 'POST' }));
       rzp.open();

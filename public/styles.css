@@ -118,3 +118,8 @@ textarea.short { min-height: 90px; }
 .my-timeline .tick-dot { width: 22px; height: 22px; border-radius: 50%; background: #dcfae6; color: var(--ok); display: grid; place-items: center; font-size: .8rem; flex: 0 0 auto; }
 .my-timeline .muted { color: var(--muted); }
 .my-timeline .answer { display: block; color: var(--text); font-size: .9rem; margin-top: 2px; }
+header.brand { position: relative; }
+.lang-switch { margin: 0 0 0 auto; width: auto; padding: 6px 12px; font-size: .85rem; font-weight: 600; background: var(--card); color: var(--primary); border: 1px solid var(--border); border-radius: 999px; }
+.lang-switch:hover { background: var(--tint); }
+.small-note { font-size: .82rem; }
+html[lang="ml"] body { line-height: 1.6; }

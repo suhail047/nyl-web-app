@@ -13,25 +13,26 @@
 <body>
   <main class="wrap">
     <header class="brand"><img class="logo" src="/logo.svg" alt=""><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
-    <a class="back" href="/patients">← Back</a>
+    <a class="back" href="/patients" data-t>← Back</a>
 
     <section class="card">
-      <h1 id="pname">My progress</h1>
-      <div class="progress-summary" id="summary"><p class="sub">Loading…</p></div>
-      <a class="btn" id="sendPhoto" href="#">Send today's photo</a>
+      <h1 id="pname" data-t>My progress</h1>
+      <div class="progress-summary" id="summary"><p class="sub" data-t>Loading…</p></div>
+      <a class="btn" id="sendPhoto" href="#" data-t>Send today's photo</a>
     </section>
 
     <section class="card my-sessions hidden" id="historyCard">
-      <h2>My sessions</h2>
+      <h2 data-t>My sessions</h2>
       <ol class="my-timeline" id="history"></ol>
     </section>
     <div class="error" id="error" role="alert"></div>
   </main>
+  <script src="/i18n.js"></script>
   <script src="/common.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     const patientId = new URLSearchParams(location.search).get('patient');
-    const fmt = (day, opts) => new Date(day + 'T00:00:00Z').toLocaleDateString('en-IN', { timeZone: 'UTC', ...opts });
+    const fmt = (day, opts) => new Date(day + 'T00:00:00Z').toLocaleDateString(LOCALE, { timeZone: 'UTC', ...opts });
 
     (async () => {
       if (!patientId) return (location.href = '/');
@@ -46,19 +47,19 @@
       }
       $('pname').textContent = d.name;
       if (!d.sessions.length) {
-        $('summary').innerHTML = '<p class="sub">You have not started yet. Send your first photo to begin your 12-session healing course.</p>';
-        $('sendPhoto').textContent = 'Send my first photo';
+        $('summary').innerHTML = '<p class="sub">' + esc(t('You have not started yet. Send your first photo to begin your 12-session healing course.')) + '</p>';
+        $('sendPhoto').textContent = t('Send my first photo');
         return;
       }
       const up = d.upcoming;
       const next = up
-        ? (up.gap === 1 ? 'Before 10 PM IST' : fmt(up.date, { weekday: 'long', day: 'numeric', month: 'long' }) + ', before 10 PM IST')
+        ? (up.gap === 1 ? t('Before 10 PM IST') : t('{date}, before 10 PM IST', { date: fmt(up.date, { weekday: 'long', day: 'numeric', month: 'long' }) }))
         : '';
       $('summary').innerHTML = `
-        <div class="stat"><span class="num">${d.sessions.length}</span><span>session${d.sessions.length === 1 ? '' : 's'} done</span></div>
-        <div class="stat"><span class="label">Now</span><b>${esc(d.current || '')}</b><span class="muted">${d.phase === 'weekly' ? 'Weekly sessions' : '12-session course'}</span></div>
-        ${up ? `<div class="stat"><span class="label">Next</span><b>${esc(up.label)}</b><span class="muted">${esc(next)}</span></div>` : ''}
-        ${up && up.finished ? `<p class="notice">${esc(up.finished)} ${esc(up.next || '')}</p>` : ''}`;
+        <div class="stat"><span class="num">${d.sessions.length}</span><span>${esc(t(d.sessions.length === 1 ? 'session done' : 'sessions done'))}</span></div>
+        <div class="stat"><span class="label">${esc(t('Now'))}</span><b>${esc(t(d.current || ''))}</b><span class="muted">${esc(t(d.phase === 'weekly' ? 'Weekly sessions' : '12-session course'))}</span></div>
+        ${up ? `<div class="stat"><span class="label">${esc(t('Next'))}</span><b>${esc(t(up.label))}</b><span class="muted">${esc(next)}</span></div>` : ''}
+        ${up && up.finished ? `<p class="notice">${esc(t(up.finished))} ${esc(up.next ? t(up.next) : '')}</p>` : ''}`;
 
       // Newest first, grouped by course.
       const items = [...d.sessions].reverse();
@@ -67,8 +68,8 @@
       for (const s of d.sessions) if (s.block != null && !courseNo[s.block]) courseNo[s.block] = ++count[s.phase];
       $('history').innerHTML = items.map((s, i) => `
         ${i === 0 || s.block !== items[i - 1].block
-          ? `<li class="course">${s.phase === 'weekly' ? 'Weekly sessions' : '12-session course #' + courseNo[s.block]}</li>` : ''}
-        <li class="row-item"><span class="tick-dot">✓</span><span><b>${esc((s.label || '').replace(/ of 12$/, ''))}</b>
+          ? `<li class="course">${esc(s.phase === 'weekly' ? t('Weekly sessions') : t('12-session course #{n}', { n: courseNo[s.block] }))}</li>` : ''}
+        <li class="row-item"><span class="tick-dot">✓</span><span><b>${esc(t((s.label || '').replace(/ of 12$/, '')))}</b>
           <span class="muted"> · ${esc(fmt(s.date, { weekday: 'short', day: 'numeric', month: 'short' }))}</span>
           ${d.showAnswers && s.text ? `<span class="answer">${esc(s.text)}</span>` : ''}</span></li>`).join('');
       $('historyCard').classList.remove('hidden');

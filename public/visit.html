@@ -15,63 +15,64 @@
   <main class="wrap">
     <header class="brand"><img class="logo" src="/logo.svg" alt=""><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
     <div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
-    <a class="back" id="back" href="/patients">← Choose another patient</a>
+    <a class="back" id="back" href="/patients" data-t>← Choose another patient</a>
 
     <form class="card" id="visitForm" novalidate>
       <div class="who" style="margin-bottom:16px"><span class="avatar" id="avatar"></span><div><h1 id="pname" style="margin:0">…</h1><span class="meta" id="pmeta" style="color:var(--muted)"></span>
-        <div><a class="small-link" id="progressLink" href="#">See my progress →</a></div></div></div>
+        <div><a class="small-link" id="progressLink" href="#" data-t>See my progress →</a></div></div></div>
 
-      <label>Your photo</label>
+      <label data-t>Your photo</label>
       <div class="instructions">
-        <strong>How to take the photo</strong>
+        <strong data-t>How to take the photo</strong>
         <figure class="example">
           <img src="/photo-example.jpg" width="640" height="960" loading="lazy"
                alt="Example: a woman sitting on her bed with eyes closed and palms facing upwards on her lap">
-          <figcaption>Example photo</figcaption>
+          <figcaption data-t>Example photo</figcaption>
         </figure>
         <ul>
-          <li>🧘 Sit comfortably with your eyes closed.</li>
-          <li>🤲 Keep your palms facing upwards on your lap.</li>
-          <li>📍 Remember where you are sitting – you will return to this spot when the healing starts.</li>
+          <li data-t>🧘 Sit comfortably with your eyes closed.</li>
+          <li data-t>🤲 Keep your palms facing upwards on your lap.</li>
+          <li data-t>📍 Remember where you are sitting – you will return to this spot when the healing starts.</li>
         </ul>
-        <small>Ask someone to take the photo for you, or use your camera's timer.</small>
+        <small data-t>Ask someone to take the photo for you, or use your camera's timer.</small>
       </div>
       <label class="photo-drop" id="drop">
         <img id="preview" class="hidden" alt="Selected photo preview">
-        <span id="dropText">📷 Tap to take or upload a photo<br><small>JPG, PNG or HEIC, up to 15 MB</small></span>
+        <span id="dropText" data-t-key="photoDrop">📷 Tap to take or upload a photo<br><small>JPG, PNG or HEIC, up to 15 MB</small></span>
         <input id="photo" name="photo" type="file" accept="image/*" capture="user" required>
       </label>
 
-      <label for="problems" id="problemsLabel">What problems are you facing?</label>
-      <textarea id="problems" name="problems" maxlength="5000" required placeholder="Your illness or symptoms, and how long you have had them…"></textarea>
+      <label for="problems" id="problemsLabel" data-t>What problems are you facing?</label>
+      <textarea id="problems" name="problems" maxlength="5000" required data-t-ph placeholder="Your illness or symptoms, and how long you have had them…"></textarea>
 
       <div id="firstVisitFields">
-        <label for="treatments">What treatments have you already tried? <span class="hint-inline">(optional)</span></label>
-        <textarea id="treatments" name="treatments" class="short" maxlength="3000" placeholder="e.g. allopathy, ayurveda, homeopathy, physiotherapy, surgery…"></textarea>
+        <label for="treatments"><span data-t>What treatments have you already tried?</span> <span class="hint-inline" data-t>(optional)</span></label>
+        <textarea id="treatments" name="treatments" class="short" maxlength="3000" data-t-ph placeholder="e.g. allopathy, ayurveda, homeopathy, physiotherapy, surgery…"></textarea>
 
-        <label for="medicines">What medicines are you taking now? <span class="hint-inline">(optional)</span></label>
-        <textarea id="medicines" name="medicines" class="short" maxlength="3000" placeholder="Medicine names and how often you take them. Write “None” if you take no medicines."></textarea>
+        <label for="medicines"><span data-t>What medicines are you taking now?</span> <span class="hint-inline" data-t>(optional)</span></label>
+        <textarea id="medicines" name="medicines" class="short" maxlength="3000" data-t-ph placeholder="Medicine names and how often you take them. Write “None” if you take no medicines."></textarea>
       </div>
 
       <label class="consent">
         <input type="checkbox" id="consent" name="consent" value="yes" required>
         <span>
-          <strong>By ticking this box, I confirm that:</strong>
+          <strong data-t>By ticking this box, I confirm that:</strong>
           <ul>
-            <li>I am the patient, or a parent, guardian or family member submitting with their permission.</li>
-            <li>I agree to share this photo and these details with <span data-clinic>Suhail&#39;s Meridian Healing</span>
+            <li data-t>I am the patient, or a parent, guardian or family member submitting with their permission.</li>
+            <li data-t-key="consentShare">I agree to share this photo and these details with <span data-clinic>Suhail&#39;s Meridian Healing</span>
               for my healing session.</li>
-            <li>I understand this is a drugless therapy, and I am taking part willingly.</li>
-            <li>I understand that results vary and are not guaranteed.</li>
+            <li data-t>I understand this is a drugless therapy, and I am taking part willingly.</li>
+            <li data-t>I understand that results vary and are not guaranteed.</li>
           </ul>
-          <a href="/privacy" target="_blank" class="small-link">Read our privacy policy</a>
+          <a href="/privacy" target="_blank" class="small-link" data-t>Read our privacy policy</a>
         </span>
       </label>
       <div class="error" id="error" role="alert"></div>
-      <button type="submit" id="submit">Upload &amp; continue to payment</button>
+      <button type="submit" id="submit" data-t>Upload &amp; continue to payment</button>
     </form>
 
   </main>
+  <script src="/i18n.js"></script>
   <script src="/common.js"></script>
   <script>
     const patientId = new URLSearchParams(location.search).get('patient');
@@ -81,6 +82,7 @@
     const error = document.getElementById('error');
     const submit = document.getElementById('submit');
     const submitLabel = submit.textContent;
+    let followUp = false;
 
     (async () => {
       if (!patientId) return (location.href = '/');
@@ -89,14 +91,15 @@
         document.getElementById('pname').textContent = p.name;
         document.getElementById('progressLink').href = '/my-progress?patient=' + p.id;
         document.getElementById('avatar').textContent = initials(p.name);
-        document.getElementById('pmeta').textContent = [p.age != null ? p.age + ' yrs' : '', p.gender].filter(Boolean).join(' · ');
+        document.getElementById('pmeta').textContent = [p.age != null ? t('{n} yrs', { n: p.age }) : '', p.gender ? t(p.gender) : ''].filter(Boolean).join(' · ');
+        followUp = p.followUp;
         if (p.followUp) {
           // Last healing was within the past week: ask how the patient is improving instead.
-          document.getElementById('problemsLabel').textContent = 'What positive changes are you feeling after your last healing?';
-          document.getElementById('problems').placeholder = 'For example: less pain, better sleep, more energy, feeling calmer…';
+          document.getElementById('problemsLabel').textContent = t('What positive changes are you feeling after your last healing?');
+          document.getElementById('problems').placeholder = t('For example: less pain, better sleep, more energy, feeling calmer…');
           document.getElementById('firstVisitFields').remove();
         }
-        if (!cfg.paymentsEnabled) submit.textContent = 'Upload & continue';
+        if (!cfg.paymentsEnabled) submit.textContent = t('Upload & continue');
       } catch (err) {
         error.textContent = err.message;
         submit.disabled = true;
@@ -108,7 +111,7 @@
       if (!file) return;
       preview.src = URL.createObjectURL(file);
       preview.classList.remove('hidden');
-      document.getElementById('dropText').innerHTML = '<small>Tap to change photo</small>';
+      document.getElementById('dropText').innerHTML = '<small>' + esc(t('Tap to change photo')) + '</small>';
     });
 
     // Phone photos are often 3–8 MB. Resize to at most 1600 px and re-save as JPEG (~200–400 KB) so the
@@ -135,21 +138,21 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       error.textContent = '';
-      if (!photo.files[0]) return (error.textContent = 'Please add a photo.');
+      if (!photo.files[0]) return (error.textContent = t('Please add a photo.'));
       if (!document.getElementById('problems').value.trim()) {
-        return (error.textContent = document.getElementById('problemsLabel').textContent.startsWith('What positive')
-          ? 'Please tell us about the positive changes you are feeling.'
-          : 'Please describe the problems you are facing.');
+        return (error.textContent = followUp
+          ? t('Please tell us about the positive changes you are feeling.')
+          : t('Please describe the problems you are facing.'));
       }
-      if (!document.getElementById('consent').checked) return (error.textContent = 'Please tick the consent box to continue.');
+      if (!document.getElementById('consent').checked) return (error.textContent = t('Please tick the consent box to continue.'));
 
       const data = new FormData(form);
       data.append('patientId', patientId);
       const label = submit.textContent;
       submit.disabled = true;
-      submit.textContent = 'Preparing photo…';
+      submit.textContent = t('Preparing photo…');
       data.set('photo', await shrinkPhoto(photo.files[0]));
-      submit.textContent = 'Uploading…';
+      submit.textContent = t('Uploading…');
       try {
         const { visitId } = await api('/api/visits', { method: 'POST', body: data });
         location.replace('/pay?visit=' + visitId); // replace: "back" from payment shouldn't re-open the upload form

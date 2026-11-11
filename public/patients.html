@@ -15,27 +15,28 @@
   <main class="wrap">
     <header class="brand"><img class="logo" src="/logo.svg" alt=""><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
     <div class="steps"><span class="on"></span><span class="on"></span><span></span><span></span></div>
-    <button type="button" class="link back" onclick="logout()">← Change number</button>
+    <button type="button" class="link back" onclick="logout()" data-t>← Change number</button>
     <section class="card">
-      <h1>Who is the patient?</h1>
-      <p class="sub" id="sub">Loading…</p>
+      <h1 data-t>Who is the patient?</h1>
+      <p class="sub" id="sub" data-t>Loading…</p>
       <ul class="list" id="list"></ul>
-      <button type="button" class="secondary" id="showAdd">+ Add a new patient</button>
+      <button type="button" class="secondary" id="showAdd" data-t>+ Add a new patient</button>
 
       <form id="addForm" class="hidden" novalidate>
-        <label for="name">Full name</label>
+        <label for="name" data-t>Full name</label>
         <input id="name" required maxlength="100" autocomplete="name">
         <div class="phone-row">
-          <div style="flex:1"><label for="age">Age</label><input id="age" type="number" min="0" max="130" inputmode="numeric"></div>
-          <div style="flex:1"><label for="gender">Gender</label>
-            <select id="gender"><option value="">—</option><option>Female</option><option>Male</option><option>Other</option></select>
+          <div style="flex:1"><label for="age" data-t>Age</label><input id="age" type="number" min="0" max="130" inputmode="numeric"></div>
+          <div style="flex:1"><label for="gender" data-t>Gender</label>
+            <select id="gender" data-t-options><option value="">—</option><option>Female</option><option>Male</option><option>Other</option></select>
           </div>
         </div>
-        <button type="submit" id="addBtn">Add &amp; continue</button>
+        <button type="submit" id="addBtn" data-t>Add &amp; continue</button>
       </form>
       <div class="error" id="error" role="alert"></div>
     </section>
   </main>
+  <script src="/i18n.js"></script>
   <script src="/common.js"></script>
   <script>
     let phone;
@@ -61,13 +62,13 @@
         phone = res.phone;
         const shown = fmtPhone(phone);
         if (!patients.length) {
-          sub.textContent = 'No patients are registered under ' + shown + ' yet. Add the patient below.';
+          sub.textContent = t('No patients are registered under {phone} yet. Add the patient below.', { phone: shown });
           openAddForm();
           return;
         }
-        sub.textContent = patients.length + ' patient' + (patients.length > 1 ? 's' : '') + ' registered under ' + shown + '.';
+        sub.textContent = t(patients.length > 1 ? '{n} patients registered under {phone}.' : '{n} patient registered under {phone}.', { n: patients.length, phone: shown });
         list.innerHTML = patients.map((p) => {
-          const meta = [p.age != null ? p.age + ' yrs' : '', p.gender || ''].filter(Boolean).join(' · ');
+          const meta = [p.age != null ? t('{n} yrs', { n: p.age }) : '', p.gender ? t(p.gender) : ''].filter(Boolean).join(' · ');
           return '<li><button type="button" data-id="' + p.id + '"><span class="who"><span class="avatar">' + esc(initials(p.name)) +
             '</span><span>' + esc(p.name) + (meta ? '<br><span class="meta">' + esc(meta) + '</span>' : '') + '</span></span><span>›</span></button></li>';
         }).join('');
