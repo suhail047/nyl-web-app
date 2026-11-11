@@ -150,6 +150,8 @@ async function loadProgress() {
       <label for="patientNotes">Your notes <span class="muted">(private – patients never see this)</span></label>
       <textarea id="patientNotes" data-patient="${p.id}" maxlength="10000" placeholder="Your observations, what you advised, follow-ups…">${esc(p.notes || '')}</textarea>
       <span class="muted small" id="notesSaved"></span>
+      <label class="check-row"><input type="checkbox" id="remindersOn" data-patient="${p.id}" ${p.reminders_off ? '' : 'checked'}>
+        Send WhatsApp reminders to this patient</label>
     </div>`;
   const restoreNotes = () => {
     if (!typed) return;
@@ -206,6 +208,65 @@ document.addEventListener('input', (e) => {
       if ($('notesSaved')) $('notesSaved').textContent = 'Not saved: ' + err.message;
     }
   }, 700);
+});
+
+// ---------- Reminders ----------
+async function loadReminders() {
+  let r;
+  try {
+    r = await api('/api/admin/reminders');
+  } catch (err) {
+    $('remStatus').innerHTML = `<p class="error">${esc(err.message)}</p>`;
+    return;
+  }
+  const last = r.lastRun
+    ? `Last sent ${esc(fmtDay(r.lastRun.day))}: ${r.lastRun.sent} sent, ${r.lastRun.failed} failed, ${r.lastRun.skipped} skipped.`
+    : 'Nothing sent automatically yet.';
+  $('remStatus').innerHTML = r.enabled
+    ? `<h2>Automatic WhatsApp reminders: <span class="on-text">ON</span></h2>
+       <p class="muted">Sent every day at ${esc(r.time)} IST to patients due a session (template "${esc(r.template)}"). ${last}</p>
+       <button type="button" id="remRun">Send today's reminders now</button> <span class="muted" id="remRunMsg"></span>`
+    : `<h2>Automatic WhatsApp reminders: <span class="off-text">not connected</span></h2>
+       <p class="muted">Use <b>Send on WhatsApp</b> below – it opens WhatsApp with the reminder written for you; just press send.
+         To have the app send reminders by itself every day, connect a WhatsApp Business account (see the README).</p>`;
+  $('remCount').textContent = `(${r.due.length})`;
+  $('remList').innerHTML = r.due.map((d) => {
+    const state = d.remindersOff ? '<span class="muted">Reminders off</span>'
+      : d.sent?.status === 'sent' ? '<span class="pill paid">Sent ✓</span>'
+      : d.sent?.status === 'failed' ? `<span class="pill failed" title="${esc(d.sent.error || '')}">Failed</span>` : '<span class="muted">Not sent</span>';
+    return `<tr>
+      <td><button type="button" class="link-plain" data-progress="${d.patientId}">${esc(d.name)}</button></td>
+      <td>${esc(fmtPhone(d.phone))}</td><td>${esc(d.label)}</td><td>${esc(fmtDay(d.lastDay))}</td><td>${state}</td>
+      <td><a class="wa-btn" href="${esc(d.waLink)}" target="_blank" rel="noopener">Send on WhatsApp</a></td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Nobody is due a session today, or everyone has already sent their photo.</td></tr>';
+}
+
+document.addEventListener('click', async (e) => {
+  if (e.target.id !== 'remRun') return;
+  e.target.disabled = true;
+  $('remRunMsg').textContent = 'Sending…';
+  try {
+    const s = await api('/api/admin/reminders/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    await loadReminders();
+    $('remRunMsg').textContent = `${s.sent} sent, ${s.failed} failed, ${s.skipped} skipped.`;
+  } catch (err) {
+    $('remRunMsg').textContent = err.message;
+    e.target.disabled = false;
+  }
+});
+
+document.addEventListener('change', async (e) => {
+  if (e.target.id !== 'remindersOn') return;
+  try {
+    await api(`/api/admin/patients/${e.target.dataset.patient}/reminders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ off: !e.target.checked }),
+    });
+  } catch (err) {
+    alert(err.message);
+    e.target.checked = !e.target.checked;
+  }
 });
 
 document.addEventListener('change', async (e) => {
@@ -270,6 +331,7 @@ function connect() {
     notify(v);
     loadPatientsQuietly();
     if (v.patientId === progress.patientId) loadProgress();
+    if (!$('tab-reminders').classList.contains('hidden')) loadReminders();
   });
   es.addEventListener('visit-updated', (e) => {
     const v = JSON.parse(e.data);
@@ -293,6 +355,8 @@ document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () 
   $('tab-patients').classList.toggle('hidden', t.dataset.tab !== 'patients');
   $('tab-progress').classList.toggle('hidden', t.dataset.tab !== 'progress');
   $('tab-settings').classList.toggle('hidden', t.dataset.tab !== 'settings');
+  $('tab-reminders').classList.toggle('hidden', t.dataset.tab !== 'reminders');
+  if (t.dataset.tab === 'reminders') loadReminders();
   if (t.dataset.tab === 'settings') loadSettings();
   if (t.dataset.tab === 'visits') clearUnseen();
 }));

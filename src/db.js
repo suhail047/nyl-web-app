@@ -96,6 +96,20 @@ if (!db.prepare('PRAGMA table_info(patients)').all().some((c) => c.name === 'nex
 if (!db.prepare('PRAGMA table_info(patients)').all().some((c) => c.name === 'notes')) {
   db.exec('ALTER TABLE patients ADD COLUMN notes TEXT');
 }
+// 1 = don't send this patient WhatsApp reminders.
+if (!db.prepare('PRAGMA table_info(patients)').all().some((c) => c.name === 'reminders_off')) {
+  db.exec('ALTER TABLE patients ADD COLUMN reminders_off INTEGER NOT NULL DEFAULT 0');
+}
+// One row per patient per day a reminder was sent (or failed), so nobody gets two in a day.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reminder_log (
+    patient_id  INTEGER NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    day         TEXT NOT NULL,              -- YYYY-MM-DD, Indian time
+    status      TEXT NOT NULL,              -- sent | failed
+    error       TEXT,
+    sent_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (patient_id, day)
+  )`);
 if (!visitColumns.includes('visit_kind')) db.exec("ALTER TABLE visits ADD COLUMN visit_kind TEXT NOT NULL DEFAULT 'first'");
 
 const VISIT_SELECT = `
@@ -124,6 +138,14 @@ const q = {
   lastVisitOfPatient: db.prepare('SELECT * FROM visits WHERE patient_id = ? ORDER BY id DESC LIMIT 1'),
   setNextBlock: db.prepare('UPDATE patients SET next_block = ? WHERE id = ?'),
   setNotes: db.prepare('UPDATE patients SET notes = ? WHERE id = ?'),
+  setRemindersOff: db.prepare('UPDATE patients SET reminders_off = ? WHERE id = ?'),
+  lastVisitPerPatient: db.prepare(`
+    SELECT v.*, p.name AS patient_name, p.phone AS patient_phone, p.next_block, p.reminders_off
+    FROM patients p JOIN visits v ON v.id = (SELECT MAX(id) FROM visits WHERE patient_id = p.id)`),
+  reminderFor: db.prepare('SELECT status, error, sent_at FROM reminder_log WHERE patient_id = ? AND day = ?'),
+  logReminder: db.prepare(`
+    INSERT INTO reminder_log (patient_id, day, status, error) VALUES (?, ?, ?, ?)
+    ON CONFLICT(patient_id, day) DO UPDATE SET status = excluded.status, error = excluded.error, sent_at = datetime('now')`),
   markUpiClaimed: db.prepare(`
     UPDATE visits SET payment_status = 'upi_claimed', upi_ref = ? WHERE id = ? AND payment_status IN ('pending', 'failed')`),
   confirmPayment: db.prepare(`

@@ -11,6 +11,7 @@ const { q, normalizePhone } = require('./src/db');
 const otp = require('./src/otp');
 const backup = require('./src/backup');
 const plan = require('./src/plan');
+const reminders = require('./src/reminders');
 
 plan.backfill();
 
@@ -45,6 +46,7 @@ if (PAYMENT_METHOD === 'upi') console.log(`Payments: UPI QR to ${UPI_ID}`);
 else if (PAYMENT_METHOD === 'none') console.warn('No UPI_ID or Razorpay keys set: patients will be asked to pay at the clinic.');
 if (!OTP_ENABLED) console.log('OTP is off: patients go straight from phone number to the patient list.');
 else if (otp.PROVIDER === 'console') console.warn('SMS_PROVIDER=console: OTP codes are printed here, not sent by SMS.');
+console.log(reminders.ENABLED ? `WhatsApp reminders: on, daily at ${reminders.status().time} IST` : 'WhatsApp reminders: not connected (manual links in the Reminders tab).');
 
 function currentFeePaise() {
   const saved = q.getSetting.get('fee_paise');
@@ -586,6 +588,31 @@ app.get('/api/admin/patients/:id/visits', (req, res) => {
   res.json({ patient: p, visits: q.visitsByPatient.all(p.id).map(visitDto), upcoming: last?.session_no ? plan.upcoming(last, p.next_block) : null });
 });
 
+// Who is due a session today, with ready-to-send WhatsApp links; and the automatic sending status.
+app.get('/api/admin/reminders', (req, res) => {
+  const appUrl = (process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+  const due = reminders.dueToday().map((d) => ({
+    ...d,
+    waLink: `https://wa.me/91${d.phone}?text=${encodeURIComponent(reminders.messageText(d.name, d.label, appUrl))}`,
+  }));
+  res.json({ ...reminders.status(), due });
+});
+
+app.post('/api/admin/reminders/run', async (_req, res, next) => {
+  try {
+    res.json(await reminders.runToday());
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/admin/patients/:id/reminders', (req, res) => {
+  const p = q.patientById.get(Number(req.params.id));
+  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  q.setRemindersOff.run(req.body.off ? 1 : 0, p.id);
+  res.json({ ok: true });
+});
+
 // The admin's private notes about a patient.
 app.post('/api/admin/patients/:id/notes', (req, res) => {
   const p = q.patientById.get(Number(req.params.id));
@@ -630,6 +657,7 @@ app.use((err, _req, res, _next) => {
 });
 
 backup.startDailyBackups();
+reminders.startDailyReminders();
 
 app.listen(PORT, process.env.HOST || undefined, () => {
   console.log(`Patient app:     http://localhost:${PORT}`);

@@ -107,3 +107,15 @@ td .link.link-ok { color: var(--primary); }
 .notes-card label { margin-top: 0; }
 .notes-card .muted { color: var(--muted); font-weight: 400; }
 .notes-card textarea { min-height: 90px; }
+.reminders-status { padding: 16px 18px; margin-bottom: 16px; }
+.reminders-status h2 { font-size: 1.1rem; margin: 0 0 6px; }
+.reminders-status .muted { color: var(--muted); }
+.reminders-status button { width: auto; margin-top: 8px; padding: 10px 16px; }
+.on-text { color: var(--ok); }
+.off-text { color: var(--warn); }
+.section-title { font-size: 1.05rem; margin: 0 0 10px; }
+.section-title .muted { color: var(--muted); font-weight: 400; }
+.wa-btn { display: inline-block; background: #25d366; color: #053d1d; font-weight: 700; padding: 7px 12px; border-radius: 8px; text-decoration: none; white-space: nowrap; }
+.wa-btn:hover { filter: brightness(.95); }
+.check-row { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 12px 0 0; }
+.check-row input { width: 18px; height: 18px; accent-color: var(--primary); }

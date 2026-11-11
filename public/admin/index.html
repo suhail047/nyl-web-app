@@ -19,6 +19,7 @@
       <button class="tab active" data-tab="visits">Submissions <span class="badge hidden" id="newCount">0</span></button>
       <button class="tab" data-tab="progress">Progress</button>
       <button class="tab" data-tab="patients">Patients</button>
+      <button class="tab" data-tab="reminders">Reminders</button>
       <button class="tab" data-tab="settings">Settings</button>
     </nav>
 
@@ -63,6 +64,17 @@
         </table>
       </div>
     </section>
+    <section id="tab-reminders" class="hidden">
+      <div class="card reminders-status" id="remStatus"><p class="muted">Loading…</p></div>
+      <h2 class="section-title">Due a session today <span class="muted" id="remCount"></span></h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Patient</th><th>Phone</th><th>Next session</th><th>Last session</th><th>Reminder</th><th></th></tr></thead>
+          <tbody id="remList"></tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="tab-settings" class="hidden">
       <form class="card settings" id="settingsForm" novalidate>
         <h2>Consultation fee</h2>

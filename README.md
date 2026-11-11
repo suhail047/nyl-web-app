@@ -105,6 +105,39 @@ Admin dashboard → **Progress**: pick a patient (or click a name on a submissio
 Patients table) to see every healing, newest first, grouped by course – with the photo, what they wrote
 and the payment status. The timeline updates live when the patient submits.
 
+## WhatsApp reminders
+
+Admin dashboard → **Reminders** lists every patient due a session today (their next session is today, they
+haven't sent today's photo, and their last session was within 2 weeks), with a **Send on WhatsApp** button that
+opens WhatsApp with the reminder already written. Reminders can be switched off per patient in the Progress tab.
+
+To have the app send them by itself every day at `REMINDER_TIME` (Indian time), connect the official
+**WhatsApp Cloud API** (Meta):
+
+1. In Meta Business Manager create a WhatsApp Business account and add a phone number (one that is *not*
+   already used in the WhatsApp app).
+2. Create a **Utility** message template, e.g. name `session_reminder`, language English, body:
+   `Hello {{1}}, a reminder from Suhail's Meridian Healing: please send your photo for {{2}} before 10 PM IST today.`
+   Optionally add a "Visit website" button to your app's address. Wait for Meta to approve it.
+3. Create a permanent access token (System user) and copy the phone number ID.
+4. Put them in `.env` (`/etc/patient-app.env` on the VPS): `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`,
+   `WHATSAPP_TEMPLATE`, `WHATSAPP_TEMPLATE_LANG`, `REMINDER_TIME`, then restart the app.
+
+Each patient gets at most one reminder a day; failed sends are shown in the Reminders tab and retried by
+"Send today's reminders now". Meta charges per business-initiated message.
+
+## Other patient features
+
+- **Installable app** – patients can add it to their home screen (Android: "Install" on the first page;
+  iPhone: Share → Add to Home Screen). Works offline only to show a "no internet" page; patient data is never
+  cached on the phone.
+- **Malayalam** – a മലയാളം / English switch on every patient page (remembered on the phone).
+- **Photos are shrunk** in the browser to at most 1600 px before upload.
+- **My progress** – patients can see the sessions they've done and what's next (their earlier answers are only
+  shown when OTP is on).
+- **Privacy policy** at `/privacy`, with contact details from `CONTACT_PHONE` / `CONTACT_EMAIL`.
+- **Your notes** – a private notes box per patient in the admin Progress tab (included in the Excel backup).
+
 ## Backups (Excel)
 
 Admin dashboard → **Settings → Backups**:
