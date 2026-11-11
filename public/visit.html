@@ -108,6 +108,27 @@
       document.getElementById('dropText').innerHTML = '<small>Tap to change photo</small>';
     });
 
+    // Phone photos are often 3–8 MB. Resize to at most 1600 px and re-save as JPEG (~200–400 KB) so the
+    // upload is quick on mobile data and the server's storage lasts longer. Photos the browser can't read
+    // (e.g. HEIC on Android) are sent as they are.
+    async function shrinkPhoto(file) {
+      const MAX = 1600;
+      if (!file || file.size < 500 * 1024) return file;
+      try {
+        const img = await createImageBitmap(file, { imageOrientation: 'from-image' });
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+        if (!blob || blob.size >= file.size) return file;
+        return new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+      } catch {
+        return file;
+      }
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       error.textContent = '';
@@ -123,6 +144,8 @@
       data.append('patientId', patientId);
       const label = submit.textContent;
       submit.disabled = true;
+      submit.textContent = 'Preparing photo…';
+      data.set('photo', await shrinkPhoto(photo.files[0]));
       submit.textContent = 'Uploading…';
       try {
         const { visitId } = await api('/api/visits', { method: 'POST', body: data });
