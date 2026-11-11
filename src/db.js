@@ -92,6 +92,10 @@ for (const [col, type] of [['phase', 'TEXT'], ['session_no', 'INTEGER'], ['block
 if (!db.prepare('PRAGMA table_info(patients)').all().some((c) => c.name === 'next_block')) {
   db.exec('ALTER TABLE patients ADD COLUMN next_block TEXT');
 }
+// The admin's private notes about a patient (never shown to patients).
+if (!db.prepare('PRAGMA table_info(patients)').all().some((c) => c.name === 'notes')) {
+  db.exec('ALTER TABLE patients ADD COLUMN notes TEXT');
+}
 if (!visitColumns.includes('visit_kind')) db.exec("ALTER TABLE visits ADD COLUMN visit_kind TEXT NOT NULL DEFAULT 'first'");
 
 const VISIT_SELECT = `
@@ -119,6 +123,7 @@ const q = {
       AND date(created_at, '+5 hours', '+30 minutes') >= date('now', '+5 hours', '+30 minutes', '-14 days') LIMIT 1`),
   lastVisitOfPatient: db.prepare('SELECT * FROM visits WHERE patient_id = ? ORDER BY id DESC LIMIT 1'),
   setNextBlock: db.prepare('UPDATE patients SET next_block = ? WHERE id = ?'),
+  setNotes: db.prepare('UPDATE patients SET notes = ? WHERE id = ?'),
   markUpiClaimed: db.prepare(`
     UPDATE visits SET payment_status = 'upi_claimed', upi_ref = ? WHERE id = ? AND payment_status IN ('pending', 'failed')`),
   confirmPayment: db.prepare(`

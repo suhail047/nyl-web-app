@@ -118,6 +118,9 @@ async function loadProgress() {
     return;
   }
   const { patient: p, visits, upcoming } = data;
+  // Keep notes being typed if the panel refreshes (e.g. a new upload arrives live).
+  const typing = $('patientNotes') && Number($('patientNotes').dataset.patient) === p.id ? $('patientNotes') : null;
+  const typed = typing ? { value: typing.value, focused: document.activeElement === typing, pos: typing.selectionStart } : null;
   const last = visits[visits.length - 1];
   const nextChoice = p.next_block || '';
   const head = `
@@ -142,9 +145,21 @@ async function loadProgress() {
       </div>
       <p class="muted small">The plan: 12 sessions → 12 weekly sessions → 12 sessions → … "Another 12 sessions" applies once, after the
         current course; after that the patient goes back to weekly healing.</p>
+    </div>
+    <div class="notes-card card">
+      <label for="patientNotes">Your notes <span class="muted">(private – patients never see this)</span></label>
+      <textarea id="patientNotes" data-patient="${p.id}" maxlength="10000" placeholder="Your observations, what you advised, follow-ups…">${esc(p.notes || '')}</textarea>
+      <span class="muted small" id="notesSaved"></span>
     </div>`;
+  const restoreNotes = () => {
+    if (!typed) return;
+    const el = $('patientNotes');
+    el.value = typed.value;
+    if (typed.focused) { el.focus(); el.setSelectionRange(typed.pos, typed.pos); }
+  };
   if (!visits.length) {
     $('progressMain').innerHTML = head + '<p class="empty">No photos submitted yet.</p>';
+    restoreNotes();
     return;
   }
   // Newest first, grouped under a heading per course.
@@ -169,7 +184,29 @@ async function loadProgress() {
       </div>
     </li>`;
   }).join('') + '</ol>';
+  restoreNotes();
 }
+
+// Notes save automatically a moment after you stop typing.
+let notesTimer;
+document.addEventListener('input', (e) => {
+  if (e.target.id !== 'patientNotes') return;
+  $('notesSaved').textContent = 'Saving…';
+  clearTimeout(notesTimer);
+  const el = e.target;
+  notesTimer = setTimeout(async () => {
+    try {
+      await api(`/api/admin/patients/${el.dataset.patient}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: el.value }),
+      });
+      if ($('notesSaved')) $('notesSaved').textContent = '✓ Saved';
+    } catch (err) {
+      if ($('notesSaved')) $('notesSaved').textContent = 'Not saved: ' + err.message;
+    }
+  }, 700);
+});
 
 document.addEventListener('change', async (e) => {
   if (e.target.id !== 'nextBlock') return;

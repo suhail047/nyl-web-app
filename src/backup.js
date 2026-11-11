@@ -30,9 +30,10 @@ async function buildWorkbook() {
     { header: 'Registered (IST)', key: 'registered', width: 18 },
     { header: 'Sessions', key: 'visits', width: 9 },
     { header: 'Last session (IST)', key: 'last_visit', width: 18 },
+    { header: 'Your notes', key: 'notes', width: 50 },
   ];
   patients.addRows(db.prepare(`
-    SELECT p.id, p.phone, p.name, p.age, p.gender, ${IST('p.created_at')} AS registered,
+    SELECT p.id, p.phone, p.name, p.age, p.gender, ${IST('p.created_at')} AS registered, p.notes,
            COUNT(v.id) AS visits, ${IST('MAX(v.created_at)')} AS last_visit
     FROM patients p LEFT JOIN visits v ON v.patient_id = p.id
     GROUP BY p.id ORDER BY p.phone, p.name`).all());

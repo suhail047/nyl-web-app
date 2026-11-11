@@ -563,6 +563,14 @@ app.get('/api/admin/patients/:id/visits', (req, res) => {
   res.json({ patient: p, visits: q.visitsByPatient.all(p.id).map(visitDto), upcoming: last?.session_no ? plan.upcoming(last, p.next_block) : null });
 });
 
+// The admin's private notes about a patient.
+app.post('/api/admin/patients/:id/notes', (req, res) => {
+  const p = q.patientById.get(Number(req.params.id));
+  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  q.setNotes.run(cleanText(req.body.notes, 10000) || null, p.id);
+  res.json({ ok: true });
+});
+
 // What follows the patient's current 12-session course: weekly (default), another 12 sessions, or restart at Session 1.
 app.post('/api/admin/patients/:id/plan', (req, res) => {
   const p = q.patientById.get(Number(req.params.id));

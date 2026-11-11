@@ -103,3 +103,7 @@ td .link.link-ok { color: var(--primary); }
 .plan-row select { width: auto; min-width: 280px; max-width: 100%; }
 .plan-card .small { font-size: .85rem; margin: 8px 0 0; }
 .timeline .course-break { font-weight: 700; color: var(--primary-dark); border-top: 2px dashed var(--border); padding-top: 10px; }
+.notes-card { margin-top: 12px; padding: 14px 18px; }
+.notes-card label { margin-top: 0; }
+.notes-card .muted { color: var(--muted); font-weight: 400; }
+.notes-card textarea { min-height: 90px; }
