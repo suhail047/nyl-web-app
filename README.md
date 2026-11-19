@@ -190,7 +190,8 @@ session *Paid*. If the patient closes the payment window they can simply tap *Pa
   (`OTP_ENABLED=true`) if that matters.
 - **Uploads** must really be JPG/PNG/WEBP/HEIC images (checked by content, max 15 MB) and are stored under
   random names; they are only served to the admin.
-- **Rate limits** per IP: 60 phone look-ups, 20 new patients and 30 uploads per hour.
+- **Rate limits**: per phone session, 30 uploads and 20 new people per hour; per IP address (generous, because
+  mobile networks share addresses), 300 phone look-ups and 600 uploads per hour.
 - Cross-site form posts are rejected, and the usual security headers are set (nosniff, no framing, HSTS).
 - `TRUST_PROXY` (default `loopback`, for Caddy on the same server; `1` on Render) controls which proxy's
   forwarded IP address is trusted.

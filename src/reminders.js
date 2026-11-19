@@ -67,8 +67,15 @@ async function sendTemplate(phone, name, label) {
 }
 
 // Send today's reminders (skips patients already reminded today or with reminders switched off).
-async function runToday() {
-  if (!ENABLED) throw Object.assign(new Error('WhatsApp is not connected.'), { status: 400 });
+let running = null; // the round in progress, so the daily timer and the button never send twice at once
+
+function runToday() {
+  if (!ENABLED) return Promise.reject(Object.assign(new Error('WhatsApp is not connected.'), { status: 400 }));
+  if (!running) running = sendRound().finally(() => { running = null; });
+  return running;
+}
+
+async function sendRound() {
   const today = plan.istDay();
   const summary = { sent: 0, failed: 0, skipped: 0 };
   for (const d of dueToday(today)) {
@@ -95,7 +102,7 @@ function startDailyReminders() {
     const minutes = now.getUTCHours() * 60 + now.getUTCMinutes();
     if (minutes < h * 60 + m || minutes >= 22 * 60) return;
     const last = JSON.parse(q.getSetting.get('reminders_last_run')?.value || '{}');
-    if (last.day === plan.istDay()) return;
+    if (last.day === plan.istDay() || running) return;
     runToday().then((s) => console.log('WhatsApp reminders:', s)).catch((e) => console.error('WhatsApp reminders failed:', e.message));
   };
   setInterval(tick, 60 * 1000).unref();

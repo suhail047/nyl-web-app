@@ -78,25 +78,30 @@ app.use((req, res, next) => {
   next();
 });
 
-// ---------- Simple per-IP rate limits (in memory) ----------
-function rateLimit(name, max, windowMs, message) {
+// ---------- Simple rate limits (in memory) ----------
+// Indian mobile networks often put many phones behind one shared IP address, so per-IP limits are generous
+// and the tight limits apply per phone session (the browser that entered a mobile number).
+function rateLimit(max, windowMs, message, keyOf = (req) => req.ip) {
   const hits = new Map();
   setInterval(() => {
     const now = Date.now();
-    for (const [ip, h] of hits) if (now - h.start > windowMs) hits.delete(ip);
+    for (const [key, h] of hits) if (now - h.start > windowMs) hits.delete(key);
   }, windowMs).unref();
   return (req, res, next) => {
+    const key = keyOf(req);
     const now = Date.now();
-    const h = hits.get(req.ip);
-    if (!h || now - h.start > windowMs) hits.set(req.ip, { start: now, count: 1 });
+    const h = hits.get(key);
+    if (!h || now - h.start > windowMs) hits.set(key, { start: now, count: 1 });
     else if (++h.count > max) return res.status(429).json({ error: message || 'Too many requests. Please try again later.' });
     next();
   };
 }
 const HOUR = 3600 * 1000;
-const limitLookups = rateLimit('lookups', 60, HOUR, 'Too many attempts. Please try again in an hour.');
-const limitUploads = rateLimit('uploads', 30, HOUR, 'Too many uploads. Please try again in an hour.');
-const limitNewPatients = rateLimit('patients', 20, HOUR, 'Too many new people added. Please try again in an hour.');
+const bySession = (req) => req.sessionKey || req.ip;
+const limitLookups = rateLimit(300, HOUR, 'Too many attempts. Please try again in an hour.');
+const limitUploadsPerIp = rateLimit(600, HOUR, 'Too many uploads. Please try again in an hour.');
+const limitUploads = rateLimit(30, HOUR, 'Too many uploads. Please try again in an hour.', bySession);
+const limitNewPatients = rateLimit(20, HOUR, 'Too many new people added. Please try again in an hour.', bySession);
 
 // ---------- Block cross-site form posts (CSRF) ----------
 // Browsers send an Origin header with POST/DELETE; it must be this site. (Razorpay's webhook is exempt.)
@@ -165,7 +170,9 @@ const SESSION_COOKIE = 'patient_session';
 function readCookie(req, name) {
   for (const part of (req.headers.cookie || '').split(';')) {
     const [k, ...v] = part.trim().split('=');
-    if (k === name) return decodeURIComponent(v.join('='));
+    if (k === name) {
+      try { return decodeURIComponent(v.join('=')); } catch { return null; }
+    }
   }
   return null;
 }
@@ -397,7 +404,7 @@ function isFollowUp(patientId) {
 // Saves the photo + answers immediately so staff see them live. Payment happens next, on the /pay page.
 // First session (or more than two weeks since the last one): problems, treatments tried, current medicines.
 // Otherwise: positive changes since the last healing (sent in the `problems` field).
-app.post('/api/visits', limitUploads, upload.single('photo'), (req, res) => {
+app.post('/api/visits', limitUploadsPerIp, limitUploads, upload.single('photo'), (req, res) => {
   if (req.file && !looksLikePhoto(req.file.path)) {
     fs.rm(req.file.path, () => {});
     return res.status(400).json({ error: 'Please upload a JPG, PNG, WEBP or HEIC photo.' });
@@ -558,7 +565,7 @@ app.post('/api/admin/visits/:id/payment', (req, res) => {
 app.get('/api/admin/export', async (_req, res, next) => {
   try {
     const buf = await backup.exportBuffer();
-    res.attachment(`patients-${backup.istDate()}.xlsx`).type('xlsx').send(Buffer.from(buf));
+    res.attachment(`members-${backup.istDate()}.xlsx`).type('xlsx').send(Buffer.from(buf));
   } catch (err) {
     next(err);
   }

@@ -110,7 +110,9 @@ function backupPath(name) {
 
 // Checks every minute; after 11:30 PM IST writes today's backup once (also catches up if the server was off then).
 function startDailyBackups() {
+  let writing = false; // a backup can take longer than the one-minute check
   const tick = () => {
+    if (writing) return;
     const now = new Date(Date.now() + 5.5 * 3600 * 1000);
     const minutes = now.getUTCHours() * 60 + now.getUTCMinutes();
     const today = now.toISOString().slice(0, 10);
@@ -118,7 +120,11 @@ function startDailyBackups() {
     const have = new Set(listBackups().map((b) => b.date));
     const due = minutes >= DAILY_AT.hour * 60 + DAILY_AT.minute ? today : have.has(yesterday) || !have.size ? null : yesterday;
     if (due && !have.has(due)) {
-      writeDailyBackup(due).then((f) => console.log('Daily backup written:', f)).catch((e) => console.error('Daily backup failed:', e));
+      writing = true;
+      writeDailyBackup(due)
+        .then((f) => console.log('Daily backup written:', f))
+        .catch((e) => console.error('Daily backup failed:', e))
+        .finally(() => { writing = false; });
     }
   };
   setInterval(tick, 60 * 1000).unref();
