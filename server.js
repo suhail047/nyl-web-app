@@ -415,7 +415,7 @@ app.post('/api/visits', limitUploads, upload.single('photo'), (req, res) => {
       return res.status(400).json({ error: 'Please answer what treatments you have tried and what medications you are taking (write “None” if none).' });
     }
     if (patient && problems && req.file) return res.status(400).json({ error: 'Please tick the consent box to continue.' });
-    const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please tell us what you would like support with.';
+    const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please tell us about your health issues.';
     return res.status(400).json({ error: !patient ? 'Person not found.' : !problems ? askText : 'Please upload a photo.' });
   }
 

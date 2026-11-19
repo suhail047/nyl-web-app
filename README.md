@@ -5,8 +5,8 @@ A small web app for patient check-in:
 1. **Phone number** – patient enters the mobile number their family is registered under (optionally
    verified with a 6-digit SMS code – see *OTP* below; off by default).
 2. **Select patient** – all names registered under that (verified) number are listed (a new name can be added).
-3. **Photo & questions** – patient takes/uploads a photo. On the first session they answer: what they would like
-   support with, the treatments they have tried and the medications they take (both required, kept on record). If their last healing was on an earlier day
+3. **Photo & questions** – patient takes/uploads a photo. On the first session they answer: their health issues
+   (what they would like support with), the treatments they have tried and the medications they take (both required, kept on record). If their last healing was on an earlier day
    within the past 7 days, they are instead asked about the *positive changes they are feeling after their
    last healing*. After more than two weeks without a session, the first-session questions are asked again.
 4. **Payment** – right after the upload, a payment page shows a **UPI QR code** (default UPI ID
@@ -97,7 +97,7 @@ even if a patient uploads more than once a day (sessions may later be morning, n
   12-session course from the patient's next upload.
 
 The patient's confirmation page shows this session ("Session 3 of 12") and asks them to send a new photo
-before their next session before 10 PM IST (with next week's date in the weekly phase). The first-session questions (support wanted,
+before their next session before 10 PM IST (with next week's date in the weekly phase). The first-session questions (health issues,
 treatments tried, current medications) are asked on a patient's first upload and again after a gap of more than 2 weeks;
 otherwise they are asked about positive changes since their last healing.
 

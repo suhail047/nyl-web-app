@@ -42,8 +42,8 @@
         <input id="photo" name="photo" type="file" accept="image/*" capture="user" required>
       </label>
 
-      <label for="problems" id="problemsLabel" data-t>What would you like support with?</label>
-      <textarea id="problems" name="problems" maxlength="5000" required data-t-ph placeholder="Tell us what you are experiencing, and for how long…"></textarea>
+      <label for="problems" id="problemsLabel" data-t>What health issues would you like support with?</label>
+      <textarea id="problems" name="problems" maxlength="5000" required data-t-ph placeholder="Your health issues, and how long you have had them…"></textarea>
 
       <div id="firstVisitFields">
         <label for="treatments" data-t>What treatments have you tried?</label>
@@ -142,7 +142,7 @@
       if (!document.getElementById('problems').value.trim()) {
         return (error.textContent = followUp
           ? t('Please tell us about the positive changes you are feeling.')
-          : t('Please tell us what you would like support with.'));
+          : t('Please tell us about your health issues.'));
       }
       // Kept on record: both are required on a first session (members can write "None").
       if (!followUp && (!document.getElementById('treatments').value.trim() || !document.getElementById('medicines').value.trim())) {

@@ -17,7 +17,7 @@ function visitCard(v, fresh) {
       <div class="row"><button type="button" class="name link-plain" data-progress="${v.patientId}" title="See progress">${esc(v.patientName)}</button><span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}</span></div>
       <div class="muted">${esc(fmtPhone(v.phone))}${v.age != null ? ' · ' + esc(v.age) + ' yrs' : ''}${v.gender ? ' · ' + esc(v.gender) : ''}</div>
       ${v.planLabel ? `<div><span class="plan-tag">${esc(v.planLabel)}</span></div>` : ''}
-      <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Wants support with'}</div>
+      <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Health issues'}</div>
       <div class="problems">${esc(v.problems)}</div>
       ${v.visitKind !== 'followup' ? `
         <div class="muted kind">Treatments tried</div>
@@ -177,7 +177,7 @@ async function loadProgress() {
       <div class="when"><span class="dayno">${esc(tag)}</span><span class="muted">of 12</span><span class="muted">${esc(fmtDay(day))}</span></div>
       <a class="thumb" href="${esc(v.photoUrl)}" target="_blank" rel="noopener">${v.photoUrl ? `<img src="${esc(v.photoUrl)}" alt="Photo, ${esc(tag)}" loading="lazy">` : ''}</a>
       <div class="what">
-        <div class="row"><span class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Wants support with'}</span>
+        <div class="row"><span class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Health issues'}</span>
           <span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}${v.amount > 0 ? ' · ₹' + esc(v.amount.toLocaleString('en-IN')) : ''}</span></div>
         <div class="problems">${esc(v.problems)}</div>
         ${v.visitKind !== 'followup' ? `

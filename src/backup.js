@@ -48,7 +48,7 @@ async function buildWorkbook() {
     { header: 'Session type', key: 'kind', width: 13 },
     { header: 'Healing plan', key: 'plan', width: 14 },
     { header: 'Course no.', key: 'block_no', width: 10 },
-    { header: 'Support wanted / positive changes', key: 'problems', width: 50 },
+    { header: 'Health issues / positive changes', key: 'problems', width: 50 },
     { header: 'Treatments tried', key: 'treatments_tried', width: 36 },
     { header: 'Current medications', key: 'current_medicines', width: 36 },
     { header: 'Amount (₹)', key: 'amount', width: 11 },
