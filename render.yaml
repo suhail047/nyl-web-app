@@ -1,8 +1,10 @@
 # Render Blueprint: https://render.com/docs/blueprint-spec
-# New → Blueprint → pick this repository. Render asks for the values marked sync: false.
+# New → Blueprint → pick this repository. Render only asks for the admin password (sync: false).
+# App name (Suhail's Meridian Healing), UPI ID and the ₹300 fee use the app's defaults; change them later
+# under the service's Environment tab (CLINIC_NAME, UPI_ID, UPI_NAME) or in the admin Settings.
 services:
   - type: web
-    name: patient-app
+    name: meridian-healing   # address: https://meridian-healing.onrender.com (if the name is free)
     runtime: node
     plan: starter          # a persistent disk needs a paid plan; the free plan would lose photos and data
     region: singapore      # closest Render region to India
@@ -22,11 +24,5 @@ services:
         value: "1"
       - key: ADMIN_USER
         value: admin
-      - key: ADMIN_PASSWORD
-        sync: false
-      - key: CLINIC_NAME
-        sync: false
-      - key: UPI_ID
-        sync: false
-      - key: UPI_NAME
+      - key: ADMIN_PASSWORD   # at least 8 characters
         sync: false
