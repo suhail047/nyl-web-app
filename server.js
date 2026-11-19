@@ -7,6 +7,7 @@ if (fs.existsSync(path.join(__dirname, '.env'))) process.loadEnvFile(path.join(_
 const express = require('express');
 const multer = require('multer');
 const QRCode = require('qrcode');
+const heicConvert = require('heic-convert');
 const { q, normalizePhone } = require('./src/db');
 const otp = require('./src/otp');
 const backup = require('./src/backup');
@@ -255,6 +256,25 @@ function looksLikePhoto(file) {
     || b.toString('latin1', 4, 8) === 'ftyp'; // HEIC / HEIF
 }
 
+// iPhones (and some Android phones) save photos as HEIC, which many browsers can't show. Convert those to
+// JPEG on arrival so the dashboard can always display them. If conversion fails, the original is kept.
+function isHeic(file) {
+  const fd = fs.openSync(file, 'r');
+  const b = Buffer.alloc(12);
+  fs.readSync(fd, b, 0, 12, 0);
+  fs.closeSync(fd);
+  return b.toString('latin1', 4, 8) === 'ftyp' && /^(heic|heix|hevc|hevx|heim|heis|hevm|hevs|mif1|msf1)$/.test(b.toString('latin1', 8, 12));
+}
+
+async function heicToJpeg(file) {
+  const jpeg = await heicConvert({ buffer: await fs.promises.readFile(file.path), format: 'JPEG', quality: 0.85 });
+  const filename = file.filename.replace(/\.[^.]+$/, '') + '.jpg';
+  await fs.promises.writeFile(path.join(UPLOAD_DIR, filename), Buffer.from(jpeg));
+  await fs.promises.rm(file.path, { force: true });
+  file.filename = filename;
+  file.path = path.join(UPLOAD_DIR, filename);
+}
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: UPLOAD_DIR,
@@ -404,10 +424,17 @@ function isFollowUp(patientId) {
 // Saves the photo + answers immediately so staff see them live. Payment happens next, on the /pay page.
 // First session (or more than two weeks since the last one): problems, treatments tried, current medicines.
 // Otherwise: positive changes since the last healing (sent in the `problems` field).
-app.post('/api/visits', limitUploadsPerIp, limitUploads, upload.single('photo'), (req, res) => {
+app.post('/api/visits', limitUploadsPerIp, limitUploads, upload.single('photo'), async (req, res) => {
   if (req.file && !looksLikePhoto(req.file.path)) {
     fs.rm(req.file.path, () => {});
     return res.status(400).json({ error: 'Please upload a JPG, PNG, WEBP or HEIC photo.' });
+  }
+  if (req.file && isHeic(req.file.path)) {
+    try {
+      await heicToJpeg(req.file);
+    } catch (err) {
+      console.error('HEIC conversion failed, keeping the original:', err.message);
+    }
   }
   const patient = ownPatient(req, req.body.patientId);
   const followUp = Boolean(patient) && isFollowUp(patient.id);
