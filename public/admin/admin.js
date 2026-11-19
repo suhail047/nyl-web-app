@@ -144,14 +144,14 @@ async function loadProgress() {
         <span class="muted" id="planSaved"></span>
       </div>
       <p class="muted small">The plan: 12 sessions → 12 weekly sessions → 12 sessions → … "Another 12 sessions" applies once, after the
-        current course; after that the patient goes back to weekly healing.</p>
+        current course; after that the member goes back to weekly healing.</p>
     </div>
     <div class="notes-card card">
       <label for="patientNotes">Your notes <span class="muted">(private – members never see this)</span></label>
       <textarea id="patientNotes" data-patient="${p.id}" maxlength="10000" placeholder="Your observations, what you advised, follow-ups…">${esc(p.notes || '')}</textarea>
       <span class="muted small" id="notesSaved"></span>
       <label class="check-row"><input type="checkbox" id="remindersOn" data-patient="${p.id}" ${p.reminders_off ? '' : 'checked'}>
-        Send WhatsApp reminders to this patient</label>
+        Send WhatsApp reminders to this member</label>
     </div>`;
   const restoreNotes = () => {
     if (!typed) return;
