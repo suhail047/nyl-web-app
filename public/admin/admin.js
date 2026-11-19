@@ -1,4 +1,5 @@
 const state = { visits: [], patients: [], unseen: 0 };
+let PHOTO_DAYS = 30; // photos are deleted automatically after this many days (from the server)
 const $ = (id) => document.getElementById(id);
 const STATUS_LABEL = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'UPI – please confirm', failed: 'Not received', not_configured: 'Pay in person' };
 
@@ -12,7 +13,9 @@ function fmtPhone(p) { return '+91 ' + p.slice(0, 5) + ' ' + p.slice(5); }
 // ---------- Submissions ----------
 function visitCard(v, fresh) {
   return `<article class="visit${fresh ? ' fresh' : ''}" data-id="${v.id}">
-    <a class="photo" href="${esc(v.photoUrl)}" target="_blank" rel="noopener">${v.photoUrl ? `<img src="${esc(v.photoUrl)}" alt="Photo of ${esc(v.patientName)}" loading="lazy">` : ''}</a>
+    ${v.photoUrl
+      ? `<a class="photo" href="${esc(v.photoUrl)}" target="_blank" rel="noopener"><img src="${esc(v.photoUrl)}" alt="Photo of ${esc(v.patientName)}" loading="lazy"></a>`
+      : `<div class="photo photo-gone">Photo deleted after ${PHOTO_DAYS} days</div>`}
     <div class="body">
       <div class="row"><button type="button" class="name link-plain" data-progress="${v.patientId}" title="See progress">${esc(v.patientName)}</button><span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}</span></div>
       <div class="muted">${esc(fmtPhone(v.phone))}${v.age != null ? ' · ' + esc(v.age) + ' yrs' : ''}${v.gender ? ' · ' + esc(v.gender) : ''}</div>
@@ -144,14 +147,14 @@ async function loadProgress() {
         <span class="muted" id="planSaved"></span>
       </div>
       <p class="muted small">The plan: 12 sessions → 12 weekly sessions → 12 sessions → … "Another 12 sessions" applies once, after the
-        current course; after that the patient goes back to weekly healing.</p>
+        current course; after that the member goes back to weekly healing.</p>
     </div>
     <div class="notes-card card">
       <label for="patientNotes">Your notes <span class="muted">(private – members never see this)</span></label>
       <textarea id="patientNotes" data-patient="${p.id}" maxlength="10000" placeholder="Your observations, what you advised, follow-ups…">${esc(p.notes || '')}</textarea>
       <span class="muted small" id="notesSaved"></span>
       <label class="check-row"><input type="checkbox" id="remindersOn" data-patient="${p.id}" ${p.reminders_off ? '' : 'checked'}>
-        Send WhatsApp reminders to this patient</label>
+        Send WhatsApp reminders to this member</label>
     </div>`;
   const restoreNotes = () => {
     if (!typed) return;
@@ -175,7 +178,9 @@ async function loadProgress() {
     ${newBlock ? `<li class="course-break">${esc(titles[v.blockNo] || 'Healing')}</li>` : ''}
     <li class="entry">
       <div class="when"><span class="dayno">${esc(tag)}</span><span class="muted">of 12</span><span class="muted">${esc(fmtDay(day))}</span></div>
-      <a class="thumb" href="${esc(v.photoUrl)}" target="_blank" rel="noopener">${v.photoUrl ? `<img src="${esc(v.photoUrl)}" alt="Photo, ${esc(tag)}" loading="lazy">` : ''}</a>
+      ${v.photoUrl
+        ? `<a class="thumb" href="${esc(v.photoUrl)}" target="_blank" rel="noopener"><img src="${esc(v.photoUrl)}" alt="Photo, ${esc(tag)}" loading="lazy"></a>`
+        : `<div class="thumb photo-gone">Photo deleted after ${PHOTO_DAYS} days</div>`}
       <div class="what">
         <div class="row"><span class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Health issues'}</span>
           <span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}${v.amount > 0 ? ' · ₹' + esc(v.amount.toLocaleString('en-IN')) : ''}</span></div>
@@ -316,7 +321,7 @@ function notify(v) {
     osc.stop(ctx.currentTime + 0.15);
   } catch {}
   if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification('New submission', { body: `${v.patientName} · ${fmtPhone(v.phone)}`, icon: v.photoUrl });
+    new Notification('New submission', { body: `${v.patientName} · ${fmtPhone(v.phone)}`, icon: v.photoUrl || undefined });
   }
 }
 
@@ -461,5 +466,6 @@ $('settingsForm').addEventListener('submit', async (e) => {
   }
 });
 
+api('/api/admin/settings').then((r) => { PHOTO_DAYS = r.photoDays || PHOTO_DAYS; }).catch(() => {});
 loadAll().catch((err) => alert(err.message));
 connect();

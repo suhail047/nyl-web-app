@@ -84,6 +84,8 @@ if (!visitColumns.includes('current_medicines')) db.exec('ALTER TABLE visits ADD
 if (!visitColumns.includes('consent_at')) db.exec('ALTER TABLE visits ADD COLUMN consent_at TEXT');
 // Hash of the patient session (browser) that created the visit: only that browser can read it back.
 if (!visitColumns.includes('session_key')) db.exec('ALTER TABLE visits ADD COLUMN session_key TEXT');
+// When the photo was deleted by the 30-day photo clean-up (the session's answers are kept).
+if (!visitColumns.includes('photo_deleted_at')) db.exec('ALTER TABLE visits ADD COLUMN photo_deleted_at TEXT');
 // Healing plan position: phase 'daily' | 'weekly', session 1–12 within the block, block = course number.
 for (const [col, type] of [['phase', 'TEXT'], ['session_no', 'INTEGER'], ['block_no', 'INTEGER']]) {
   if (!visitColumns.includes(col)) db.exec(`ALTER TABLE visits ADD COLUMN ${col} ${type}`);
@@ -138,6 +140,8 @@ const q = {
   lastVisitOfPatient: db.prepare('SELECT * FROM visits WHERE patient_id = ? ORDER BY id DESC LIMIT 1'),
   setNextBlock: db.prepare('UPDATE patients SET next_block = ? WHERE id = ?'),
   setNotes: db.prepare('UPDATE patients SET notes = ? WHERE id = ?'),
+  photosOlderThan: db.prepare(`SELECT id, photo_file FROM visits WHERE photo_file IS NOT NULL AND created_at < datetime('now', ?)`),
+  clearPhoto: db.prepare(`UPDATE visits SET photo_file = NULL, photo_deleted_at = datetime('now') WHERE id = ?`),
   setRemindersOff: db.prepare('UPDATE patients SET reminders_off = ? WHERE id = ?'),
   lastVisitPerPatient: db.prepare(`
     SELECT v.*, p.name AS patient_name, p.phone AS patient_phone, p.next_block, p.reminders_off

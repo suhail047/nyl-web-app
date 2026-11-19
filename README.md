@@ -138,6 +138,12 @@ Each patient gets at most one reminder a day; failed sends are shown in the Remi
 - **Privacy policy** at `/privacy` (English and Malayalam).
 - **Your notes** – a private notes box per patient in the admin Progress tab (included in the Excel backup).
 
+## Photo retention
+
+Photos are deleted automatically **30 days** after they are sent (`PHOTO_RETENTION_DAYS`). The clean-up runs at
+start-up and every hour. Only the photo file is removed – the session's answers, plan position and payment stay,
+and the dashboard shows "Photo deleted after 30 days" in its place.
+
 ## Backups (Excel)
 
 Admin dashboard → **Settings → Backups**:
