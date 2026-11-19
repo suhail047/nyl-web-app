@@ -22,8 +22,10 @@ function visitCard(v, fresh) {
       ${v.visitKind !== 'followup' ? `
         <div class="muted kind">Treatments tried</div>
         <div class="problems">${esc(v.treatmentsTried || '—')}</div>
-        <div class="muted kind">Medications (current and past)</div>
-        <div class="problems">${esc(v.currentMedicines || '—')}${v.pastMedicines ? '\n' + esc(v.pastMedicines) : ''}</div>` : ''}
+        <div class="muted kind">Current medications</div>
+        <div class="problems">${esc(v.currentMedicines || '—')}</div>
+        <div class="muted kind">Past medications</div>
+        <div class="problems">${esc(v.pastMedicines || '—')}</div>` : ''}
       ${v.consentAt ? '<div class="muted">✓ Consent given</div>' : ''}
       <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
@@ -182,7 +184,8 @@ async function loadProgress() {
         <div class="problems">${esc(v.problems)}</div>
         ${v.visitKind !== 'followup' ? `
           <div class="muted kind">Treatments tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
-          <div class="muted kind">Medications (current and past)</div><div class="problems">${esc(v.currentMedicines || '—')}${v.pastMedicines ? '\n' + esc(v.pastMedicines) : ''}</div>` : ''}
+          <div class="muted kind">Current medications</div><div class="problems">${esc(v.currentMedicines || '—')}</div>
+          <div class="muted kind">Past medications</div><div class="problems">${esc(v.pastMedicines || '—')}</div>` : ''}
       </div>
     </li>`;
   }).join('') + '</ol>';
