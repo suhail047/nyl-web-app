@@ -72,7 +72,7 @@
     'For example: feeling lighter, better sleep, more energy, a calmer mind…': 'ഉദാ: ശരീരത്തിന് ലഘുത്വം, നന്നായി ഉറങ്ങുന്നു, കൂടുതൽ ഊർജ്ജം, മനസ്സിന് ശാന്തത…',
     'By ticking this box, I confirm that:': 'ഈ ബോക്സിൽ ടിക്ക് ചെയ്യുന്നതിലൂടെ ഞാൻ സ്ഥിരീകരിക്കുന്നു:',
     'I am the person receiving the healing, or a parent, guardian or family member submitting with their permission.': 'ഹീലിംഗ് സ്വീകരിക്കുന്നത് ഞാനാണ്, അല്ലെങ്കിൽ അവരുടെ അനുവാദത്തോടെ അയയ്ക്കുന്ന മാതാപിതാവോ രക്ഷിതാവോ കുടുംബാംഗമോ ആണ് ഞാൻ.',
-    'I understand this is a drugless therapy, and I am taking part willingly.': 'ഇത് മരുന്നില്ലാത്ത ഒരു തെറാപ്പിയാണെന്ന് ഞാൻ മനസ്സിലാക്കുന്നു, സ്വമനസ്സാലെയാണ് ഞാൻ പങ്കെടുക്കുന്നത്.',
+    'I understand this is a drugless wellness service, and I am taking part willingly.': 'ഇത് മരുന്നില്ലാത്ത ഒരു വെൽനസ് സേവനമാണെന്ന് ഞാൻ മനസ്സിലാക്കുന്നു, സ്വമനസ്സാലെയാണ് ഞാൻ പങ്കെടുക്കുന്നത്.',
     'I understand that results vary and are not guaranteed.': 'ഫലങ്ങൾ ഓരോരുത്തർക്കും വ്യത്യസ്തമായിരിക്കുമെന്നും ഉറപ്പ് നൽകാനാവില്ലെന്നും ഞാൻ മനസ്സിലാക്കുന്നു.',
     'Read our privacy policy': 'ഞങ്ങളുടെ സ്വകാര്യതാ നയം വായിക്കുക',
     'Upload & continue to payment': 'അപ്‌ലോഡ് ചെയ്ത് പണമടയ്ക്കാൻ തുടരുക',
