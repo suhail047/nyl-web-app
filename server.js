@@ -12,7 +12,6 @@ const otp = require('./src/otp');
 const backup = require('./src/backup');
 const plan = require('./src/plan');
 const reminders = require('./src/reminders');
-const retention = require('./src/retention');
 
 plan.backfill();
 
@@ -206,7 +205,6 @@ function visitDto(v) {
     treatmentsTried: v.treatments_tried,
     currentMedicines: v.current_medicines,
     photoUrl: v.photo_file ? `/uploads/${v.photo_file}` : null,
-    photoDeletedAt: v.photo_deleted_at,
     amount: v.amount_paise / 100,
     paymentStatus: v.payment_status,
     razorpayOrderId: v.razorpay_order_id,
@@ -574,7 +572,7 @@ app.get('/api/admin/backups/:name', (req, res) => {
   res.download(file);
 });
 
-app.get('/api/admin/settings', (_req, res) => res.json({ fee: currentFeePaise() / 100, photoDays: retention.DAYS }));
+app.get('/api/admin/settings', (_req, res) => res.json({ fee: currentFeePaise() / 100 }));
 
 app.post('/api/admin/settings', (req, res) => {
   const fee = parseAmount(req.body.fee);
@@ -661,7 +659,6 @@ app.use((err, _req, res, _next) => {
 
 backup.startDailyBackups();
 reminders.startDailyReminders();
-retention.startPhotoCleanup(UPLOAD_DIR);
 
 app.listen(PORT, process.env.HOST || undefined, () => {
   console.log(`Patient app:     http://localhost:${PORT}`);
