@@ -204,6 +204,7 @@ function visitDto(v) {
     consentAt: v.consent_at,
     treatmentsTried: v.treatments_tried,
     currentMedicines: v.current_medicines,
+    pastMedicines: v.past_medicines,
     photoUrl: v.photo_file ? `/uploads/${v.photo_file}` : null,
     amount: v.amount_paise / 100,
     paymentStatus: v.payment_status,
@@ -407,12 +408,13 @@ app.post('/api/visits', limitUploads, upload.single('photo'), (req, res) => {
   const problems = cleanText(req.body.problems, 5000);
   const treatments = followUp ? null : cleanText(req.body.treatments, 3000) || null;
   const medicines = followUp ? null : cleanText(req.body.medicines, 3000) || null;
+  const pastMedicines = followUp ? null : cleanText(req.body.pastMedicines, 3000) || null;
   const consented = req.body.consent === 'yes';
-  const missingRecord = !followUp && (!treatments || !medicines); // both kept on record for a first session
+  const missingRecord = !followUp && (!treatments || !medicines || !pastMedicines); // kept on record for a first session
   if (!patient || !problems || !req.file || !consented || missingRecord) {
     if (req.file) fs.rm(req.file.path, () => {});
     if (patient && problems && missingRecord) {
-      return res.status(400).json({ error: 'Please answer what treatments you have tried and what medications you are taking (write “None” if none).' });
+      return res.status(400).json({ error: 'Please answer the questions about treatments and medications (write “None” if none).' });
     }
     if (patient && problems && req.file) return res.status(400).json({ error: 'Please tick the consent box to continue.' });
     const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please tell us about your health issues.';
@@ -422,7 +424,7 @@ app.post('/api/visits', limitUploads, upload.single('photo'), (req, res) => {
   const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
   const step = plan.nextStep(q.lastVisitOfPatient.get(patient.id), patient.next_block);
   const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, currentFeePaise(), status, PAYMENT_METHOD,
-    followUp ? 'followup' : 'first', treatments, medicines, step.phase, step.session, step.block, req.sessionKey);
+    followUp ? 'followup' : 'first', treatments, medicines, pastMedicines, step.phase, step.session, step.block, req.sessionKey);
   if (step.consumed) q.setNextBlock.run(null, patient.id);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });
