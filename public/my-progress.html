@@ -53,7 +53,9 @@
       }
       const up = d.upcoming;
       const next = up
-        ? (up.gap === 1 ? t('Before 10 PM IST') : t('{date}, before 10 PM IST', { date: fmt(up.date, { weekday: 'long', day: 'numeric', month: 'long' }) }))
+        ? (up.gap === 1
+          ? t('Tomorrow, {date}, before 10 PM IST', { date: fmt(up.date, { day: 'numeric', month: 'long' }) })
+          : t('Next {weekday}, {date}, before 10 PM IST', { weekday: fmt(up.date, { weekday: 'long' }), date: fmt(up.date, { day: 'numeric', month: 'long' }) }))
         : '';
       $('summary').innerHTML = `
         <div class="stat"><span class="num">${d.sessions.length}</span><span>${esc(t(d.sessions.length === 1 ? 'session done' : 'sessions done'))}</span></div>

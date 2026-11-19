@@ -62,12 +62,15 @@
         $('myProgress').classList.remove('hidden');
         $('planBadge').textContent = v.plan.phase === 'weekly' ? t(v.plan.today) : t('{label} · 12-session course', { label: t(v.plan.today) });
         $('planBadge').classList.remove('hidden');
-        const when = new Date(p.date + 'T00:00:00Z').toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+        // Daily sessions: "tomorrow, Friday 20 November"; weekly: "next Wednesday, 25 November".
+        const d = new Date(p.date + 'T00:00:00Z');
+        const weekday = d.toLocaleDateString(LOCALE, { weekday: 'long', timeZone: 'UTC' });
+        const date = d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', timeZone: 'UTC' });
         $('nextTitle').textContent = p.finished ? t(p.finished) : t('Your next healing');
         $('nextText').textContent = (p.finished && p.next ? t(p.next) + '. ' : '') +
           (p.gap === 1
-            ? t('Please send a new photo before 10 PM IST for your next session ({label}).', { label: t(p.label) })
-            : t('Please send a new photo next week, on {date}, before 10 PM IST ({label}).', { date: when, label: t(p.label) }));
+            ? t('Please send a new photo tomorrow, {weekday} {date}, before 10 PM IST ({label}).', { weekday, date, label: t(p.label) })
+            : t('Please send a new photo next {weekday}, {date}, before 10 PM IST ({label}).', { weekday, date, label: t(p.label) }));
         $('nextBox').classList.remove('hidden');
       }).catch(() => {});
     }
