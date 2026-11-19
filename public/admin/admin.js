@@ -1,4 +1,4 @@
-const state = { visits: [], patients: [], unseen: 0 };
+const state = { visits: [], patients: [], unseen: 0, day: null, today: null };
 const $ = (id) => document.getElementById(id);
 const STATUS_LABEL = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'UPI – please confirm', failed: 'Not received', not_configured: 'Pay in person' };
 
@@ -45,6 +45,9 @@ function renderVisits(freshId) {
     (!term || [v.patientName, v.phone, v.problems, v.treatmentsTried, v.currentMedicines].some((f) => String(f).toLowerCase().includes(term))));
   $('visits').innerHTML = shown.map((v) => visitCard(v, v.id === freshId)).join('');
   $('visitsEmpty').classList.toggle('hidden', shown.length > 0);
+  const n = state.visits.length;
+  const which = state.day === state.today ? 'Today' : fmtDay(state.day);
+  $('dayCount').textContent = `${which}: ${n} upload${n === 1 ? '' : 's'}` + (shown.length !== n ? ` (${shown.length} shown)` : '');
 }
 
 // ---------- Patients ----------
@@ -291,11 +294,26 @@ document.addEventListener('click', (e) => {
 });
 $('progressSearch').addEventListener('input', renderProgressList);
 
-async function loadAll() {
-  const [visits, patients] = await Promise.all([api('/api/admin/visits'), api('/api/admin/patients')]);
-  state.visits = visits;
-  state.patients = patients;
+// Submissions: every upload on the chosen day (today by default, Indian time).
+async function loadVisits(day) {
+  const r = await api('/api/admin/visits' + (day ? '?day=' + day : ''));
+  state.visits = r.visits;
+  state.day = r.day;
+  state.today = r.today;
+  $('visitDay').value = r.day;
+  $('visitDay').max = r.today;
+  $('dayNext').disabled = r.day >= r.today;
   renderVisits();
+}
+
+function shiftDay(n) {
+  const d = new Date(Date.parse(state.day) + n * 86400000).toISOString().slice(0, 10);
+  if (d <= state.today) loadVisits(d).catch((err) => alert(err.message));
+}
+
+async function loadAll() {
+  const [, patients] = await Promise.all([loadVisits(state.day && state.day !== state.today ? state.day : null), api('/api/admin/patients')]);
+  state.patients = patients;
   renderPatients();
 }
 
@@ -326,8 +344,7 @@ function connect() {
   es.onerror = () => { $('live').className = 'live off'; $('liveText').textContent = 'Reconnecting…'; };
   es.addEventListener('visit-created', (e) => {
     const v = JSON.parse(e.data);
-    state.visits.unshift(v);
-    renderVisits(v.id);
+    if (state.day === istDay(v.createdAt)) { state.visits.unshift(v); renderVisits(v.id); }
     notify(v);
     loadPatientsQuietly();
     if (v.patientId === progress.patientId) loadProgress();
@@ -393,6 +410,10 @@ $('visits').addEventListener('click', async (e) => {
 });
 
 $('visitSearch').addEventListener('input', () => renderVisits());
+$('visitDay').addEventListener('change', (e) => { if (e.target.value) loadVisits(e.target.value).catch((err) => alert(err.message)); });
+$('dayPrev').addEventListener('click', () => shiftDay(-1));
+$('dayNext').addEventListener('click', () => shiftDay(1));
+$('dayToday').addEventListener('click', () => loadVisits(null).catch((err) => alert(err.message)));
 $('statusFilter').addEventListener('change', () => renderVisits());
 $('patientSearch').addEventListener('input', renderPatients);
 

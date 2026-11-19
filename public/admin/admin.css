@@ -119,3 +119,10 @@ td .link.link-ok { color: var(--primary); }
 .wa-btn:hover { filter: brightness(.95); }
 .check-row { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 12px 0 0; }
 .check-row input { width: 18px; height: 18px; accent-color: var(--primary); }
+.day-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.day-bar input[type=date] { width: auto; padding: 9px 12px; }
+.day-nav { width: auto; margin: 0; padding: 8px 14px; background: var(--card); color: var(--text); border: 1px solid var(--border); font-size: 1.1rem; line-height: 1; }
+.day-nav:hover { background: var(--tint); }
+.day-nav:disabled { opacity: .4; cursor: default; }
+.day-bar .link { font-size: .95rem; }
+.day-count { margin-left: auto; color: var(--muted); font-weight: 600; }

@@ -176,6 +176,8 @@ const q = {
   deleteSession: db.prepare('DELETE FROM patient_sessions WHERE token_hash = ?'),
   purgeSessions: db.prepare('DELETE FROM patient_sessions WHERE expires_at <= ?'),
   recentVisits: db.prepare(`${VISIT_SELECT} ORDER BY v.id DESC LIMIT ?`),
+  // Every upload on one day (Indian time), newest first.
+  visitsOnDay: db.prepare(`${VISIT_SELECT} WHERE date(v.created_at, '+5 hours', '+30 minutes') = ? ORDER BY v.id DESC`),
   visitsByPatient: db.prepare(`${VISIT_SELECT} WHERE v.patient_id = ? ORDER BY v.id`),
 };
 

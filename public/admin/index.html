@@ -24,6 +24,13 @@
     </nav>
 
     <section id="tab-visits">
+      <div class="day-bar">
+        <button type="button" class="day-nav" id="dayPrev" aria-label="Previous day">‹</button>
+        <input type="date" id="visitDay" aria-label="Day">
+        <button type="button" class="day-nav" id="dayNext" aria-label="Next day">›</button>
+        <button type="button" class="link" id="dayToday">Today</button>
+        <span class="day-count" id="dayCount"></span>
+      </div>
       <div class="toolbar">
         <input id="visitSearch" type="search" placeholder="Search name, phone or notes…">
         <select id="statusFilter">
@@ -32,7 +39,7 @@
         </select>
       </div>
       <div class="grid" id="visits"></div>
-      <p class="empty hidden" id="visitsEmpty">No submissions yet. New uploads will appear here instantly.</p>
+      <p class="empty hidden" id="visitsEmpty">No photos uploaded on this day yet. New uploads appear here instantly.</p>
     </section>
 
     <section id="tab-progress" class="hidden">

@@ -545,9 +545,10 @@ app.get('/api/admin/stream', (req, res) => {
   req.on('close', () => liveClients.delete(res));
 });
 
+// Every upload on one day (default: today, Indian time) for the Submissions tab.
 app.get('/api/admin/visits', (req, res) => {
-  const limit = Math.min(Number(req.query.limit) || 200, 1000);
-  res.json(q.recentVisits.all(limit).map(visitDto));
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(req.query.day || '') ? req.query.day : plan.istDay();
+  res.json({ day, today: plan.istDay(), visits: q.visitsOnDay.all(day).map(visitDto) });
 });
 
 app.post('/api/admin/visits/:id/payment', (req, res) => {
