@@ -407,10 +407,10 @@ app.post('/api/visits', limitUploads, upload.single('photo'), (req, res) => {
   const followUp = Boolean(patient) && isFollowUp(patient.id);
   const problems = cleanText(req.body.problems, 5000);
   const treatments = followUp ? null : cleanText(req.body.treatments, 3000) || null;
-  const medicines = followUp ? null : cleanText(req.body.medicines, 3000) || null;
-  const pastMedicines = followUp ? null : cleanText(req.body.pastMedicines, 3000) || null;
+  // Current and past medications are asked together in one box.
+  const medicines = followUp ? null : cleanText(req.body.medicines, 5000) || null;
   const consented = req.body.consent === 'yes';
-  const missingRecord = !followUp && (!treatments || !medicines || !pastMedicines); // kept on record for a first session
+  const missingRecord = !followUp && (!treatments || !medicines); // kept on record for a first session
   if (!patient || !problems || !req.file || !consented || missingRecord) {
     if (req.file) fs.rm(req.file.path, () => {});
     if (patient && problems && missingRecord) {
@@ -424,7 +424,7 @@ app.post('/api/visits', limitUploads, upload.single('photo'), (req, res) => {
   const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
   const step = plan.nextStep(q.lastVisitOfPatient.get(patient.id), patient.next_block);
   const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, currentFeePaise(), status, PAYMENT_METHOD,
-    followUp ? 'followup' : 'first', treatments, medicines, pastMedicines, step.phase, step.session, step.block, req.sessionKey);
+    followUp ? 'followup' : 'first', treatments, medicines, null, step.phase, step.session, step.block, req.sessionKey);
   if (step.consumed) q.setNextBlock.run(null, patient.id);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });
