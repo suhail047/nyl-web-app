@@ -20,9 +20,9 @@ function visitCard(v, fresh) {
       <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Wants support with'}</div>
       <div class="problems">${esc(v.problems)}</div>
       ${v.visitKind !== 'followup' ? `
-        <div class="muted kind">Already tried</div>
+        <div class="muted kind">Treatments tried</div>
         <div class="problems">${esc(v.treatmentsTried || '—')}</div>
-        <div class="muted kind">Currently taking</div>
+        <div class="muted kind">Current medications</div>
         <div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
       ${v.consentAt ? '<div class="muted">✓ Consent given</div>' : ''}
       <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
@@ -181,8 +181,8 @@ async function loadProgress() {
           <span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}${v.amount > 0 ? ' · ₹' + esc(v.amount.toLocaleString('en-IN')) : ''}</span></div>
         <div class="problems">${esc(v.problems)}</div>
         ${v.visitKind !== 'followup' ? `
-          <div class="muted kind">Already tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
-          <div class="muted kind">Currently taking</div><div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
+          <div class="muted kind">Treatments tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
+          <div class="muted kind">Current medications</div><div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
       </div>
     </li>`;
   }).join('') + '</ol>';

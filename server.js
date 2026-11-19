@@ -408,8 +408,12 @@ app.post('/api/visits', limitUploads, upload.single('photo'), (req, res) => {
   const treatments = followUp ? null : cleanText(req.body.treatments, 3000) || null;
   const medicines = followUp ? null : cleanText(req.body.medicines, 3000) || null;
   const consented = req.body.consent === 'yes';
-  if (!patient || !problems || !req.file || !consented) {
+  const missingRecord = !followUp && (!treatments || !medicines); // both kept on record for a first session
+  if (!patient || !problems || !req.file || !consented || missingRecord) {
     if (req.file) fs.rm(req.file.path, () => {});
+    if (patient && problems && missingRecord) {
+      return res.status(400).json({ error: 'Please answer what treatments you have tried and what medications you are taking (write “None” if none).' });
+    }
     if (patient && problems && req.file) return res.status(400).json({ error: 'Please tick the consent box to continue.' });
     const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please tell us what you would like support with.';
     return res.status(400).json({ error: !patient ? 'Person not found.' : !problems ? askText : 'Please upload a photo.' });

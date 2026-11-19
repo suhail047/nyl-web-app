@@ -46,11 +46,11 @@
       <textarea id="problems" name="problems" maxlength="5000" required data-t-ph placeholder="Tell us what you are experiencing, and for how long…"></textarea>
 
       <div id="firstVisitFields">
-        <label for="treatments"><span data-t>What have you already tried?</span> <span class="hint-inline" data-t>(optional)</span></label>
-        <textarea id="treatments" name="treatments" class="short" maxlength="3000" data-t-ph placeholder="e.g. yoga, ayurveda, massage, diet changes, other healing…"></textarea>
+        <label for="treatments" data-t>What treatments have you tried?</label>
+        <textarea id="treatments" name="treatments" class="short" maxlength="3000" required data-t-ph placeholder="e.g. allopathy, ayurveda, homeopathy, physiotherapy, surgery. Write “None” if you haven't tried any."></textarea>
 
-        <label for="medicines"><span data-t>Is there anything you are taking at the moment?</span> <span class="hint-inline" data-t>(optional)</span></label>
-        <textarea id="medicines" name="medicines" class="short" maxlength="3000" data-t-ph placeholder="e.g. tablets, supplements, herbal products – and how often. Write “None” if nothing."></textarea>
+        <label for="medicines" data-t>What medications are you taking currently?</label>
+        <textarea id="medicines" name="medicines" class="short" maxlength="3000" required data-t-ph placeholder="Medication names and how often you take them. Write “None” if you take none."></textarea>
       </div>
 
       <label class="consent">
@@ -61,7 +61,7 @@
             <li data-t>I am the person receiving the healing, or a parent, guardian or family member submitting with their permission.</li>
             <li data-t-key="consentShare">I agree to share this photo and these details with <span data-clinic>Suhail&#39;s Meridian Healing</span>
               for my healing session.</li>
-            <li data-t>I understand this is a drugless wellness practice, and I am taking part willingly.</li>
+            <li data-t>I understand this is a drugless therapy, and I am taking part willingly.</li>
             <li data-t>I understand that results vary and are not guaranteed.</li>
           </ul>
           <a href="/privacy" target="_blank" class="small-link" data-t>Read our privacy policy</a>
@@ -143,6 +143,10 @@
         return (error.textContent = followUp
           ? t('Please tell us about the positive changes you are feeling.')
           : t('Please tell us what you would like support with.'));
+      }
+      // Kept on record: both are required on a first session (members can write "None").
+      if (!followUp && (!document.getElementById('treatments').value.trim() || !document.getElementById('medicines').value.trim())) {
+        return (error.textContent = t('Please answer what treatments you have tried and what medications you are taking (write “None” if none).'));
       }
       if (!document.getElementById('consent').checked) return (error.textContent = t('Please tick the consent box to continue.'));
 
