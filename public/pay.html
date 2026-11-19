@@ -19,10 +19,10 @@
 
     <section class="card" id="payCard">
       <h1 data-t>Payment</h1>
-      <p class="sub"><span class="badge-ok" data-t>✓ Photo &amp; details sent</span> <span data-t>Complete the payment to confirm your treatment.</span></p>
+      <p class="sub"><span class="badge-ok" data-t>✓ Photo &amp; details sent</span> <span data-t>Complete the payment to confirm your healing session.</span></p>
 
       <div class="summary">
-        <div class="line"><span data-t>Patient</span><strong id="pname">…</strong></div>
+        <div class="line"><span data-t>Name</span><strong id="pname">…</strong></div>
         <div class="problems" id="problems"></div>
       </div>
       <div class="total" id="totalRow"><span data-t>Total</span><span class="amount" id="amount">—</span></div>
@@ -58,7 +58,7 @@
 
 
       <div id="offline" class="hidden">
-        <p class="notice" data-t>Online payment is not set up yet. Your details have been received — please pay at the clinic.</p>
+        <p class="notice" data-t>Online payment is not set up yet. Your details have been received — please pay in person.</p>
         <a class="btn" id="finishLink" href="/done?status=submitted" data-t>Finish</a>
       </div>
     </section>
@@ -86,7 +86,7 @@
       $('finishLink').href = '/done?status=submitted&visit=' + visitId;
       if (visit.paymentMethod !== 'upi' && visit.paymentMethod !== 'razorpay') return $('offline').classList.remove('hidden');
 
-      // The clinic's fee is pre-filled; the patient can change it or clear it.
+      // The's fee is pre-filled; the patient can change it or clear it.
       $('totalRow').classList.add('hidden');
       $('amountEdit').classList.remove('hidden');
       $('amountInput').value = visit.amount > 0 ? visit.amount : '';
@@ -196,7 +196,7 @@
         amount: order.amount,
         currency: order.currency,
         name: order.name,
-        description: 'Treatment',
+        description: 'Healing session',
         prefill: order.prefill,
         theme: { color: '#15803d' },
         handler: async (resp) => {

@@ -9,13 +9,13 @@
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <meta name="theme-color" content="#15803d">
   <meta name="apple-mobile-web-app-title" content="Meridian Healing">
-  <title>Photo &amp; Problems</title>
+  <title>Your Photo</title>
 </head>
 <body>
   <main class="wrap">
     <header class="brand"><img class="logo" src="/logo.svg" alt=""><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
     <div class="steps"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
-    <a class="back" id="back" href="/patients" data-t>← Choose another patient</a>
+    <a class="back" id="back" href="/patients" data-t>← Choose someone else</a>
 
     <form class="card" id="visitForm" novalidate>
       <div class="who" style="margin-bottom:16px"><span class="avatar" id="avatar"></span><div><h1 id="pname" style="margin:0">…</h1><span class="meta" id="pmeta" style="color:var(--muted)"></span>
@@ -42,15 +42,15 @@
         <input id="photo" name="photo" type="file" accept="image/*" capture="user" required>
       </label>
 
-      <label for="problems" id="problemsLabel" data-t>What problems are you facing?</label>
-      <textarea id="problems" name="problems" maxlength="5000" required data-t-ph placeholder="Your illness or symptoms, and how long you have had them…"></textarea>
+      <label for="problems" id="problemsLabel" data-t>What would you like support with?</label>
+      <textarea id="problems" name="problems" maxlength="5000" required data-t-ph placeholder="Tell us what you are experiencing, and for how long…"></textarea>
 
       <div id="firstVisitFields">
-        <label for="treatments"><span data-t>What treatments have you already tried?</span> <span class="hint-inline" data-t>(optional)</span></label>
-        <textarea id="treatments" name="treatments" class="short" maxlength="3000" data-t-ph placeholder="e.g. allopathy, ayurveda, homeopathy, physiotherapy, surgery…"></textarea>
+        <label for="treatments"><span data-t>What have you already tried?</span> <span class="hint-inline" data-t>(optional)</span></label>
+        <textarea id="treatments" name="treatments" class="short" maxlength="3000" data-t-ph placeholder="e.g. yoga, ayurveda, massage, diet changes, other healing…"></textarea>
 
-        <label for="medicines"><span data-t>What medicines are you taking now?</span> <span class="hint-inline" data-t>(optional)</span></label>
-        <textarea id="medicines" name="medicines" class="short" maxlength="3000" data-t-ph placeholder="Medicine names and how often you take them. Write “None” if you take no medicines."></textarea>
+        <label for="medicines"><span data-t>Is there anything you are taking at the moment?</span> <span class="hint-inline" data-t>(optional)</span></label>
+        <textarea id="medicines" name="medicines" class="short" maxlength="3000" data-t-ph placeholder="e.g. tablets, supplements, herbal products – and how often. Write “None” if nothing."></textarea>
       </div>
 
       <label class="consent">
@@ -58,10 +58,10 @@
         <span>
           <strong data-t>By ticking this box, I confirm that:</strong>
           <ul>
-            <li data-t>I am the patient, or a parent, guardian or family member submitting with their permission.</li>
+            <li data-t>I am the person receiving the healing, or a parent, guardian or family member submitting with their permission.</li>
             <li data-t-key="consentShare">I agree to share this photo and these details with <span data-clinic>Suhail&#39;s Meridian Healing</span>
               for my healing session.</li>
-            <li data-t>I understand this is a drugless therapy, and I am taking part willingly.</li>
+            <li data-t>I understand this is a drugless wellness practice, and I am taking part willingly.</li>
             <li data-t>I understand that results vary and are not guaranteed.</li>
           </ul>
           <a href="/privacy" target="_blank" class="small-link" data-t>Read our privacy policy</a>
@@ -96,7 +96,7 @@
         if (p.followUp) {
           // Last healing was within the past week: ask how the patient is improving instead.
           document.getElementById('problemsLabel').textContent = t('What positive changes are you feeling after your last healing?');
-          document.getElementById('problems').placeholder = t('For example: less pain, better sleep, more energy, feeling calmer…');
+          document.getElementById('problems').placeholder = t('For example: feeling lighter, better sleep, more energy, a calmer mind…');
           document.getElementById('firstVisitFields').remove();
         }
         if (!cfg.paymentsEnabled) submit.textContent = t('Upload & continue');
@@ -142,7 +142,7 @@
       if (!document.getElementById('problems').value.trim()) {
         return (error.textContent = followUp
           ? t('Please tell us about the positive changes you are feeling.')
-          : t('Please describe the problems you are facing.'));
+          : t('Please tell us what you would like support with.'));
       }
       if (!document.getElementById('consent').checked) return (error.textContent = t('Please tick the consent box to continue.'));
 

@@ -10,7 +10,7 @@ const KEEP_DAYS = 365;
 const DAILY_AT = { hour: 23, minute: 30 }; // Indian time
 
 const IST = (col) => `strftime('%Y-%m-%d %H:%M', ${col}, '+5 hours', '+30 minutes')`;
-const STATUS = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'Patient says paid (to confirm)', failed: 'Not received', not_configured: 'Pay at clinic' };
+const STATUS = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'Member says paid (to confirm)', failed: 'Not received', not_configured: 'Pay in person' };
 
 function istDate(d = new Date()) {
   return new Date(d.getTime() + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
@@ -20,9 +20,9 @@ async function buildWorkbook() {
   const wb = new ExcelJS.Workbook();
   wb.created = new Date();
 
-  const patients = wb.addWorksheet('Patients', { views: [{ state: 'frozen', ySplit: 1 }] });
+  const patients = wb.addWorksheet('Members', { views: [{ state: 'frozen', ySplit: 1 }] });
   patients.columns = [
-    { header: 'Patient ID', key: 'id', width: 11 },
+    { header: 'Member ID', key: 'id', width: 11 },
     { header: 'Phone', key: 'phone', width: 14 },
     { header: 'Name', key: 'name', width: 26 },
     { header: 'Age', key: 'age', width: 7 },
@@ -42,15 +42,15 @@ async function buildWorkbook() {
   visits.columns = [
     { header: 'Ref no.', key: 'id', width: 9 },
     { header: 'Date (IST)', key: 'date', width: 18 },
-    { header: 'Patient ID', key: 'patient_id', width: 11 },
-    { header: 'Patient name', key: 'name', width: 24 },
+    { header: 'Member ID', key: 'patient_id', width: 11 },
+    { header: 'Name', key: 'name', width: 24 },
     { header: 'Phone', key: 'phone', width: 14 },
     { header: 'Session type', key: 'kind', width: 13 },
     { header: 'Healing plan', key: 'plan', width: 14 },
     { header: 'Course no.', key: 'block_no', width: 10 },
-    { header: 'Problems / positive changes', key: 'problems', width: 50 },
-    { header: 'Treatments tried', key: 'treatments_tried', width: 36 },
-    { header: 'Medicines taking now', key: 'current_medicines', width: 36 },
+    { header: 'Support wanted / positive changes', key: 'problems', width: 50 },
+    { header: 'Already tried', key: 'treatments_tried', width: 36 },
+    { header: 'Currently taking', key: 'current_medicines', width: 36 },
     { header: 'Amount (₹)', key: 'amount', width: 11 },
     { header: 'Payment status', key: 'status', width: 28 },
     { header: 'Payment method', key: 'payment_method', width: 15 },

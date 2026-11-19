@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <meta name="theme-color" content="#15803d">
   <meta name="apple-mobile-web-app-title" content="Meridian Healing">
-  <title>Select Patient</title>
+  <title>Choose Person</title>
 </head>
 <body>
   <main class="wrap">
@@ -17,10 +17,10 @@
     <div class="steps"><span class="on"></span><span class="on"></span><span></span><span></span></div>
     <button type="button" class="link back" onclick="logout()" data-t>← Change number</button>
     <section class="card">
-      <h1 data-t>Who is the patient?</h1>
+      <h1 data-t>Who is the healing for?</h1>
       <p class="sub" id="sub" data-t>Loading…</p>
       <ul class="list" id="list"></ul>
-      <button type="button" class="secondary" id="showAdd" data-t>+ Add a new patient</button>
+      <button type="button" class="secondary" id="showAdd" data-t>+ Add someone new</button>
 
       <form id="addForm" class="hidden" novalidate>
         <label for="name" data-t>Full name</label>
@@ -62,11 +62,11 @@
         phone = res.phone;
         const shown = fmtPhone(phone);
         if (!patients.length) {
-          sub.textContent = t('No patients are registered under {phone} yet. Add the patient below.', { phone: shown });
+          sub.textContent = t('No one is registered under {phone} yet. Add a person below.', { phone: shown });
           openAddForm();
           return;
         }
-        sub.textContent = t(patients.length > 1 ? '{n} patients registered under {phone}.' : '{n} patient registered under {phone}.', { n: patients.length, phone: shown });
+        sub.textContent = t(patients.length > 1 ? '{n} people registered under {phone}.' : '{n} person registered under {phone}.', { n: patients.length, phone: shown });
         list.innerHTML = patients.map((p) => {
           const meta = [p.age != null ? t('{n} yrs', { n: p.age }) : '', p.gender ? t(p.gender) : ''].filter(Boolean).join(' · ');
           return '<li><button type="button" data-id="' + p.id + '"><span class="who"><span class="avatar">' + esc(initials(p.name)) +

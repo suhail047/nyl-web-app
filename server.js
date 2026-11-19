@@ -40,7 +40,7 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 if (ADMIN_PASSWORD === 'change-me') console.warn('WARNING: set ADMIN_PASSWORD in .env before going live.');
 if (PAYMENT_METHOD === 'upi') console.log(`Payments: UPI QR to ${UPI_ID}`);
-else if (PAYMENT_METHOD === 'none') console.warn('No UPI_ID or Razorpay keys set: patients will be asked to pay at the clinic.');
+else if (PAYMENT_METHOD === 'none') console.warn('No UPI_ID or Razorpay keys set: patients will be asked to pay in person.');
 if (!OTP_ENABLED) console.log('OTP is off: patients go straight from phone number to the patient list.');
 else if (otp.PROVIDER === 'console') console.warn('SMS_PROVIDER=console: OTP codes are printed here, not sent by SMS.');
 console.log(reminders.ENABLED ? `WhatsApp reminders: on, daily at ${reminders.status().time} IST` : 'WhatsApp reminders: not connected (manual links in the Reminders tab).');
@@ -96,7 +96,7 @@ function rateLimit(name, max, windowMs, message) {
 const HOUR = 3600 * 1000;
 const limitLookups = rateLimit('lookups', 60, HOUR, 'Too many attempts. Please try again in an hour.');
 const limitUploads = rateLimit('uploads', 30, HOUR, 'Too many uploads. Please try again in an hour.');
-const limitNewPatients = rateLimit('patients', 20, HOUR, 'Too many new patients added. Please try again in an hour.');
+const limitNewPatients = rateLimit('patients', 20, HOUR, 'Too many new people added. Please try again in an hour.');
 
 // ---------- Block cross-site form posts (CSRF) ----------
 // Browsers send an Origin header with POST/DELETE; it must be this site. (Razorpay's webhook is exempt.)
@@ -363,7 +363,7 @@ function ownVisit(req) {
 
 app.get('/api/patients/:id', (req, res) => {
   const p = ownPatient(req, req.params.id);
-  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  if (!p) return res.status(404).json({ error: 'Person not found.' });
   res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone, followUp: isFollowUp(p.id) });
 });
 
@@ -371,7 +371,7 @@ app.get('/api/patients/:id', (req, res) => {
 // OTP is on, because without it anyone who knows the phone number could open this page.
 app.get('/api/patients/:id/progress', (req, res) => {
   const p = ownPatient(req, req.params.id);
-  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  if (!p) return res.status(404).json({ error: 'Person not found.' });
   const visits = q.visitsByPatient.all(p.id);
   const last = visits[visits.length - 1];
   res.json({
@@ -411,8 +411,8 @@ app.post('/api/visits', limitUploads, upload.single('photo'), (req, res) => {
   if (!patient || !problems || !req.file || !consented) {
     if (req.file) fs.rm(req.file.path, () => {});
     if (patient && problems && req.file) return res.status(400).json({ error: 'Please tick the consent box to continue.' });
-    const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please describe the problems you are facing.';
-    return res.status(400).json({ error: !patient ? 'Patient not found.' : !problems ? askText : 'Please upload a photo.' });
+    const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please tell us what you would like support with.';
+    return res.status(400).json({ error: !patient ? 'Person not found.' : !problems ? askText : 'Please upload a photo.' });
   }
 
   const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
@@ -580,7 +580,7 @@ app.post('/api/admin/settings', (req, res) => {
 // One patient's visits, oldest first, for the Progress view.
 app.get('/api/admin/patients/:id/visits', (req, res) => {
   const p = q.patientById.get(Number(req.params.id));
-  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  if (!p) return res.status(404).json({ error: 'Person not found.' });
   const last = q.lastVisitOfPatient.get(p.id);
   res.json({ patient: p, visits: q.visitsByPatient.all(p.id).map(visitDto), upcoming: last?.session_no ? plan.upcoming(last, p.next_block) : null });
 });
@@ -605,7 +605,7 @@ app.post('/api/admin/reminders/run', async (_req, res, next) => {
 
 app.post('/api/admin/patients/:id/reminders', (req, res) => {
   const p = q.patientById.get(Number(req.params.id));
-  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  if (!p) return res.status(404).json({ error: 'Person not found.' });
   q.setRemindersOff.run(req.body.off ? 1 : 0, p.id);
   res.json({ ok: true });
 });
@@ -613,7 +613,7 @@ app.post('/api/admin/patients/:id/reminders', (req, res) => {
 // The admin's private notes about a patient.
 app.post('/api/admin/patients/:id/notes', (req, res) => {
   const p = q.patientById.get(Number(req.params.id));
-  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  if (!p) return res.status(404).json({ error: 'Person not found.' });
   q.setNotes.run(cleanText(req.body.notes, 10000) || null, p.id);
   res.json({ ok: true });
 });
@@ -621,7 +621,7 @@ app.post('/api/admin/patients/:id/notes', (req, res) => {
 // What follows the patient's current 12-session course: weekly (default), another 12 sessions, or restart at Session 1.
 app.post('/api/admin/patients/:id/plan', (req, res) => {
   const p = q.patientById.get(Number(req.params.id));
-  if (!p) return res.status(404).json({ error: 'Patient not found.' });
+  if (!p) return res.status(404).json({ error: 'Person not found.' });
   const choice = req.body.nextBlock;
   if (![null, 'daily', 'restart'].includes(choice ?? null)) return res.status(400).json({ error: 'Unknown plan choice.' });
   q.setNextBlock.run(choice ?? null, p.id);

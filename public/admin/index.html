@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Clinic Admin</title>
+  <title>Admin</title>
   <link rel="stylesheet" href="/styles.css">
   <link rel="icon" href="/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/admin/admin.css">
@@ -18,17 +18,17 @@
     <nav class="tabs">
       <button class="tab active" data-tab="visits">Submissions <span class="badge hidden" id="newCount">0</span></button>
       <button class="tab" data-tab="progress">Progress</button>
-      <button class="tab" data-tab="patients">Patients</button>
+      <button class="tab" data-tab="patients">Members</button>
       <button class="tab" data-tab="reminders">Reminders</button>
       <button class="tab" data-tab="settings">Settings</button>
     </nav>
 
     <section id="tab-visits">
       <div class="toolbar">
-        <input id="visitSearch" type="search" placeholder="Search name, phone or problem…">
+        <input id="visitSearch" type="search" placeholder="Search name, phone or notes…">
         <select id="statusFilter">
           <option value="">All payments</option><option value="upi_claimed">UPI – to confirm</option><option value="paid">Paid</option>
-          <option value="pending">Pending</option><option value="failed">Not received</option><option value="not_configured">Pay at clinic</option>
+          <option value="pending">Pending</option><option value="failed">Not received</option><option value="not_configured">Pay in person</option>
         </select>
       </div>
       <div class="grid" id="visits"></div>
@@ -42,7 +42,7 @@
           <ul class="progress-list" id="progressList"></ul>
         </aside>
         <div class="progress-main" id="progressMain">
-          <p class="empty">Choose a patient to see their progress day by day.</p>
+          <p class="empty">Choose a member to see their progress day by day.</p>
         </div>
       </div>
     </section>
@@ -53,7 +53,7 @@
         <input id="apName" placeholder="Full name" required>
         <input id="apAge" type="number" min="0" max="130" placeholder="Age">
         <select id="apGender"><option value="">Gender</option><option>Female</option><option>Male</option><option>Other</option></select>
-        <button type="submit">Add patient</button>
+        <button type="submit">Add member</button>
       </form>
       <div class="error" id="apError"></div>
       <div class="toolbar"><input id="patientSearch" type="search" placeholder="Search name or phone…"></div>
@@ -69,7 +69,7 @@
       <h2 class="section-title">Due a session today <span class="muted" id="remCount"></span></h2>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Patient</th><th>Phone</th><th>Next session</th><th>Last session</th><th>Reminder</th><th></th></tr></thead>
+          <thead><tr><th>Member</th><th>Phone</th><th>Next session</th><th>Last session</th><th>Reminder</th><th></th></tr></thead>
           <tbody id="remList"></tbody>
         </table>
       </div>
@@ -78,7 +78,7 @@
     <section id="tab-settings" class="hidden">
       <form class="card settings" id="settingsForm" novalidate>
         <h2>Consultation fee</h2>
-        <p class="muted">Pre-filled on the payment page for new patients. Patients can still change the amount.
+        <p class="muted">Pre-filled on the payment page for new members. Members can still change the amount.
           Leave empty for no fixed fee.</p>
         <label for="feeInput">Default fee (₹)</label>
         <input id="feeInput" type="text" inputmode="decimal" maxlength="9" placeholder="No fixed fee">
@@ -88,7 +88,7 @@
 
       <section class="card settings backups">
         <h2>Backups</h2>
-        <p class="muted">An Excel file of all patients and sessions (answers and payments, no photos). A backup is saved
+        <p class="muted">An Excel file of all members and sessions (answers and payments, no photos). A backup is saved
           automatically every night at 11:30 PM IST and kept for a year. Download them regularly to keep a copy off the server.</p>
         <a class="btn" href="/api/admin/export" download>⬇ Download Excel now</a>
         <h3>Daily backups</h3>

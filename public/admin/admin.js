@@ -1,6 +1,6 @@
 const state = { visits: [], patients: [], unseen: 0 };
 const $ = (id) => document.getElementById(id);
-const STATUS_LABEL = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'UPI – please confirm', failed: 'Not received', not_configured: 'Pay at clinic' };
+const STATUS_LABEL = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'UPI – please confirm', failed: 'Not received', not_configured: 'Pay in person' };
 
 // SQLite stores UTC as "YYYY-MM-DD HH:MM:SS"
 function fmtDate(s) {
@@ -17,18 +17,18 @@ function visitCard(v, fresh) {
       <div class="row"><button type="button" class="name link-plain" data-progress="${v.patientId}" title="See progress">${esc(v.patientName)}</button><span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}</span></div>
       <div class="muted">${esc(fmtPhone(v.phone))}${v.age != null ? ' · ' + esc(v.age) + ' yrs' : ''}${v.gender ? ' · ' + esc(v.gender) : ''}</div>
       ${v.planLabel ? `<div><span class="plan-tag">${esc(v.planLabel)}</span></div>` : ''}
-      <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Problems faced'}</div>
+      <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Wants support with'}</div>
       <div class="problems">${esc(v.problems)}</div>
       ${v.visitKind !== 'followup' ? `
-        <div class="muted kind">Treatments tried</div>
+        <div class="muted kind">Already tried</div>
         <div class="problems">${esc(v.treatmentsTried || '—')}</div>
-        <div class="muted kind">Medicines taking now</div>
+        <div class="muted kind">Currently taking</div>
         <div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
       ${v.consentAt ? '<div class="muted">✓ Consent given</div>' : ''}
       <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
       ${v.paymentMethod === 'upi' && v.paymentStatus !== 'paid' ? `<div class="muted">UPI note to look for: <b>Ref ${v.id}</b></div>` : ''}
-      ${v.upiRef ? `<div class="muted">UTR given by patient: <b>${esc(v.upiRef)}</b></div>` : ''}
+      ${v.upiRef ? `<div class="muted">UTR given by member: <b>${esc(v.upiRef)}</b></div>` : ''}
       ${v.paymentStatus !== 'paid' ? `<div class="pay-actions">
         <button type="button" data-pay="confirm" data-id="${v.id}">✓ Mark paid</button>
         ${v.paymentStatus === 'upi_claimed' ? `<button type="button" class="secondary" data-pay="reject" data-id="${v.id}">Not received</button>` : ''}
@@ -60,7 +60,7 @@ function renderPatients() {
       <td>${p.visit_count ?? 0}</td><td>${esc(fmtDate(p.last_visit))}</td><td>${esc(fmtDate(p.created_at))}</td>
       <td><button class="link link-ok" data-progress="${p.id}">Progress</button></td>
       <td><button class="link" data-del="${p.id}">Delete</button></td></tr>`;
-  }).join('') || '<tr><td colspan="9" class="empty">No patients yet.</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="empty">No members yet.</td></tr>';
   renderProgressList();
 }
 
@@ -85,7 +85,7 @@ function renderProgressList() {
     <li><button type="button" class="${p.id === progress.patientId ? 'active' : ''}" data-progress="${p.id}">
       <span class="pname">${esc(p.name)}</span>
       <span class="muted">${esc(fmtPhone(p.phone))} · ${p.visit_count || 0} session${p.visit_count === 1 ? '' : 's'}${p.last_visit ? ' · last ' + esc(fmtDay(istDay(p.last_visit))) : ''}</span>
-    </button></li>`).join('') || '<li class="muted">No patients found.</li>';
+    </button></li>`).join('') || '<li class="muted">No members found.</li>';
 }
 
 async function openProgress(patientId) {
@@ -147,7 +147,7 @@ async function loadProgress() {
         current course; after that the patient goes back to weekly healing.</p>
     </div>
     <div class="notes-card card">
-      <label for="patientNotes">Your notes <span class="muted">(private – patients never see this)</span></label>
+      <label for="patientNotes">Your notes <span class="muted">(private – members never see this)</span></label>
       <textarea id="patientNotes" data-patient="${p.id}" maxlength="10000" placeholder="Your observations, what you advised, follow-ups…">${esc(p.notes || '')}</textarea>
       <span class="muted small" id="notesSaved"></span>
       <label class="check-row"><input type="checkbox" id="remindersOn" data-patient="${p.id}" ${p.reminders_off ? '' : 'checked'}>
@@ -177,12 +177,12 @@ async function loadProgress() {
       <div class="when"><span class="dayno">${esc(tag)}</span><span class="muted">of 12</span><span class="muted">${esc(fmtDay(day))}</span></div>
       <a class="thumb" href="${esc(v.photoUrl)}" target="_blank" rel="noopener">${v.photoUrl ? `<img src="${esc(v.photoUrl)}" alt="Photo, ${esc(tag)}" loading="lazy">` : ''}</a>
       <div class="what">
-        <div class="row"><span class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Problems faced'}</span>
+        <div class="row"><span class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Wants support with'}</span>
           <span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}${v.amount > 0 ? ' · ₹' + esc(v.amount.toLocaleString('en-IN')) : ''}</span></div>
         <div class="problems">${esc(v.problems)}</div>
         ${v.visitKind !== 'followup' ? `
-          <div class="muted kind">Treatments tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
-          <div class="muted kind">Medicines taking now</div><div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
+          <div class="muted kind">Already tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
+          <div class="muted kind">Currently taking</div><div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
       </div>
     </li>`;
   }).join('') + '</ol>';
@@ -224,7 +224,7 @@ async function loadReminders() {
     : 'Nothing sent automatically yet.';
   $('remStatus').innerHTML = r.enabled
     ? `<h2>Automatic WhatsApp reminders: <span class="on-text">ON</span></h2>
-       <p class="muted">Sent every day at ${esc(r.time)} IST to patients due a session (template "${esc(r.template)}"). ${last}</p>
+       <p class="muted">Sent every day at ${esc(r.time)} IST to members due a session (template "${esc(r.template)}"). ${last}</p>
        <button type="button" id="remRun">Send today's reminders now</button> <span class="muted" id="remRunMsg"></span>`
     : `<h2>Automatic WhatsApp reminders: <span class="off-text">not connected</span></h2>
        <p class="muted">Use <b>Send on WhatsApp</b> below – it opens WhatsApp with the reminder written for you; just press send.
@@ -305,7 +305,7 @@ function notify(v) {
     state.unseen++;
     $('newCount').textContent = state.unseen;
     $('newCount').classList.remove('hidden');
-    document.title = `(${state.unseen}) New submission · Clinic Admin`;
+    document.title = `(${state.unseen}) New submission · Admin`;
   }
   try {
     const ctx = new AudioContext();
@@ -316,7 +316,7 @@ function notify(v) {
     osc.stop(ctx.currentTime + 0.15);
   } catch {}
   if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification('New patient submission', { body: `${v.patientName} · ${fmtPhone(v.phone)}`, icon: v.photoUrl });
+    new Notification('New submission', { body: `${v.patientName} · ${fmtPhone(v.phone)}`, icon: v.photoUrl });
   }
 }
 
@@ -364,7 +364,7 @@ document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () 
 function clearUnseen() {
   state.unseen = 0;
   $('newCount').classList.add('hidden');
-  document.title = 'Clinic Admin';
+  document.title = 'Admin';
 }
 window.addEventListener('focus', () => { if (!$('tab-visits').classList.contains('hidden')) clearUnseen(); });
 document.addEventListener('click', () => {
@@ -453,7 +453,7 @@ $('settingsForm').addEventListener('submit', async (e) => {
     });
     $('feeInput').value = fee > 0 ? fee : '';
     msg.style.color = 'var(--ok)';
-    msg.textContent = fee > 0 ? `Saved. New patients will see ₹${fee.toLocaleString('en-IN')}.` : 'Saved. No fixed fee – patients enter the amount.';
+    msg.textContent = fee > 0 ? `Saved. New members will see ₹${fee.toLocaleString('en-IN')}.` : 'Saved. No fixed fee – members enter the amount.';
   } catch (err) {
     msg.textContent = err.message;
   } finally {
