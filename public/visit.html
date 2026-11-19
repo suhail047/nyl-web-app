@@ -115,11 +115,12 @@
     });
 
     // Phone photos are often 3–8 MB. Resize to at most 1600 px and re-save as JPEG (~200–400 KB) so the
-    // upload is quick on mobile data and the server's storage lasts longer. Photos the browser can't read
-    // (e.g. HEIC on Android) are sent as they are.
+    // upload is quick on mobile data and the server's storage lasts longer. Re-saving also removes hidden
+    // details stored in the photo, such as the GPS location where it was taken. Photos the browser can't
+    // read (e.g. HEIC on Android) are sent as they are and converted on the server.
     async function shrinkPhoto(file) {
       const MAX = 1600;
-      if (!file || file.size < 500 * 1024) return file;
+      if (!file) return file;
       try {
         const img = await createImageBitmap(file, { imageOrientation: 'from-image' });
         const scale = Math.min(1, MAX / Math.max(img.width, img.height));
@@ -128,8 +129,7 @@
         canvas.height = Math.round(img.height * scale);
         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
-        if (!blob || blob.size >= file.size) return file;
-        return new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+        return blob ? new File([blob], 'photo.jpg', { type: 'image/jpeg' }) : file;
       } catch {
         return file;
       }

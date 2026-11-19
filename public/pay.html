@@ -86,7 +86,7 @@
       $('finishLink').href = '/done?status=submitted&visit=' + visitId;
       if (visit.paymentMethod !== 'upi' && visit.paymentMethod !== 'razorpay') return $('offline').classList.remove('hidden');
 
-      // The's fee is pre-filled; the patient can change it or clear it.
+      // The fee is pre-filled; the member can change it or clear it.
       $('totalRow').classList.add('hidden');
       $('amountEdit').classList.remove('hidden');
       $('amountInput').value = visit.amount > 0 ? visit.amount : '';
