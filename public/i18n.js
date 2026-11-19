@@ -64,8 +64,6 @@
     'What health issues would you like support with?': 'ഏതൊക്കെ ആരോഗ്യ പ്രശ്നങ്ങൾക്കാണ് നിങ്ങൾക്ക് പിന്തുണ വേണ്ടത്?',
     'Your health issues, and how long you have had them…': 'നിങ്ങളുടെ ആരോഗ്യ പ്രശ്നങ്ങളും അവ എത്ര കാലമായി ഉണ്ടെന്നും…',
     'What treatments have you tried?': 'ഇതുവരെ ഏതൊക്കെ ചികിത്സകൾ ചെയ്തിട്ടുണ്ട്?',
-    'What medications did you take in the past?': 'മുമ്പ് ഏതൊക്കെ മരുന്നുകൾ കഴിച്ചിരുന്നു?',
-    'Medications you used to take, and for how long. Write “None” if none.': 'മുമ്പ് കഴിച്ചിരുന്ന മരുന്നുകളും എത്ര കാലം കഴിച്ചു എന്നും. ഇല്ലെങ്കിൽ “ഇല്ല” എന്ന് എഴുതുക.',
     'What medications are you taking currently?': 'ഇപ്പോൾ ഏതൊക്കെ മരുന്നുകൾ കഴിക്കുന്നുണ്ട്?',
     '(optional)': '(നിർബന്ധമില്ല)',
     'e.g. allopathy, ayurveda, homeopathy, physiotherapy, surgery. Write “None” if you haven\'t tried any.': 'ഉദാ: അലോപ്പതി, ആയുർവേദം, ഹോമിയോപ്പതി, ഫിസിയോതെറാപ്പി, ശസ്ത്രക്രിയ. ഒന്നും ചെയ്തിട്ടില്ലെങ്കിൽ “ഇല്ല” എന്ന് എഴുതുക.',
@@ -84,7 +82,7 @@
     'Please add a photo.': 'ദയവായി ഒരു ഫോട്ടോ ചേർക്കുക.',
     'Please tell us about your health issues.': 'നിങ്ങളുടെ ആരോഗ്യ പ്രശ്നങ്ങളെക്കുറിച്ച് പറയുക.',
     'Please tell us about the positive changes you are feeling.': 'അനുഭവപ്പെടുന്ന നല്ല മാറ്റങ്ങളെക്കുറിച്ച് പറയുക.',
-    'Please answer the questions about treatments and medications (write “None” if none).': 'ചികിത്സകളെയും മരുന്നുകളെയും കുറിച്ചുള്ള ചോദ്യങ്ങൾക്ക് ഉത്തരം നൽകുക (ഇല്ലെങ്കിൽ “ഇല്ല” എന്ന് എഴുതുക).',
+    'Please answer what treatments you have tried and what medications you are taking (write “None” if none).': 'ചെയ്ത ചികിത്സകളും ഇപ്പോൾ കഴിക്കുന്ന മരുന്നുകളും എഴുതുക (ഇല്ലെങ്കിൽ “ഇല്ല” എന്ന് എഴുതുക).',
     'Please tick the consent box to continue.': 'തുടരാൻ സമ്മത ബോക്സിൽ ടിക്ക് ചെയ്യുക.',
     // Payment page
     'Payment': 'പണമടയ്ക്കൽ',

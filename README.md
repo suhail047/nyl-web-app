@@ -6,8 +6,7 @@ A small web app for patient check-in:
    verified with a 6-digit SMS code – see *OTP* below; off by default).
 2. **Select patient** – all names registered under that (verified) number are listed (a new name can be added).
 3. **Photo & questions** – patient takes/uploads a photo. On the first session they answer: their health issues
-   (what they would like support with), the treatments they have tried, the medications they take now and the medications they used to take (all
-   required, kept on record). If their last healing was on an earlier day
+   (what they would like support with), the treatments they have tried and the medications they take (both required, kept on record). If their last healing was on an earlier day
    within the past 7 days, they are instead asked about the *positive changes they are feeling after their
    last healing*. After more than two weeks without a session, the first-session questions are asked again.
 4. **Payment** – right after the upload, a payment page shows a **UPI QR code** (default UPI ID

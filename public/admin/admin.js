@@ -23,9 +23,7 @@ function visitCard(v, fresh) {
         <div class="muted kind">Treatments tried</div>
         <div class="problems">${esc(v.treatmentsTried || '—')}</div>
         <div class="muted kind">Current medications</div>
-        <div class="problems">${esc(v.currentMedicines || '—')}</div>
-        <div class="muted kind">Past medications</div>
-        <div class="problems">${esc(v.pastMedicines || '—')}</div>` : ''}
+        <div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
       ${v.consentAt ? '<div class="muted">✓ Consent given</div>' : ''}
       <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
@@ -44,7 +42,7 @@ function renderVisits(freshId) {
   const status = $('statusFilter').value;
   const shown = state.visits.filter((v) =>
     (!status || v.paymentStatus === status) &&
-    (!term || [v.patientName, v.phone, v.problems, v.treatmentsTried, v.currentMedicines, v.pastMedicines].some((f) => String(f).toLowerCase().includes(term))));
+    (!term || [v.patientName, v.phone, v.problems, v.treatmentsTried, v.currentMedicines].some((f) => String(f).toLowerCase().includes(term))));
   $('visits').innerHTML = shown.map((v) => visitCard(v, v.id === freshId)).join('');
   $('visitsEmpty').classList.toggle('hidden', shown.length > 0);
 }
@@ -184,8 +182,7 @@ async function loadProgress() {
         <div class="problems">${esc(v.problems)}</div>
         ${v.visitKind !== 'followup' ? `
           <div class="muted kind">Treatments tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
-          <div class="muted kind">Current medications</div><div class="problems">${esc(v.currentMedicines || '—')}</div>
-          <div class="muted kind">Past medications</div><div class="problems">${esc(v.pastMedicines || '—')}</div>` : ''}
+          <div class="muted kind">Current medications</div><div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
       </div>
     </li>`;
   }).join('') + '</ol>';

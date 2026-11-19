@@ -51,9 +51,6 @@
 
         <label for="medicines" data-t>What medications are you taking currently?</label>
         <textarea id="medicines" name="medicines" class="short" maxlength="3000" required data-t-ph placeholder="Medication names and how often you take them. Write “None” if you take none."></textarea>
-
-        <label for="pastMedicines" data-t>What medications did you take in the past?</label>
-        <textarea id="pastMedicines" name="pastMedicines" class="short" maxlength="3000" required data-t-ph placeholder="Medications you used to take, and for how long. Write “None” if none."></textarea>
       </div>
 
       <label class="consent">
@@ -148,8 +145,8 @@
           : t('Please tell us about your health issues.'));
       }
       // Kept on record: both are required on a first session (members can write "None").
-      if (!followUp && ['treatments', 'medicines', 'pastMedicines'].some((id) => !document.getElementById(id).value.trim())) {
-        return (error.textContent = t('Please answer the questions about treatments and medications (write “None” if none).'));
+      if (!followUp && (!document.getElementById('treatments').value.trim() || !document.getElementById('medicines').value.trim())) {
+        return (error.textContent = t('Please answer what treatments you have tried and what medications you are taking (write “None” if none).'));
       }
       if (!document.getElementById('consent').checked) return (error.textContent = t('Please tick the consent box to continue.'));
 

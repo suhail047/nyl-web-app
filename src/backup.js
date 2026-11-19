@@ -51,7 +51,6 @@ async function buildWorkbook() {
     { header: 'Health issues / positive changes', key: 'problems', width: 50 },
     { header: 'Treatments tried', key: 'treatments_tried', width: 36 },
     { header: 'Current medications', key: 'current_medicines', width: 36 },
-    { header: 'Past medications', key: 'past_medicines', width: 36 },
     { header: 'Amount (₹)', key: 'amount', width: 11 },
     { header: 'Payment status', key: 'status', width: 28 },
     { header: 'Payment method', key: 'payment_method', width: 15 },
@@ -62,7 +61,7 @@ async function buildWorkbook() {
   ];
   const rows = db.prepare(`
     SELECT v.id, ${IST('v.created_at')} AS date, v.patient_id, p.name, p.phone, v.visit_kind, v.phase, v.session_no, v.block_no, v.problems,
-           v.treatments_tried, v.current_medicines, v.past_medicines, v.amount_paise, v.payment_status, v.payment_method, v.upi_ref,
+           v.treatments_tried, v.current_medicines, v.amount_paise, v.payment_status, v.payment_method, v.upi_ref,
            v.razorpay_payment_id, ${IST('v.paid_at')} AS paid_at, ${IST('v.consent_at')} AS consent_at
     FROM visits v JOIN patients p ON p.id = v.patient_id ORDER BY p.phone, p.name, v.id`).all();
   visits.addRows(rows.map((r) => ({
@@ -75,7 +74,6 @@ async function buildWorkbook() {
   visits.getColumn('problems').alignment = { wrapText: true, vertical: 'top' };
   visits.getColumn('treatments_tried').alignment = { wrapText: true, vertical: 'top' };
   visits.getColumn('current_medicines').alignment = { wrapText: true, vertical: 'top' };
-  visits.getColumn('past_medicines').alignment = { wrapText: true, vertical: 'top' };
 
   for (const ws of [patients, visits]) {
     ws.getRow(1).font = { bold: true };
