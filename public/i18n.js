@@ -74,6 +74,10 @@
     'I am the person receiving the healing, or a parent, guardian or family member submitting with their permission.': 'ഹീലിംഗ് സ്വീകരിക്കുന്നത് ഞാനാണ്, അല്ലെങ്കിൽ അവരുടെ അനുവാദത്തോടെ അയയ്ക്കുന്ന മാതാപിതാവോ രക്ഷിതാവോ കുടുംബാംഗമോ ആണ് ഞാൻ.',
     'I understand this is a drugless wellness service, and I am taking part willingly.': 'ഇത് മരുന്നില്ലാത്ത ഒരു വെൽനസ് സേവനമാണെന്ന് ഞാൻ മനസ്സിലാക്കുന്നു, സ്വമനസ്സാലെയാണ് ഞാൻ പങ്കെടുക്കുന്നത്.',
     'I understand that results vary and are not guaranteed.': 'ഫലങ്ങൾ ഓരോരുത്തർക്കും വ്യത്യസ്തമായിരിക്കുമെന്നും ഉറപ്പ് നൽകാനാവില്ലെന്നും ഞാൻ മനസ്സിലാക്കുന്നു.',
+    'For privacy, progress is shown only on the phone that sends the photos.': 'സ്വകാര്യതയ്ക്കായി, ഫോട്ടോകൾ അയയ്ക്കുന്ന ഫോണിൽ മാത്രമേ പുരോഗതി കാണിക്കൂ.',
+    'Progress is shown only on the phone that sends the photos.': 'ഫോട്ടോകൾ അയയ്ക്കുന്ന ഫോണിൽ മാത്രമേ പുരോഗതി കാണിക്കൂ.',
+    'Please tick the box to agree to the User agreement.': 'തുടരാൻ, ഉപയോക്തൃ കരാർ അംഗീകരിക്കാൻ ബോക്സിൽ ടിക്ക് ചെയ്യുക.',
+    'User agreement': 'ഉപയോക്തൃ കരാർ',
     'Read our privacy policy': 'ഞങ്ങളുടെ സ്വകാര്യതാ നയം വായിക്കുക',
     'Upload & continue to payment': 'അപ്‌ലോഡ് ചെയ്ത് പണമടയ്ക്കാൻ തുടരുക',
     'Upload & continue': 'അപ്‌ലോഡ് ചെയ്ത് തുടരുക',
@@ -164,6 +168,7 @@
   // Text with markup inside (kept separate so the HTML stays intact).
   const HTML_ML = {
     photoDrop: '📷 ഫോട്ടോ എടുക്കാനോ അപ്‌ലോഡ് ചെയ്യാനോ ടാപ്പ് ചെയ്യുക<br><small>JPG, PNG അല്ലെങ്കിൽ HEIC, 15 MB വരെ</small>',
+    consentAgree: '<a href="/agreement" target="_blank">ഉപയോക്തൃ കരാറും</a> <a href="/privacy" target="_blank">സ്വകാര്യതാ നയവും</a> ഞാൻ വായിച്ചു, അവ അംഗീകരിക്കുന്നു.',
     consentShare: 'എന്റെ ഹീലിംഗ് സെഷനുവേണ്ടി ഈ ഫോട്ടോയും വിവരങ്ങളും <span data-clinic>Suhail&#39;s Meridian Healing</span>-മായി പങ്കുവെക്കാൻ ഞാൻ സമ്മതിക്കുന്നു.',
     treatmentTime: 'നിങ്ങളുടെ ഹീലിംഗ് സെഷൻ <strong>ഇന്ത്യൻ സമയം രാത്രി 10 മണിക്ക്</strong> ആരംഭിക്കും.',
   };

@@ -42,6 +42,10 @@
         d = await api('/api/patients/' + encodeURIComponent(patientId) + '/progress');
       } catch (err) {
         $('summary').innerHTML = '';
+        if (err.data?.noAccess) {
+          $('summary').innerHTML = '<p class="sub">' + esc(t('For privacy, progress is shown only on the phone that sends the photos.')) + '</p>';
+          return;
+        }
         $('error').textContent = err.message;
         return;
       }

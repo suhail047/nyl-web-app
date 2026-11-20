@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#15803d">
+  <title>User Agreement</title>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand"><img class="logo" src="/logo.svg" alt=""><span data-clinic>Suhail&#39;s Meridian Healing</span></header>
+    <a class="back" href="/" data-t>← Back</a>
+    <article class="card policy" id="policy-en">
+      <h1>User agreement</h1>
+      <p class="muted">Last updated: 20 November 2026</p>
+      <p>By ticking the box when you send a photo, you confirm that:</p>
+      <ul>
+        <li>I am the person receiving the healing, or a parent, guardian or family member submitting with their permission.</li>
+        <li>I agree to share this photo and these details with <span data-clinic>Suhail&#39;s Meridian Healing</span> for my healing session.</li>
+        <li>I understand this is a drugless wellness service, and I am taking part willingly.</li>
+        <li>I understand that results vary and are not guaranteed.</li>
+      </ul>
+      <p>We record the date and time you agreed. How we look after your details is explained in our
+        <a href="/privacy">Privacy policy</a>.</p>
+    </article>
+    <article class="card policy hidden" id="policy-ml">
+      <h1>ഉപയോക്തൃ കരാർ</h1>
+      <p class="muted">അവസാനം പുതുക്കിയത്: 2026 നവംബർ 20</p>
+      <p>ഫോട്ടോ അയയ്ക്കുമ്പോൾ ബോക്സിൽ ടിക്ക് ചെയ്യുന്നതിലൂടെ നിങ്ങൾ സ്ഥിരീകരിക്കുന്നു:</p>
+      <ul>
+        <li>ഹീലിംഗ് സ്വീകരിക്കുന്നത് ഞാനാണ്, അല്ലെങ്കിൽ അവരുടെ അനുവാദത്തോടെ അയയ്ക്കുന്ന മാതാപിതാവോ രക്ഷിതാവോ കുടുംബാംഗമോ ആണ് ഞാൻ.</li>
+        <li>എന്റെ ഹീലിംഗ് സെഷനുവേണ്ടി ഈ ഫോട്ടോയും വിവരങ്ങളും <span data-clinic>Suhail&#39;s Meridian Healing</span>-മായി പങ്കുവെക്കാൻ ഞാൻ സമ്മതിക്കുന്നു.</li>
+        <li>ഇത് മരുന്നില്ലാത്ത ഒരു വെൽനസ് സേവനമാണെന്ന് ഞാൻ മനസ്സിലാക്കുന്നു, സ്വമനസ്സാലെയാണ് ഞാൻ പങ്കെടുക്കുന്നത്.</li>
+        <li>ഫലങ്ങൾ ഓരോരുത്തർക്കും വ്യത്യസ്തമായിരിക്കുമെന്നും ഉറപ്പ് നൽകാനാവില്ലെന്നും ഞാൻ മനസ്സിലാക്കുന്നു.</li>
+      </ul>
+      <p>നിങ്ങൾ സമ്മതിച്ച തീയതിയും സമയവും ഞങ്ങൾ രേഖപ്പെടുത്തുന്നു. നിങ്ങളുടെ വിവരങ്ങൾ എങ്ങനെ സംരക്ഷിക്കുന്നു എന്ന്
+        <a href="/privacy">സ്വകാര്യതാ നയത്തിൽ</a> വിശദീകരിച്ചിട്ടുണ്ട്.</p>
+      <p class="muted small-note">ഈ മലയാളം പതിപ്പ് സൗകര്യത്തിനുവേണ്ടിയുള്ളതാണ്. സംശയമുണ്ടെങ്കിൽ ഇംഗ്ലീഷ് പതിപ്പാണ് ആധാരം.</p>
+    </article>
+  </main>
+  <script src="/i18n.js"></script>
+  <script src="/common.js"></script>
+  <script>
+    if (LANG === 'ml') {
+      document.getElementById('policy-en').classList.add('hidden');
+      document.getElementById('policy-ml').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

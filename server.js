@@ -400,6 +400,11 @@ app.get('/api/patients/:id/progress', (req, res) => {
   const p = ownPatient(req, req.params.id);
   if (!p) return res.status(404).json({ error: 'Person not found.' });
   const visits = q.visitsByPatient.all(p.id);
+  // Only a phone that has sent a photo for this person may see their progress, so someone who merely
+  // knows the mobile number sees nothing.
+  if (visits.length && !visits.some((v) => v.session_key && v.session_key === req.sessionKey)) {
+    return res.status(403).json({ error: 'Progress is shown only on the phone that sends the photos.', noAccess: true });
+  }
   const last = visits[visits.length - 1];
   res.json({
     name: p.name,

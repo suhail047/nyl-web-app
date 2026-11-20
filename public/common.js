@@ -7,7 +7,7 @@ async function api(url, options = {}) {
     return new Promise(() => {}); // page is navigating away
   }
   const message = body.error || 'Something went wrong. Please try again.';
-  if (!res.ok) throw Object.assign(new Error(window.t ? window.t(message) : message), { retryAfter: body.retryAfter });
+  if (!res.ok) throw Object.assign(new Error(window.t ? window.t(message) : message), { retryAfter: body.retryAfter, data: body });
   return body;
 }
 

@@ -55,17 +55,8 @@
 
       <label class="consent">
         <input type="checkbox" id="consent" name="consent" value="yes" required>
-        <span>
-          <strong data-t>By ticking this box, I confirm that:</strong>
-          <ul>
-            <li data-t>I am the person receiving the healing, or a parent, guardian or family member submitting with their permission.</li>
-            <li data-t-key="consentShare">I agree to share this photo and these details with <span data-clinic>Suhail&#39;s Meridian Healing</span>
-              for my healing session.</li>
-            <li data-t>I understand this is a drugless wellness service, and I am taking part willingly.</li>
-            <li data-t>I understand that results vary and are not guaranteed.</li>
-          </ul>
-          <a href="/privacy" target="_blank" class="small-link" data-t>Read our privacy policy</a>
-        </span>
+        <span data-t-key="consentAgree">I have read and agree to the <a href="/agreement" target="_blank">User agreement</a>
+          and the <a href="/privacy" target="_blank">Privacy policy</a>.</span>
       </label>
       <div class="error" id="error" role="alert"></div>
       <button type="submit" id="submit" data-t>Upload &amp; continue to payment</button>
@@ -148,7 +139,7 @@
       if (!followUp && (!document.getElementById('treatments').value.trim() || !document.getElementById('medicines').value.trim())) {
         return (error.textContent = t('Please answer what treatments you have tried and what medications you are taking (write “None” if none).'));
       }
-      if (!document.getElementById('consent').checked) return (error.textContent = t('Please tick the consent box to continue.'));
+      if (!document.getElementById('consent').checked) return (error.textContent = t('Please tick the box to agree to the User agreement.'));
 
       const data = new FormData(form);
       data.append('patientId', patientId);
