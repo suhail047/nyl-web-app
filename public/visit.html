@@ -25,9 +25,10 @@
       <label data-t>Your photo</label>
       <label class="photo-drop" id="drop" style="margin-bottom:12px">
         <img id="preview" class="hidden" alt="Selected photo preview">
-        <span id="dropText" data-t-key="photoDrop">📷 Tap to take or upload a photo<br><small>JPG, PNG or HEIC, up to 15 MB</small></span>
+        <span id="dropText" data-t-key="photoDrop">📷 Tap to take or upload a photo</span>
         <input id="photo" name="photo" type="file" accept="image/*" capture="user" required>
       </label>
+      <div class="error" id="photoError" role="alert" style="margin:-4px 0 10px"></div>
       <div class="instructions">
         <strong data-t>How to take the photo</strong>
         <figure class="example">
@@ -105,7 +106,18 @@
 
     photo.addEventListener('change', () => {
       const file = photo.files[0];
+      const photoError = document.getElementById('photoError');
+      photoError.textContent = '';
       if (!file) return;
+      // Only photos: JPG, PNG, WEBP or HEIC (iPhone). Anything else gets a clear message straight away.
+      const okType = /^image\/(jpeg|png|webp|heic|heif)$/.test(file.type) || (!file.type && /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name));
+      if (!okType) {
+        photo.value = '';
+        preview.classList.add('hidden');
+        document.getElementById('dropText').textContent = t('📷 Tap to take or upload a photo');
+        photoError.textContent = t('Please upload a JPG, PNG, WEBP or HEIC photo.');
+        return;
+      }
       preview.src = URL.createObjectURL(file);
       preview.classList.remove('hidden');
       document.getElementById('dropText').innerHTML = '<small>' + esc(t('Tap to change photo')) + '</small>';
