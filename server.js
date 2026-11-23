@@ -11,6 +11,7 @@ const heicConvert = require('heic-convert');
 const { q, normalizePhone } = require('./src/db');
 const otp = require('./src/otp');
 const backup = require('./src/backup');
+const whitebg = require('./src/whitebg');
 const plan = require('./src/plan');
 const reminders = require('./src/reminders');
 
@@ -212,7 +213,8 @@ function visitDto(v) {
     consentAt: v.consent_at,
     treatmentsTried: v.treatments_tried,
     currentMedicines: v.current_medicines,
-    photoUrl: v.photo_file ? `/uploads/${v.photo_file}` : null,
+    photoUrl: v.photo_white ? `/uploads/${v.photo_white}` : v.photo_file ? `/uploads/${v.photo_file}` : null,
+    originalPhotoUrl: v.photo_white && v.photo_file ? `/uploads/${v.photo_file}` : null,
     amount: v.amount_paise / 100,
     paymentStatus: v.payment_status,
     razorpayOrderId: v.razorpay_order_id,
@@ -264,6 +266,15 @@ function isHeic(file) {
   fs.readSync(fd, b, 0, 12, 0);
   fs.closeSync(fd);
   return b.toString('latin1', 4, 8) === 'ftyp' && /^(heic|heix|hevc|hevx|heim|heis|hevm|hevs|mif1|msf1)$/.test(b.toString('latin1', 8, 12));
+}
+
+// Makes a white-background copy in the background; the dashboard swaps to it as soon as it is ready.
+function whiteBackground(visitId, file) {
+  whitebg.enqueue(UPLOAD_DIR, file, (white) => {
+    if (!q.visitById.get(visitId)) return fs.rm(path.join(UPLOAD_DIR, white), () => {}); // deleted meanwhile
+    q.setPhotoWhite.run(white, visitId);
+    broadcast('photo-ready', visitDto(q.visitById.get(visitId)));
+  });
 }
 
 async function heicToJpeg(file) {
@@ -465,6 +476,7 @@ app.post('/api/visits', limitUploadsPerIp, limitUploads, upload.single('photo'),
   if (step.consumed) q.setNextBlock.run(null, patient.id);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });
+  whiteBackground(visitId, req.file.filename);
 });
 
 // Summary shown on the payment page.
@@ -680,7 +692,9 @@ app.delete('/api/admin/patients/:id', (req, res) => {
   const id = Number(req.params.id);
   const photos = q.photosForPatient.all(id);
   q.deletePatient.run(id);
-  for (const { photo_file } of photos) fs.rm(path.join(UPLOAD_DIR, photo_file), () => {});
+  for (const { photo_file, photo_white } of photos) {
+    for (const f of [photo_file, photo_white]) if (f) fs.rm(path.join(UPLOAD_DIR, f), () => {});
+  }
   broadcast('patient-deleted', { id });
   res.json({ ok: true });
 });
@@ -698,6 +712,8 @@ app.use((err, _req, res, _next) => {
 });
 
 backup.startDailyBackups();
+// Photos sent before white backgrounds were switched on (or while the model was downloading).
+setTimeout(() => { for (const v of q.photosWithoutWhite.all()) if (fs.existsSync(path.join(UPLOAD_DIR, v.photo_file))) whiteBackground(v.id, v.photo_file); }, 5000).unref();
 reminders.startDailyReminders();
 
 app.listen(PORT, process.env.HOST || undefined, () => {

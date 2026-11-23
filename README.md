@@ -126,6 +126,14 @@ To have the app send them by itself every day at `REMINDER_TIME` (Indian time), 
 Each patient gets at most one reminder a day; failed sends are shown in the Reminders tab and retried by
 "Send today's reminders now". Meta charges per business-initiated message.
 
+
+## White backgrounds
+
+Every uploaded photo also gets a copy on a plain white background, made on your own server (no cost, photos
+never leave it). The dashboard shows the white copy, with a **View original photo** link — the original is
+always kept. The first time the app starts it downloads the free photo model (~170 MB, one time). It needs
+about 1 GB of memory, which the Hostinger KVM 1 has. To turn it off, add `WHITE_BACKGROUND=false`.
+
 ## Other patient features
 
 - **Installable app** – patients can add it to their home screen (Android: "Install" on the first page;

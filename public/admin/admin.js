@@ -24,6 +24,7 @@ function visitCard(v, fresh) {
         <div class="problems">${esc(v.treatmentsTried || '—')}</div>
         <div class="muted kind">Current medications</div>
         <div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
+      ${v.originalPhotoUrl ? `<div><a class="muted small-link" href="${esc(v.originalPhotoUrl)}" target="_blank" rel="noopener">View original photo</a></div>` : ''}
       ${v.consentAt ? '<div class="muted">✓ Consent given</div>' : ''}
       <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
@@ -353,8 +354,15 @@ function connect() {
   es.addEventListener('visit-updated', (e) => {
     const v = JSON.parse(e.data);
     const i = state.visits.findIndex((x) => x.id === v.id);
-    if (i >= 0) state.visits[i] = v; else state.visits.unshift(v);
+    if (i >= 0) state.visits[i] = v; else if (state.day === istDay(v.createdAt)) state.visits.unshift(v); else return;
     renderVisits(v.id);
+    if (v.patientId === progress.patientId) loadProgress();
+  });
+  // The white-background copy of a photo is ready: swap it in quietly.
+  es.addEventListener('photo-ready', (e) => {
+    const v = JSON.parse(e.data);
+    const i = state.visits.findIndex((x) => x.id === v.id);
+    if (i >= 0) { state.visits[i] = v; renderVisits(); }
     if (v.patientId === progress.patientId) loadProgress();
   });
   es.addEventListener('patient-added', loadPatientsQuietly);

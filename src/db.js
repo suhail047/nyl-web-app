@@ -84,6 +84,7 @@ if (!visitColumns.includes('current_medicines')) db.exec('ALTER TABLE visits ADD
 if (!visitColumns.includes('consent_at')) db.exec('ALTER TABLE visits ADD COLUMN consent_at TEXT');
 // Hash of the patient session (browser) that created the visit: only that browser can read it back.
 if (!visitColumns.includes('session_key')) db.exec('ALTER TABLE visits ADD COLUMN session_key TEXT');
+if (!visitColumns.includes('photo_white')) db.exec('ALTER TABLE visits ADD COLUMN photo_white TEXT');
 // Healing plan position: phase 'daily' | 'weekly', session 1–12 within the block, block = course number.
 for (const [col, type] of [['phase', 'TEXT'], ['session_no', 'INTEGER'], ['block_no', 'INTEGER']]) {
   if (!visitColumns.includes(col)) db.exec(`ALTER TABLE visits ADD COLUMN ${col} ${type}`);
@@ -120,7 +121,9 @@ const q = {
   patientsByPhone: db.prepare('SELECT id, name, age, gender FROM patients WHERE phone = ? ORDER BY name'),
   patientById: db.prepare('SELECT * FROM patients WHERE id = ?'),
   insertPatient: db.prepare('INSERT INTO patients (phone, name, age, gender) VALUES (?, ?, ?, ?)'),
-  photosForPatient: db.prepare('SELECT photo_file FROM visits WHERE patient_id = ? AND photo_file IS NOT NULL'),
+  photosForPatient: db.prepare('SELECT photo_file, photo_white FROM visits WHERE patient_id = ? AND photo_file IS NOT NULL'),
+  setPhotoWhite: db.prepare('UPDATE visits SET photo_white = ? WHERE id = ?'),
+  photosWithoutWhite: db.prepare('SELECT id, photo_file FROM visits WHERE photo_file IS NOT NULL AND photo_white IS NULL ORDER BY id DESC'),
   deletePatient: db.prepare('DELETE FROM patients WHERE id = ?'),
   allPatients: db.prepare(`
     SELECT p.*, COUNT(v.id) AS visit_count, MAX(v.created_at) AS last_visit
