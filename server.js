@@ -460,19 +460,14 @@ app.post('/api/visits', limitUploadsPerIp, limitUploads, upload.single('photo'),
   }
   const patient = ownPatient(req, req.body.patientId);
   const followUp = Boolean(patient) && isFollowUp(patient.id);
-  const problems = cleanText(req.body.problems, 5000);
+  // Only the photo and the consent tick are required; the answers are optional.
+  const problems = cleanText(req.body.problems, 5000) || '';
   const treatments = followUp ? null : cleanText(req.body.treatments, 3000) || null;
   const medicines = followUp ? null : cleanText(req.body.medicines, 3000) || null;
   const consented = req.body.consent === 'yes';
-  const missingRecord = !followUp && (!treatments || !medicines); // both kept on record for a first session
-  if (!patient || !problems || !req.file || !consented || missingRecord) {
+  if (!patient || !req.file || !consented) {
     if (req.file) fs.rm(req.file.path, () => {});
-    if (patient && problems && missingRecord) {
-      return res.status(400).json({ error: 'Please answer what treatments you have tried and what medications you are taking (write “None” if none).' });
-    }
-    if (patient && problems && req.file) return res.status(400).json({ error: 'Please tick the consent box to continue.' });
-    const askText = followUp ? 'Please tell us about the positive changes you are feeling.' : 'Please tell us about your health issues.';
-    return res.status(400).json({ error: !patient ? 'Person not found.' : !problems ? askText : 'Please upload a photo.' });
+    return res.status(400).json({ error: !patient ? 'Person not found.' : !req.file ? 'Please upload a photo.' : 'Please tick the box to agree to the User agreement.' });
   }
 
   const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';

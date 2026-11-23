@@ -45,14 +45,14 @@
       </div>
 
       <label for="problems" id="problemsLabel" data-t>What health issues would you like support with?</label>
-      <textarea id="problems" name="problems" maxlength="5000" required data-t-ph placeholder="Your health issues, and how long you have had them…"></textarea>
+      <textarea id="problems" name="problems" maxlength="5000" data-t-ph placeholder="Your health issues, and how long you have had them…"></textarea>
 
       <div id="firstVisitFields">
         <label for="treatments" data-t>What treatments have you tried?</label>
-        <textarea id="treatments" name="treatments" class="short" maxlength="3000" required data-t-ph placeholder="e.g. allopathy, ayurveda, homeopathy, physiotherapy, surgery. Write “None” if you haven't tried any."></textarea>
+        <textarea id="treatments" name="treatments" class="short" maxlength="3000" data-t-ph placeholder="e.g. allopathy, ayurveda, homeopathy, physiotherapy, surgery."></textarea>
 
         <label for="medicines" data-t>What medications are you taking currently?</label>
-        <textarea id="medicines" name="medicines" class="short" maxlength="3000" required data-t-ph placeholder="Medication names and how often you take them. Write “None” if you take none."></textarea>
+        <textarea id="medicines" name="medicines" class="short" maxlength="3000" data-t-ph placeholder="Medication names and how often you take them."></textarea>
       </div>
 
       <label class="consent">
@@ -148,15 +148,6 @@
       e.preventDefault();
       error.textContent = '';
       if (!photo.files[0]) return (error.textContent = t('Please add a photo.'));
-      if (!document.getElementById('problems').value.trim()) {
-        return (error.textContent = followUp
-          ? t('Please tell us about the positive changes you are feeling.')
-          : t('Please tell us about your health issues.'));
-      }
-      // Kept on record: both are required on a first session (members can write "None").
-      if (!followUp && (!document.getElementById('treatments').value.trim() || !document.getElementById('medicines').value.trim())) {
-        return (error.textContent = t('Please answer what treatments you have tried and what medications you are taking (write “None” if none).'));
-      }
       if (!document.getElementById('consent').checked) return (error.textContent = t('Please tick the box to agree to the User agreement.'));
 
       const data = new FormData(form);

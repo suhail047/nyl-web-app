@@ -18,7 +18,7 @@ function visitCard(v, fresh) {
       <div class="muted">${esc(fmtPhone(v.phone))}${v.age != null ? ' · ' + esc(v.age) + ' yrs' : ''}${v.gender ? ' · ' + esc(v.gender) : ''}</div>
       ${v.planLabel ? `<div><span class="plan-tag">${esc(v.planLabel)}</span></div>` : ''}
       <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Health issues'}</div>
-      <div class="problems">${esc(v.problems)}</div>
+      <div class="problems">${esc(v.problems || '—')}</div>
       ${v.visitKind !== 'followup' ? `
         <div class="muted kind">Treatments tried</div>
         <div class="problems">${esc(v.treatmentsTried || '—')}</div>
@@ -183,7 +183,7 @@ async function loadProgress() {
       <div class="what">
         <div class="row"><span class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Health issues'}</span>
           <span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}${v.amount > 0 ? ' · ₹' + esc(v.amount.toLocaleString('en-IN')) : ''}</span></div>
-        <div class="problems">${esc(v.problems)}</div>
+        <div class="problems">${esc(v.problems || '—')}</div>
         ${v.visitKind !== 'followup' ? `
           <div class="muted kind">Treatments tried</div><div class="problems">${esc(v.treatmentsTried || '—')}</div>
           <div class="muted kind">Current medications</div><div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}

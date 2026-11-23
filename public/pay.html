@@ -82,6 +82,7 @@
       if (visit.paymentStatus === 'upi_claimed') return location.replace('/done?status=upi&visit=' + visitId);
       $('pname').textContent = visit.patientName;
       $('problems').textContent = visit.problems;
+      $('problems').classList.toggle('hidden', !visit.problems);
       $('amount').textContent = visit.amount > 0 ? rupees(visit.amount) : t('Any amount');
       $('finishLink').href = '/done?status=submitted&visit=' + visitId;
       if (visit.paymentMethod !== 'upi' && visit.paymentMethod !== 'razorpay') return $('offline').classList.remove('hidden');
