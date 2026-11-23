@@ -28,8 +28,7 @@
     'Install': 'ഇൻസ്റ്റാൾ',
     'Tap the Share button, then "Add to Home Screen".': 'ഷെയർ ബട്ടൺ അമർത്തി "Add to Home Screen" തിരഞ്ഞെടുക്കുക.',
     // Rules
-    'Rules to follow during your healing': 'ഹീലിംഗ് സമയത്ത് പാലിക്കേണ്ട നിയമങ്ങൾ',
-    'Please follow these rules': 'ദയവായി ഈ നിയമങ്ങൾ പാലിക്കുക',
+    'Rules to be followed': 'പാലിക്കേണ്ട നിയമങ്ങൾ',
     'Do not hate or keep grudges against anyone.': 'ആരെയും വെറുക്കുകയോ ആരോടും പക വെക്കുകയോ ചെയ്യരുത്.',
     'Eat only when hungry. Stop eating when you stop feeling hungry.': 'വിശക്കുമ്പോൾ മാത്രം ഭക്ഷണം കഴിക്കുക. വിശപ്പ് മാറുമ്പോൾ കഴിക്കുന്നത് നിർത്തുക.',
     'Drink only when thirsty. Stop drinking when you stop feeling thirsty.': 'ദാഹിക്കുമ്പോൾ മാത്രം കുടിക്കുക. ദാഹം മാറുമ്പോൾ കുടിക്കുന്നത് നിർത്തുക.',
