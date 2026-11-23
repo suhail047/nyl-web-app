@@ -29,11 +29,11 @@
     'Tap the Share button, then "Add to Home Screen".': 'ഷെയർ ബട്ടൺ അമർത്തി "Add to Home Screen" തിരഞ്ഞെടുക്കുക.',
     // Rules
     'Rules to be followed': 'പാലിക്കേണ്ട നിയമങ്ങൾ',
-    'Do not hate or keep grudges against anyone.': 'ആരെയും വെറുക്കുകയോ ആരോടും പക വെക്കുകയോ ചെയ്യരുത്.',
-    'Eat only when hungry. Stop eating when you stop feeling hungry.': 'വിശക്കുമ്പോൾ മാത്രം ഭക്ഷണം കഴിക്കുക. വിശപ്പ് മാറുമ്പോൾ കഴിക്കുന്നത് നിർത്തുക.',
-    'Drink only when thirsty. Stop drinking when you stop feeling thirsty.': 'ദാഹിക്കുമ്പോൾ മാത്രം കുടിക്കുക. ദാഹം മാറുമ്പോൾ കുടിക്കുന്നത് നിർത്തുക.',
-    'Rest when your body asks for it.': 'ശരീരം ആവശ്യപ്പെടുമ്പോൾ വിശ്രമിക്കുക.',
-    'Sleep early.': 'നേരത്തെ ഉറങ്ങുക.',
+    'Let go of hatred and grudges towards anyone.': 'ആരോടുമുള്ള വെറുപ്പും പകയും ഉപേക്ഷിക്കുക.',
+    'Eat only when you feel hungry, and stop once the hunger is gone.': 'വിശക്കുമ്പോൾ മാത്രം ഭക്ഷണം കഴിക്കുക, വിശപ്പ് മാറിയാൽ നിർത്തുക.',
+    'Drink only when you feel thirsty, and stop once the thirst is gone.': 'ദാഹിക്കുമ്പോൾ മാത്രം കുടിക്കുക, ദാഹം മാറിയാൽ നിർത്തുക.',
+    'Rest whenever your body asks for it.': 'ശരീരം ആവശ്യപ്പെടുമ്പോഴെല്ലാം വിശ്രമിക്കുക.',
+    'Go to sleep early.': 'നേരത്തെ ഉറങ്ങാൻ പോവുക.',
     // Choose patient
     '← Change number': '← നമ്പർ മാറ്റുക',
     'Who is the healing for?': 'ആർക്കുവേണ്ടിയാണ് ഹീലിംഗ്?',
