@@ -1,6 +1,6 @@
 // Service worker: lets the app be installed and shows a friendly page when there is no internet.
 // Patient data (API calls, photos, admin pages) is never cached.
-const CACHE = 'smh-v13';
+const CACHE = 'smh-v14';
 const STATIC = ['/offline.html', '/styles.css', '/common.js', '/i18n.js', '/logo.svg', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
