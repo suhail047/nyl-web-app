@@ -232,3 +232,12 @@ If you use nginx instead, disable buffering for `/api/admin/stream` so live upda
 ## Notes / next steps
 
 - Photos are health data – keep the admin password strong and the server on HTTPS.
+
+## Photos-only view, QR card and full backup
+
+- **📷 Photos only** (top of the dashboard, or `/admin/photos`): just the day's photos, large, updating live.
+  Tap a photo to see it full screen and swipe between photos. Untick **Names** to hide names.
+- **QR card** (`/admin/qr`): a printable card with the QR code members scan to open the app. Use **Print / Save
+  as PDF**. It uses `PUBLIC_URL`, so set that to your domain first.
+- **Full backup** (Settings): one zip with every photo, the database and an Excel copy. Download it weekly and
+  keep it on Google Drive or a computer. Also turn on Hostinger's weekly VPS backups.

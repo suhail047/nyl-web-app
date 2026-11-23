@@ -62,9 +62,10 @@ function renderPatients() {
     return `<tr class="${first ? 'group-start' : ''}">
       <td>${first ? esc(fmtPhone(p.phone)) : ''}</td><td>${esc(p.name)}</td><td>${p.age ?? '—'}</td><td>${esc(p.gender || '—')}</td>
       <td>${p.visit_count ?? 0}</td><td>${esc(fmtDate(p.last_visit))}</td><td>${esc(fmtDate(p.created_at))}</td>
-      <td><button class="link link-ok" data-progress="${p.id}">Progress</button></td>
-      <td><button class="link" data-del="${p.id}">Delete</button></td></tr>`;
+      <td class="row-actions"><button class="link link-ok" data-progress="${p.id}">Progress</button></td>
+      <td class="row-actions"><button class="link" data-del="${p.id}">Delete</button></td></tr>`;
   }).join('') || '<tr><td colspan="9" class="empty">No members yet.</td></tr>';
+  labelCells('patients');
   renderProgressList();
 }
 
@@ -243,6 +244,14 @@ async function loadReminders() {
       <td>${esc(fmtPhone(d.phone))}</td><td>${esc(d.label)}</td><td>${esc(fmtDay(d.lastDay))}</td><td>${state}</td>
       <td><a class="wa-btn" href="${esc(d.waLink)}" target="_blank" rel="noopener">Send on WhatsApp</a></td></tr>`;
   }).join('') || '<tr><td colspan="6" class="empty">Nobody is due a session today, or everyone has already sent their photo.</td></tr>';
+  labelCells('remList');
+}
+
+// On phones, tables turn into cards; each cell shows its column name (CSS reads data-label).
+function labelCells(tbodyId) {
+  const tbody = $(tbodyId);
+  const heads = [...tbody.closest('table').querySelectorAll('thead th')].map((th) => th.textContent);
+  tbody.querySelectorAll('tr').forEach((tr) => [...tr.children].forEach((td, i) => { td.dataset.label = heads[i] || ''; }));
 }
 
 document.addEventListener('click', async (e) => {

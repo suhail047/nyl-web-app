@@ -12,7 +12,8 @@
   <div class="admin">
     <header class="topbar">
       <div class="brand-row"><img class="logo" src="/logo.svg" alt=""><strong><span data-clinic>Suhail&#39;s Meridian Healing</span> · Admin</strong></div>
-      <div class="live" id="live"><span class="dot"></span><span id="liveText">Connecting…</span></div>
+      <div class="top-links"><a class="btn secondary small-btn" href="/admin/photos">📷 Photos only</a><a class="btn secondary small-btn" href="/admin/qr">QR card</a>
+        <div class="live" id="live"><span class="dot"></span><span id="liveText">Connecting…</span></div></div>
     </header>
 
     <nav class="tabs">
@@ -84,7 +85,7 @@
 
     <section id="tab-settings" class="hidden">
       <form class="card settings" id="settingsForm" novalidate>
-        <h2>Consultation fee</h2>
+        <h2>Session fee</h2>
         <p class="muted">Pre-filled on the payment page for new members. Members can still change the amount.
           Leave empty for no fixed fee.</p>
         <label for="feeInput">Default fee (₹)</label>
@@ -98,6 +99,10 @@
         <p class="muted">An Excel file of all members and sessions (answers and payments, no photos). A backup is saved
           automatically every night at 11:30 PM IST and kept for a year. Download them regularly to keep a copy off the server.</p>
         <a class="btn" href="/api/admin/export" download>⬇ Download Excel now</a>
+        <h3>Full backup (photos + data)</h3>
+        <p class="muted">One zip file with every photo, all answers and payments. Download it once a week and keep it
+          on Google Drive or a computer, so nothing is lost even if something happens to the server.</p>
+        <a class="btn secondary" href="/api/admin/full-backup" download>⬇ Download full backup</a>
         <h3>Daily backups</h3>
         <ul class="backup-list" id="backupList"><li class="muted">Loading…</li></ul>
       </section>

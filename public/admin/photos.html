@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photos</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/admin/admin.css">
+  <style>
+    body { background: #fff; }
+    .pbar { position: sticky; top: 0; z-index: 5; background: #fff; border-bottom: 1px solid var(--border); padding: 10px 14px;
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pbar a.back { margin: 0 6px 0 0; }
+    .pbar input[type=date] { width: auto; margin: 0; padding: 6px 8px; }
+    .pbar .count { margin-left: auto; color: var(--muted); font-weight: 600; }
+    .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; padding: 14px; }
+    .ph { margin: 0; cursor: zoom-in; }
+    .ph img { width: 100%; aspect-ratio: 3 / 4; object-fit: contain; background: #fff; border: 1px solid var(--border); border-radius: 10px; display: block; }
+    .ph figcaption { font-size: .85rem; color: var(--muted); margin-top: 4px; text-align: center; }
+    .ph.fresh img { outline: 3px solid var(--primary); }
+    .hide-names .ph figcaption { display: none; }
+    .pempty { text-align: center; color: var(--muted); padding: 40px 16px; }
+    .viewer { position: fixed; inset: 0; background: #fff; z-index: 20; display: flex; flex-direction: column; }
+    .viewer img { flex: 1; min-height: 0; width: 100%; object-fit: contain; }
+    .viewer .vbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; gap: 10px; }
+    .viewer button { width: auto; margin: 0; padding: 8px 14px; }
+    @media (max-width: 520px) { .pgrid { grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; } }
+  </style>
+</head>
+<body>
+  <div class="pbar">
+    <a class="back" href="/admin">← Dashboard</a>
+    <button type="button" class="day-nav" id="prev" aria-label="Previous day">‹</button>
+    <input type="date" id="day" aria-label="Day">
+    <button type="button" class="day-nav" id="next" aria-label="Next day">›</button>
+    <label style="display:flex;align-items:center;gap:6px;margin:0;font-weight:400"><input type="checkbox" id="names" checked style="width:auto;margin:0"> Names</label>
+    <span class="live" id="live"><span class="dot"></span></span>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="pgrid" id="grid"></div>
+  <p class="pempty hidden" id="empty">No photos on this day yet. New photos appear here instantly.</p>
+
+  <div class="viewer hidden" id="viewer">
+    <div class="vbar"><button type="button" class="secondary" id="vPrev">‹ Previous</button><strong id="vName"></strong><button type="button" class="secondary" id="vClose">Close ✕</button></div>
+    <img id="vImg" alt="">
+    <div class="vbar"><span class="muted" id="vPos"></span><button type="button" class="secondary" id="vNext">Next ›</button></div>
+  </div>
+
+  <script src="/common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const state = { day: null, today: null, visits: [] };
+    let open = -1;
+
+    try { if (localStorage.getItem('photosNames') === 'off') { $('names').checked = false; document.body.classList.add('hide-names'); } } catch {}
+    $('names').addEventListener('change', () => {
+      document.body.classList.toggle('hide-names', !$('names').checked);
+      try { localStorage.setItem('photosNames', $('names').checked ? 'on' : 'off'); } catch {}
+    });
+
+    function istDay(s) { return new Date(new Date(s.replace(' ', 'T') + 'Z').getTime() + 5.5 * 3600 * 1000).toISOString().slice(0, 10); }
+
+    // Oldest first, so the order matches the order photos came in.
+    function render(freshId) {
+      const list = state.visits.filter((v) => v.photoUrl);
+      $('grid').innerHTML = list.map((v, i) => `<figure class="ph${v.id === freshId ? ' fresh' : ''}" data-i="${i}">
+        <img src="${esc(v.photoUrl)}" alt="${esc(v.patientName)}" loading="lazy"><figcaption>${esc(v.patientName)}</figcaption></figure>`).join('');
+      $('empty').classList.toggle('hidden', list.length > 0);
+      const which = state.day === state.today ? 'Today' : new Date(state.day + 'T00:00:00Z').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+      $('count').textContent = `${which}: ${list.length} photo${list.length === 1 ? '' : 's'}`;
+      if (open >= 0) show(Math.min(open, list.length - 1));
+    }
+
+    async function load(day) {
+      const r = await api('/api/admin/visits' + (day ? '?day=' + day : ''));
+      state.visits = r.visits.slice().reverse();
+      state.day = r.day; state.today = r.today;
+      $('day').value = r.day; $('day').max = r.today;
+      $('next').disabled = r.day >= r.today;
+      render();
+    }
+    function shift(n) {
+      const d = new Date(Date.parse(state.day) + n * 86400000).toISOString().slice(0, 10);
+      if (d <= state.today) load(d).catch((e) => alert(e.message));
+    }
+    $('prev').addEventListener('click', () => shift(-1));
+    $('next').addEventListener('click', () => shift(1));
+    $('day').addEventListener('change', () => $('day').value && load($('day').value).catch((e) => alert(e.message)));
+
+    // Full-screen viewer: tap a photo; swipe or use the buttons / arrow keys to move between photos.
+    function photos() { return state.visits.filter((v) => v.photoUrl); }
+    function show(i) {
+      const list = photos();
+      if (i < 0 || i >= list.length) return;
+      open = i;
+      $('vImg').src = list[i].photoUrl;
+      $('vName').textContent = $('names').checked ? list[i].patientName : '';
+      $('vPos').textContent = `${i + 1} of ${list.length}`;
+      $('viewer').classList.remove('hidden');
+    }
+    function close() { open = -1; $('viewer').classList.add('hidden'); }
+    $('grid').addEventListener('click', (e) => { const f = e.target.closest('.ph'); if (f) show(Number(f.dataset.i)); });
+    $('vPrev').addEventListener('click', () => show(open - 1));
+    $('vNext').addEventListener('click', () => show(open + 1));
+    $('vClose').addEventListener('click', close);
+    document.addEventListener('keydown', (e) => {
+      if (open < 0) return;
+      if (e.key === 'ArrowLeft') show(open - 1);
+      if (e.key === 'ArrowRight') show(open + 1);
+      if (e.key === 'Escape') close();
+    });
+    let touchX = null;
+    $('viewer').addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+    $('viewer').addEventListener('touchend', (e) => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+      if (Math.abs(dx) > 50) show(open + (dx < 0 ? 1 : -1));
+    });
+
+    // Live: new photos appear at the end; white-background copies replace the originals when ready.
+    function connect() {
+      const es = new EventSource('/api/admin/stream');
+      es.onopen = () => { $('live').className = 'live on'; load(state.day && state.day !== state.today ? state.day : null).catch(() => {}); };
+      es.onerror = () => { $('live').className = 'live off'; };
+      es.addEventListener('visit-created', (e) => {
+        const v = JSON.parse(e.data);
+        if (state.day === istDay(v.createdAt)) { state.visits.push(v); render(v.id); }
+      });
+      es.addEventListener('photo-ready', (e) => {
+        const v = JSON.parse(e.data);
+        const i = state.visits.findIndex((x) => x.id === v.id);
+        if (i >= 0) { state.visits[i] = v; render(); }
+      });
+      es.addEventListener('patient-deleted', () => load(state.day).catch(() => {}));
+    }
+    connect();
+  </script>
+</body>
+</html>

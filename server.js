@@ -8,7 +8,8 @@ const express = require('express');
 const multer = require('multer');
 const QRCode = require('qrcode');
 const heicConvert = require('heic-convert');
-const { q, normalizePhone } = require('./src/db');
+const { db, q, normalizePhone, DB_PATH } = require('./src/db');
+const archiver = require('archiver');
 const otp = require('./src/otp');
 const backup = require('./src/backup');
 const whitebg = require('./src/whitebg');
@@ -618,6 +619,33 @@ app.get('/api/admin/export', async (_req, res, next) => {
 });
 
 app.get('/api/admin/backups', (_req, res) => res.json(backup.listBackups()));
+
+// Everything in one zip: all photos, the database and an Excel copy. Keep it somewhere safe (Google Drive,
+// a computer) so nothing is lost even if the server is.
+app.get('/api/admin/full-backup', async (_req, res, next) => {
+  const snapshot = path.join(path.dirname(DB_PATH), `snapshot-${Date.now()}.db`);
+  try {
+    db.exec(`VACUUM INTO '${snapshot.replace(/'/g, "''")}'`); // a consistent copy, safe while the app runs
+    const zip = archiver('zip', { zlib: { level: 1 } }); // photos are already compressed
+    zip.on('error', next);
+    res.on('close', () => fs.rm(snapshot, { force: true }, () => {}));
+    res.attachment(`full-backup-${backup.istDate()}.zip`).type('zip');
+    zip.pipe(res);
+    zip.file(snapshot, { name: 'app.db' });
+    zip.append(Buffer.from(await backup.exportBuffer()), { name: `members-${backup.istDate()}.xlsx` });
+    zip.directory(UPLOAD_DIR, 'photos');
+    await zip.finalize();
+  } catch (err) {
+    fs.rm(snapshot, { force: true }, () => {});
+    next(err);
+  }
+});
+
+// The link members open, as a QR code for the printable card.
+app.get('/api/admin/qr', async (req, res) => {
+  const url = (process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '') + '/';
+  res.json({ url, svg: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14532d' } }) });
+});
 
 app.get('/api/admin/backups/:name', (req, res) => {
   const file = backup.backupPath(req.params.name);

@@ -126,3 +126,26 @@ td .link.link-ok { color: var(--primary); }
 .day-nav:disabled { opacity: .4; cursor: default; }
 .day-bar .link { font-size: .95rem; }
 .day-count { margin-left: auto; color: var(--muted); font-weight: 600; }
+.top-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.small-btn { width: auto; padding: 6px 12px; font-size: .88rem; margin: 0; }
+/* Phones: tabs wrap so every tab is visible; tables become one card per row. */
+@media (max-width: 640px) {
+  .tabs { flex-wrap: wrap; overflow: visible; gap: 0; }
+  .tab { padding: 8px 10px; font-size: .92rem; }
+  .table-wrap { background: none; border: 0; overflow: visible; }
+  .table-wrap table, .table-wrap tbody, .table-wrap tr, .table-wrap td { display: block; width: 100%; }
+  .table-wrap thead { display: none; }
+  .table-wrap tr { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 10px; }
+  .table-wrap td, .table-wrap tr.group-start td { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border: 0; text-align: right; white-space: normal; }
+  .table-wrap td::before { content: attr(data-label); color: var(--muted); font-weight: 600; text-align: left; }
+  .table-wrap td:empty, .table-wrap td[data-label=""]:not(:has(*)) { display: none; }
+  .table-wrap td[data-label=""] { justify-content: flex-end; }
+  .table-wrap td.empty { display: block; text-align: center; padding: 16px 0; }
+  .table-wrap td.empty::before { content: none; }
+}
+@media (max-width: 640px) {
+  .table-wrap tr:has(.row-actions) { display: flex; flex-wrap: wrap; }
+  .table-wrap td:not(.row-actions) { flex: 0 0 100%; }
+  .table-wrap td.row-actions { width: auto; flex: 1 1 50%; justify-content: flex-start; padding-top: 8px; }
+  .table-wrap td.row-actions + td.row-actions { justify-content: flex-end; }
+}
