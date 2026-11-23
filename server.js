@@ -644,7 +644,8 @@ app.get('/api/admin/full-backup', async (_req, res, next) => {
 // The link members open, as a QR code for the printable card.
 app.get('/api/admin/qr', async (req, res) => {
   const url = (process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '') + '/';
-  res.json({ url, svg: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#111111' } }) });
+  // Level 'H' error correction so it still scans with the yin-yang in the middle.
+  res.json({ url, svg: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'H', color: { dark: '#111111' } }) });
 });
 
 app.get('/api/admin/backups/:name', (req, res) => {

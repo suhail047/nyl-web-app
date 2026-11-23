@@ -8,45 +8,112 @@
   <link rel="icon" href="/logo.svg" type="image/svg+xml">
   <style>
     body { background: var(--bg); }
-    .tools { max-width: 420px; margin: 16px auto 0; padding: 0 16px; display: flex; gap: 8px; align-items: center; }
-    .tools button, .tools a { width: auto; margin: 0; }
-    .card-qr { max-width: 340px; margin: 24px auto; background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; }
+    .tools { max-width: 420px; margin: 16px auto 0; padding: 0 16px; }
+    .tools a { margin: 0; }
+    .section { max-width: 420px; margin: 18px auto 28px; padding: 0 16px; }
+    .section h2 { font-size: 1rem; margin: 0 0 4px; }
+    .section p.muted { margin: 0 0 10px; font-size: .9rem; }
+    .section button { margin-top: 12px; }
+
+    /* QR card */
+    .card-qr { background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; max-width: 340px; margin: 0 auto; }
     .card-qr .logo { width: 48px; height: 48px; display: block; margin: 0 auto 12px; }
     .card-qr h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 20px; color: #111; }
     .card-qr .qr { margin: 0 auto; }
     .card-qr .steps-text { color: var(--muted); margin: 18px 0 0; }
     .card-qr .url { font-weight: 600; margin-top: 6px; word-break: break-all; color: #111; }
+
+    /* Visiting card: standard 89 × 51 mm */
+    .vcard { width: 89mm; height: 51mm; background: #fff; box-sizing: border-box; padding: 5mm 5mm 5mm 6mm;
+             display: flex; align-items: center; justify-content: space-between; gap: 4mm; color: #111; overflow: hidden; }
+    .section .vcard { margin: 0 auto; border-radius: 6px; box-shadow: 0 1px 6px rgba(0,0,0,.12); }
+    .vcard .left { display: flex; flex-direction: column; justify-content: center; height: 100%; min-width: 0; }
+    .vcard .logo { width: 10mm; height: 10mm; margin-bottom: 3mm; }
+    .vcard .name { font-weight: 600; font-size: 12pt; line-height: 1.2; }
+    .vcard .tag { font-size: 7.5pt; color: #555; margin-top: 1.5mm; }
+    .vcard .vurl { font-size: 8pt; font-weight: 600; margin-top: 3.5mm; word-break: break-all; }
+    .vcard .vqr { flex: 0 0 auto; text-align: center; }
+    .vcard .vqr .qr-slot { width: 30mm; height: 30mm; }
+    .vcard .vqr .qr-slot > svg { width: 30mm; height: 30mm; display: block; }
+    .vcard .vqr small { display: block; font-size: 6.5pt; color: #555; margin-top: 1mm; }
+    .sheet { display: none; }
+    /* Yin-yang in the middle of the QR code, on a small white circle. */
+    .qr-slot { position: relative; }
+    .qr-center { position: absolute; left: 50%; top: 50%; width: 24%; height: 24%; transform: translate(-50%, -50%);
+                 background: #fff; border-radius: 50%; padding: 3%; box-sizing: border-box; }
+    .qr-center svg { width: 100%; height: 100%; display: block; }
+
     @media print {
+      @page { size: A4; margin: 10mm; }
       body { background: #fff; }
-      .tools { display: none; }
-      .card-qr { margin: 0 auto; break-inside: avoid; }
+      .tools, .section h2, .section p.muted, .section button { display: none !important; }
+      body.print-qr .section-vcard, body.print-vcard .section-qr { display: none; }
+      .section { margin: 0 auto; padding: 0; max-width: none; }
+      body.print-vcard .section-vcard > .vcard { display: none; }
+      body.print-vcard .sheet { display: grid; grid-template-columns: repeat(2, 89mm); justify-content: center; }
+      .sheet .vcard { outline: 0.2mm dashed #ccc; break-inside: avoid; }
+      .card-qr { break-inside: avoid; }
     }
   </style>
 </head>
 <body>
-  <div class="tools">
-    <a class="back" href="/admin" style="margin:0">← Dashboard</a>
-    <button type="button" id="print" style="margin-left:auto">🖨 Print / Save as PDF</button>
-  </div>
-  <div class="card-qr">
-    <svg class="logo" viewBox="10 10 44 44" role="img" aria-label="Yin-yang">
-      <circle cx="32" cy="32" r="21" fill="#fff" stroke="#111" stroke-width="1.5"/>
-      <path d="M32 11 A21 21 0 0 1 32 53 A10.5 10.5 0 0 1 32 32 A10.5 10.5 0 0 0 32 11 Z" fill="#111"/>
-      <circle cx="32" cy="21.5" r="3.4" fill="#111"/>
-      <circle cx="32" cy="42.5" r="3.4" fill="#fff"/>
-    </svg>
-    <h1 data-clinic>Suhail&#39;s Meridian Healing</h1>
-    <div class="qr" id="qr" role="img" aria-label="QR code"></div>
-    <p class="steps-text">Scan to send your photo</p>
-    <div class="url" id="url"></div>
-  </div>
+  <div class="tools"><a class="back" href="/admin">← Dashboard</a></div>
+
+  <section class="section section-qr">
+    <h2>QR card</h2>
+    <p class="muted">For a wall, counter or WhatsApp.</p>
+    <div class="card-qr">
+      <svg class="logo yy" viewBox="10 10 44 44" role="img" aria-label="Yin-yang"></svg>
+      <h1 data-clinic>Suhail&#39;s Meridian Healing</h1>
+      <div class="qr qr-slot" role="img" aria-label="QR code"></div>
+      <p class="steps-text">Scan to send your photo</p>
+      <div class="url url-slot"></div>
+    </div>
+    <button type="button" id="printQr">🖨 Print QR card / Save as PDF</button>
+  </section>
+
+  <section class="section section-vcard">
+    <h2>Visiting card</h2>
+    <p class="muted">Standard size (89 × 51 mm). Prints 10 cards on one A4 sheet with light cutting lines.</p>
+    <div class="vcard" id="vcard">
+      <div class="left">
+        <svg class="logo yy" viewBox="10 10 44 44" role="img" aria-label="Yin-yang"></svg>
+        <div class="name" data-clinic>Suhail&#39;s Meridian Healing</div>
+        <div class="tag">Drugless wellness service</div>
+        <div class="vurl url-slot"></div>
+      </div>
+      <div class="vqr"><div class="qr-slot"></div><small>Scan to send your photo</small></div>
+    </div>
+    <div class="sheet" id="sheet"></div>
+    <button type="button" id="printCards">🖨 Print visiting cards / Save as PDF</button>
+  </section>
+
   <script src="/common.js"></script>
   <script>
+    const YY = `<circle cx="32" cy="32" r="21" fill="#fff" stroke="#111" stroke-width="1.5"/>
+      <path d="M32 11 A21 21 0 0 1 32 53 A10.5 10.5 0 0 1 32 32 A10.5 10.5 0 0 0 32 11 Z" fill="#111"/>
+      <circle cx="32" cy="21.5" r="3.4" fill="#111"/><circle cx="32" cy="42.5" r="3.4" fill="#fff"/>`;
+    document.querySelectorAll('.yy').forEach((el) => (el.innerHTML = YY));
+
     api('/api/admin/qr').then((r) => {
-      document.getElementById('qr').innerHTML = r.svg; // SVG generated by our own server
-      document.getElementById('url').textContent = r.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const centre = `<div class="qr-center"><svg viewBox="10 10 44 44" aria-hidden="true">${YY}</svg></div>`;
+      document.querySelectorAll('.qr-slot').forEach((el) => (el.innerHTML = r.svg + centre)); // SVG made by our own server
+      const short = r.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      document.querySelectorAll('.url-slot').forEach((el) => (el.textContent = short));
     }).catch((e) => alert(e.message));
-    document.getElementById('print').addEventListener('click', () => window.print());
+
+    // Fill the A4 sheet with 10 copies of the visiting card just before printing.
+    function printAs(kind) {
+      if (kind === 'vcard') {
+        const one = document.getElementById('vcard').outerHTML.replace(' id="vcard"', '');
+        document.getElementById('sheet').innerHTML = one.repeat(10);
+      }
+      document.body.classList.add('print-' + kind);
+      window.print();
+      document.body.classList.remove('print-' + kind);
+    }
+    document.getElementById('printQr').addEventListener('click', () => printAs('qr'));
+    document.getElementById('printCards').addEventListener('click', () => printAs('vcard'));
   </script>
 </body>
 </html>
