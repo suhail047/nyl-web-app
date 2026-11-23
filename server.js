@@ -402,7 +402,13 @@ function ownVisit(req) {
 app.get('/api/patients/:id', (req, res) => {
   const p = ownPatient(req, req.params.id);
   if (!p) return res.status(404).json({ error: 'Person not found.' });
-  res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone, followUp: isFollowUp(p.id) });
+  // Which session this upload will be. Like My progress, only shown to the phone that sends this
+  // person's photos (or for someone who has not started yet).
+  const visits = q.visitsByPatient.all(p.id);
+  const mine = !visits.length || visits.some((v) => v.session_key && v.session_key === req.sessionKey);
+  const step = plan.nextStep(visits[visits.length - 1], p.next_block);
+  res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone, followUp: isFollowUp(p.id),
+    nextSession: mine ? plan.label(step.phase, step.session) : null });
 });
 
 // The patient's own progress: sessions done and what comes next. Earlier answers are only included when

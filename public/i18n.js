@@ -77,6 +77,7 @@
     'For privacy, progress is shown only on the phone that sends the photos.': 'സ്വകാര്യതയ്ക്കായി, ഫോട്ടോകൾ അയയ്ക്കുന്ന ഫോണിൽ മാത്രമേ പുരോഗതി കാണിക്കൂ.',
     'Progress is shown only on the phone that sends the photos.': 'ഫോട്ടോകൾ അയയ്ക്കുന്ന ഫോണിൽ മാത്രമേ പുരോഗതി കാണിക്കൂ.',
     'Please tick the box to agree to the User agreement.': 'തുടരാൻ, ഉപയോക്തൃ കരാർ അംഗീകരിക്കാൻ ബോക്സിൽ ടിക്ക് ചെയ്യുക.',
+    'Today: {plan}': 'ഇന്ന്: {plan}',
     'User agreement': 'ഉപയോക്തൃ കരാർ',
     'Read our privacy policy': 'ഞങ്ങളുടെ സ്വകാര്യതാ നയം വായിക്കുക',
     'Upload & continue to payment': 'അപ്‌ലോഡ് ചെയ്ത് പണമടയ്ക്കാൻ തുടരുക',

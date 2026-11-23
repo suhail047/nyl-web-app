@@ -19,6 +19,7 @@
 
     <form class="card" id="visitForm" novalidate>
       <div class="who" style="margin-bottom:16px"><span class="avatar" id="avatar"></span><div><h1 id="pname" style="margin:0">…</h1><span class="meta" id="pmeta" style="color:var(--muted)"></span>
+        <div><span class="plan-badge hidden" id="sessionBadge" style="margin:6px 0 2px"></span></div>
         <div><a class="small-link" id="progressLink" href="#" data-t>See my progress →</a></div></div></div>
 
       <label data-t>Your photo</label>
@@ -83,6 +84,10 @@
         document.getElementById('progressLink').href = '/my-progress?patient=' + p.id;
         document.getElementById('avatar').textContent = initials(p.name);
         document.getElementById('pmeta').textContent = [p.age != null ? t('{n} yrs', { n: p.age }) : '', p.gender ? t(p.gender) : ''].filter(Boolean).join(' · ');
+        if (p.nextSession) {
+          document.getElementById('sessionBadge').textContent = t('Today: {plan}', { plan: t(p.nextSession) });
+          document.getElementById('sessionBadge').classList.remove('hidden');
+        }
         followUp = p.followUp;
         if (p.followUp) {
           // Last healing was within the past week: ask how the patient is improving instead.
