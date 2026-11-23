@@ -31,7 +31,18 @@
       .card-back { break-before: page; }
       body { background: #fff; }
       .tools { display: none; }
-      .card-qr { margin: 0 auto; break-inside: avoid; }
+      /* Each side fills a whole A4 page. */
+      @page { size: A4; margin: 12mm; }
+      .card-qr { margin: 0 auto; break-inside: avoid; max-width: none; width: 100%; height: 271mm; box-sizing: border-box;
+                 padding: 14mm 12mm; border-radius: 0; display: flex; flex-direction: column; justify-content: center; }
+      .card-qr h1 { font-size: 34pt; }
+      .card-qr .tag { font-size: 21pt; margin: 3mm 0 14mm; }
+      .card-qr .qr { width: 135mm; height: 135mm; }
+      .card-qr .steps-text { font-size: 23pt; margin-top: 12mm; }
+      .card-qr .phone { font-size: 28pt; margin-top: 10mm; }
+      .card-qr .url { font-size: 22pt; margin-top: 2mm; }
+      .card-back h2 { font-size: 30pt; margin-bottom: 18mm; }
+      .card-back ol { font-size: 23pt; gap: 12mm; padding-left: 16mm; line-height: 1.4; }
     }
   </style>
 </head>
