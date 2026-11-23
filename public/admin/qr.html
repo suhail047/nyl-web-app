@@ -10,14 +10,11 @@
     body { background: var(--bg); }
     .tools { max-width: 420px; margin: 16px auto 0; padding: 0 16px; display: flex; gap: 8px; align-items: center; }
     .tools button, .tools a { width: auto; margin: 0; }
-    .card-qr { max-width: 380px; margin: 16px auto; background: #fff; border: 2px solid var(--primary); border-radius: 18px;
-               padding: 24px 22px; text-align: center; }
-    .card-qr .logo { width: 56px; height: 56px; }
-    .card-qr h1 { font-size: 1.35rem; margin: 8px 0 4px; }
-    .card-qr .ml { font-size: 1rem; color: var(--primary-dark); margin: 0 0 14px; }
-    .card-qr .qr svg { width: 230px; height: 230px; display: block; margin: 0 auto; }
-    .card-qr .steps-text { font-size: .95rem; margin: 12px 0 0; }
-    .card-qr .url { font-weight: 700; color: var(--primary-dark); margin-top: 10px; word-break: break-all; }
+    .card-qr { max-width: 340px; margin: 24px auto; background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; }
+    .card-qr h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 20px; }
+    .card-qr .qr { margin: 0 auto; }
+    .card-qr .steps-text { color: var(--muted); margin: 18px 0 0; }
+    .card-qr .url { font-weight: 600; margin-top: 6px; word-break: break-all; }
     @media print {
       body { background: #fff; }
       .tools { display: none; }
@@ -31,12 +28,9 @@
     <button type="button" id="print" style="margin-left:auto">🖨 Print / Save as PDF</button>
   </div>
   <div class="card-qr">
-    <img class="logo" src="/logo.svg" alt="">
     <h1 data-clinic>Suhail&#39;s Meridian Healing</h1>
-    <p class="ml">സുഹൈൽസ് മെറിഡിയൻ ഹീലിംഗ്</p>
     <div class="qr" id="qr" role="img" aria-label="QR code"></div>
-    <p class="steps-text">Scan to send your photo for today's healing<br>
-      <span style="color:var(--primary-dark)">ഇന്നത്തെ ഹീലിംഗിനുള്ള ഫോട്ടോ അയയ്ക്കാൻ സ്കാൻ ചെയ്യുക</span></p>
+    <p class="steps-text">Scan to send your photo</p>
     <div class="url" id="url"></div>
   </div>
   <script src="/common.js"></script>
