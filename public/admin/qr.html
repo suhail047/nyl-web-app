@@ -17,7 +17,6 @@
 
     /* QR card */
     .card-qr { background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; max-width: 340px; margin: 0 auto; }
-    .card-qr .logo { width: 48px; height: 48px; display: block; margin: 0 auto 12px; }
     .card-qr h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 20px; color: #111; }
     .card-qr .qr { margin: 0 auto; }
     .card-qr .steps-text { color: var(--muted); margin: 18px 0 0; }
@@ -28,10 +27,10 @@
              display: flex; align-items: center; justify-content: space-between; gap: 4mm; color: #111; overflow: hidden; }
     .section .vcard { margin: 0 auto; border-radius: 6px; box-shadow: 0 1px 6px rgba(0,0,0,.12); }
     .vcard .left { display: flex; flex-direction: column; justify-content: center; height: 100%; min-width: 0; }
-    .vcard .logo { width: 10mm; height: 10mm; margin-bottom: 3mm; }
     .vcard .name { font-weight: 600; font-size: 12pt; line-height: 1.2; }
     .vcard .tag { font-size: 7.5pt; color: #555; margin-top: 1.5mm; }
-    .vcard .vurl { font-size: 8pt; font-weight: 600; margin-top: 3.5mm; word-break: break-all; }
+    .vcard .vphone { font-size: 9pt; font-weight: 600; margin-top: 4mm; }
+    .vcard .vurl { font-size: 8pt; margin-top: 1mm; word-break: break-all; }
     .vcard .vqr { flex: 0 0 auto; text-align: center; }
     .vcard .vqr .qr-slot { width: 30mm; height: 30mm; }
     .vcard .vqr .qr-slot > svg { width: 30mm; height: 30mm; display: block; }
@@ -63,7 +62,6 @@
     <h2>QR card</h2>
     <p class="muted">For a wall, counter or WhatsApp.</p>
     <div class="card-qr">
-      <svg class="logo yy" viewBox="10 10 44 44" role="img" aria-label="Yin-yang"></svg>
       <h1 data-clinic>Suhail&#39;s Meridian Healing</h1>
       <div class="qr qr-slot" role="img" aria-label="QR code"></div>
       <p class="steps-text">Scan to send your photo</p>
@@ -77,9 +75,9 @@
     <p class="muted">Standard size (89 × 51 mm). Prints 10 cards on one A4 sheet with light cutting lines.</p>
     <div class="vcard" id="vcard">
       <div class="left">
-        <svg class="logo yy" viewBox="10 10 44 44" role="img" aria-label="Yin-yang"></svg>
         <div class="name" data-clinic>Suhail&#39;s Meridian Healing</div>
         <div class="tag">Drugless wellness service</div>
+        <div class="vphone">+91 86067 57805</div>
         <div class="vurl url-slot"></div>
       </div>
       <div class="vqr"><div class="qr-slot"></div><small>Scan to send your photo</small></div>
@@ -93,7 +91,6 @@
     const YY = `<circle cx="32" cy="32" r="21" fill="#fff" stroke="#111" stroke-width="1.5"/>
       <path d="M32 11 A21 21 0 0 1 32 53 A10.5 10.5 0 0 1 32 32 A10.5 10.5 0 0 0 32 11 Z" fill="#111"/>
       <circle cx="32" cy="21.5" r="3.4" fill="#111"/><circle cx="32" cy="42.5" r="3.4" fill="#fff"/>`;
-    document.querySelectorAll('.yy').forEach((el) => (el.innerHTML = YY));
 
     api('/api/admin/qr').then((r) => {
       const centre = `<div class="qr-center"><svg viewBox="10 10 44 44" aria-hidden="true">${YY}</svg></div>`;
