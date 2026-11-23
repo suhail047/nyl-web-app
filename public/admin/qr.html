@@ -22,7 +22,13 @@
     .qr-center { position: absolute; left: 50%; top: 50%; width: 24%; height: 24%; transform: translate(-50%, -50%);
                  background: #fff; border-radius: 50%; padding: 3%; box-sizing: border-box; }
     .qr-center svg { width: 100%; height: 100%; display: block; }
+    .side-label { max-width: 340px; margin: 18px auto -14px; padding: 0 4px; color: var(--muted); font-size: .85rem; font-weight: 600; }
+    .card-back { text-align: left; }
+    .card-back h2 { font-size: 1.05rem; font-weight: 600; text-align: center; margin: 0 0 16px; color: #111; }
+    .card-back ol { margin: 0; padding-left: 22px; display: grid; gap: 12px; line-height: 1.45; }
     @media print {
+      .side-label { display: none; }
+      .card-back { break-before: page; }
       body { background: #fff; }
       .tools { display: none; }
       .card-qr { margin: 0 auto; break-inside: avoid; }
@@ -34,6 +40,7 @@
     <a class="back" href="/admin">← Dashboard</a>
     <button type="button" id="print" style="margin-left:auto">🖨 Print / Save as PDF</button>
   </div>
+  <p class="side-label">Front</p>
   <div class="card-qr">
     <h1 data-clinic>Suhail&#39;s Meridian Healing</h1>
     <p class="tag">Drugless wellness service</p>
@@ -41,6 +48,17 @@
     <p class="steps-text">Scan to send your photo</p>
     <div class="phone">+91 86067 57805</div>
     <div class="url url-slot"></div>
+  </div>
+  <p class="side-label">Back</p>
+  <div class="card-qr card-back">
+    <h2>Rules to follow during your healing</h2>
+    <ol>
+      <li>Do not hate or keep grudges against anyone.</li>
+      <li>Eat only when hungry. Stop eating when you stop feeling hungry.</li>
+      <li>Drink only when thirsty. Stop drinking when you stop feeling thirsty.</li>
+      <li>Rest when your body asks for it.</li>
+      <li>Sleep early.</li>
+    </ol>
   </div>
   <script src="/common.js"></script>
   <script>
