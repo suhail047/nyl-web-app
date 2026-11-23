@@ -30,8 +30,8 @@
     // Rules
     'Rules to be followed': 'പാലിക്കേണ്ട നിയമങ്ങൾ',
     'Let go of hatred and grudges towards anyone.': 'ആരോടുമുള്ള വെറുപ്പും പകയും ഉപേക്ഷിക്കുക.',
-    'Eat only when you feel hungry, and stop once the hunger is gone.': 'വിശക്കുമ്പോൾ മാത്രം ഭക്ഷണം കഴിക്കുക, വിശപ്പ് മാറിയാൽ നിർത്തുക.',
-    'Drink only when you feel thirsty, and stop once the thirst is gone.': 'ദാഹിക്കുമ്പോൾ മാത്രം വെള്ളം കുടിക്കുക, ദാഹം മാറിയാൽ നിർത്തുക.',
+    'Eat only when hungry.': 'വിശക്കുമ്പോൾ മാത്രം ഭക്ഷണം കഴിക്കുക.',
+    'Drink only when thirsty.': 'ദാഹിക്കുമ്പോൾ മാത്രം വെള്ളം കുടിക്കുക.',
     'Rest whenever your body asks for it.': 'ശരീരം ആവശ്യപ്പെടുമ്പോൾ വിശ്രമിക്കുക.',
     'Go to sleep early.': 'നേരത്തെ ഉറങ്ങുക.',
     // Choose patient
