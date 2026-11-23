@@ -11,6 +11,7 @@
     .tools { max-width: 420px; margin: 16px auto 0; padding: 0 16px; display: flex; gap: 8px; align-items: center; }
     .tools button, .tools a { width: auto; margin: 0; }
     .card-qr { max-width: 340px; margin: 24px auto; background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; }
+    .card-qr .logo { width: 48px; height: 48px; display: block; margin: 0 auto 12px; }
     .card-qr h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 20px; }
     .card-qr .qr { margin: 0 auto; }
     .card-qr .steps-text { color: var(--muted); margin: 18px 0 0; }
@@ -28,6 +29,7 @@
     <button type="button" id="print" style="margin-left:auto">🖨 Print / Save as PDF</button>
   </div>
   <div class="card-qr">
+    <img class="logo" src="/logo.svg" alt="">
     <h1 data-clinic>Suhail&#39;s Meridian Healing</h1>
     <div class="qr" id="qr" role="img" aria-label="QR code"></div>
     <p class="steps-text">Scan to send your photo</p>
