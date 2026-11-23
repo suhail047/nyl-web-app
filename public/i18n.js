@@ -33,7 +33,7 @@
     'Eat only when hungry, and stop once the hunger is gone.': 'വിശക്കുമ്പോൾ മാത്രം ഭക്ഷണം കഴിക്കുക, വിശപ്പ് മാറിയാൽ നിർത്തുക.',
     'Drink only when thirsty, and stop once the thirst is gone.': 'ദാഹിക്കുമ്പോൾ മാത്രം വെള്ളം കുടിക്കുക, ദാഹം മാറിയാൽ നിർത്തുക.',
     'Rest whenever your body asks for it.': 'ശരീരം ആവശ്യപ്പെടുമ്പോൾ വിശ്രമിക്കുക.',
-    'Go to sleep early.': 'നേരത്തെ ഉറങ്ങുക.',
+    'Sleep early.': 'നേരത്തെ ഉറങ്ങുക.',
     // Choose patient
     '← Change number': '← നമ്പർ മാറ്റുക',
     'Who is the healing for?': 'ആർക്കുവേണ്ടിയാണ് ഹീലിംഗ്?',
