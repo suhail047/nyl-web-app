@@ -20,9 +20,14 @@
     <form class="card" id="visitForm" novalidate>
       <div class="who" style="margin-bottom:16px"><span class="avatar" id="avatar"></span><div><h1 id="pname" style="margin:0">…</h1><span class="meta" id="pmeta" style="color:var(--muted)"></span>
         <div><span class="plan-badge hidden" id="sessionBadge" style="margin:6px 0 2px"></span></div>
-        <div><a class="small-link" id="progressLink" href="#" data-t>See my progress →</a></div></div></div>
+        <div id="progressRow" class="hidden"><a class="small-link" id="progressLink" href="#" data-t>See my progress →</a></div></div></div>
 
       <label data-t>Your photo</label>
+      <label class="photo-drop" id="drop" style="margin-bottom:12px">
+        <img id="preview" class="hidden" alt="Selected photo preview">
+        <span id="dropText" data-t-key="photoDrop">📷 Tap to take or upload a photo<br><small>JPG, PNG or HEIC, up to 15 MB</small></span>
+        <input id="photo" name="photo" type="file" accept="image/*" capture="user" required>
+      </label>
       <div class="instructions">
         <strong data-t>How to take the photo</strong>
         <figure class="example">
@@ -37,11 +42,6 @@
         </ul>
         <small data-t>Ask someone to take the photo for you, or use your camera's timer.</small>
       </div>
-      <label class="photo-drop" id="drop">
-        <img id="preview" class="hidden" alt="Selected photo preview">
-        <span id="dropText" data-t-key="photoDrop">📷 Tap to take or upload a photo<br><small>JPG, PNG or HEIC, up to 15 MB</small></span>
-        <input id="photo" name="photo" type="file" accept="image/*" capture="user" required>
-      </label>
 
       <label for="problems" id="problemsLabel" data-t>What health issues would you like support with?</label>
       <textarea id="problems" name="problems" maxlength="5000" required data-t-ph placeholder="Your health issues, and how long you have had them…"></textarea>
@@ -84,6 +84,7 @@
         document.getElementById('progressLink').href = '/my-progress?patient=' + p.id;
         document.getElementById('avatar').textContent = initials(p.name);
         document.getElementById('pmeta').textContent = [p.age != null ? t('{n} yrs', { n: p.age }) : '', p.gender ? t(p.gender) : ''].filter(Boolean).join(' · ');
+        if (p.canSeeProgress) document.getElementById('progressRow').classList.remove('hidden');
         if (p.nextSession) {
           document.getElementById('sessionBadge').textContent = t('Today: {plan}', { plan: t(p.nextSession) });
           document.getElementById('sessionBadge').classList.remove('hidden');

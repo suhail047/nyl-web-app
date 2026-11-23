@@ -408,7 +408,7 @@ app.get('/api/patients/:id', (req, res) => {
   const mine = !visits.length || visits.some((v) => v.session_key && v.session_key === req.sessionKey);
   const step = plan.nextStep(visits[visits.length - 1], p.next_block);
   res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone, followUp: isFollowUp(p.id),
-    nextSession: mine ? plan.label(step.phase, step.session) : null });
+    nextSession: mine ? plan.label(step.phase, step.session) : null, canSeeProgress: mine });
 });
 
 // The patient's own progress: sessions done and what comes next. Earlier answers are only included when
