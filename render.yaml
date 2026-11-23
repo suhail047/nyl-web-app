@@ -22,6 +22,8 @@ services:
         value: /var/data/uploads
       - key: TRUST_PROXY   # Render puts one proxy in front of the app
         value: "1"
+      - key: WHITE_BACKGROUND   # needs ~1 GB RAM; Render's starter plan has 512 MB
+        value: "false"
       - key: ADMIN_USER
         value: admin
       - key: ADMIN_PASSWORD   # at least 8 characters
