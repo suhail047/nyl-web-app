@@ -29,7 +29,7 @@
     'Tap the Share button, then "Add to Home Screen".': 'ഷെയർ ബട്ടൺ അമർത്തി "Add to Home Screen" തിരഞ്ഞെടുക്കുക.',
     // Rules
     'Rules to be followed': 'പാലിക്കേണ്ട നിയമങ്ങൾ',
-    'Do not keep hatred or grudges towards anyone.': 'ആരോടും വെറുപ്പും പകയും കൊണ്ടു നടക്കാതിരിക്കുക.',
+    'Do not keep hatred or grudges against anyone.': 'ആരോടും വെറുപ്പും പകയും കൊണ്ടു നടക്കാതിരിക്കുക.',
     'Eat only when hungry, and stop once the hunger is gone.': 'വിശക്കുമ്പോൾ മാത്രം ഭക്ഷണം കഴിക്കുക, വിശപ്പ് മാറിയാൽ നിർത്തുക.',
     'Drink only when thirsty, and stop once the thirst is gone.': 'ദാഹിക്കുമ്പോൾ മാത്രം വെള്ളം കുടിക്കുക, ദാഹം മാറിയാൽ നിർത്തുക.',
     'Rest whenever your body asks for it.': 'ശരീരം ആവശ്യപ്പെടുമ്പോൾ വിശ്രമിക്കുക.',
