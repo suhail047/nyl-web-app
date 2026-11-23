@@ -38,7 +38,6 @@ button.secondary:hover { background: var(--tint); }
 .photo-drop:hover { border-color: var(--primary); }
 .photo-drop img { max-width: 100%; max-height: 260px; border-radius: 10px; display: block; margin: 0 auto 8px; }
 .photo-drop input { display: none; }
-.photo-drop .drop-tip { display: inline-block; margin: 6px 0 4px; color: var(--primary-dark); font-weight: 600; font-size: .9rem; }
 .fee { display: flex; justify-content: space-between; padding: 14px; margin-top: 18px; background: var(--bg); border-radius: 10px; font-weight: 600; }
 .hidden { display: none !important; }
 .center { text-align: center; }

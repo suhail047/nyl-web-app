@@ -168,7 +168,7 @@
 
   // Text with markup inside (kept separate so the HTML stays intact).
   const HTML_ML = {
-    photoDrop: '📷 ഫോട്ടോ എടുക്കാനോ അപ്‌ലോഡ് ചെയ്യാനോ ടാപ്പ് ചെയ്യുക<br><span class="drop-tip">🧘 കണ്ണുകൾ അടച്ച്, 🤲 കൈപ്പത്തികൾ മുകളിലേക്ക് മടിയിൽ വെച്ച്</span><br><small>JPG, PNG അല്ലെങ്കിൽ HEIC, 15 MB വരെ</small>',
+    photoDrop: '📷 ഫോട്ടോ എടുക്കാനോ അപ്‌ലോഡ് ചെയ്യാനോ ടാപ്പ് ചെയ്യുക<br><small>JPG, PNG അല്ലെങ്കിൽ HEIC, 15 MB വരെ</small>',
     consentAgree: '<a href="/agreement" target="_blank">ഉപയോക്തൃ കരാറും</a> <a href="/privacy" target="_blank">സ്വകാര്യതാ നയവും</a> ഞാൻ വായിച്ചു, അവ അംഗീകരിക്കുന്നു.',
     consentShare: 'എന്റെ ഹീലിംഗ് സെഷനുവേണ്ടി ഈ ഫോട്ടോയും വിവരങ്ങളും <span data-clinic>Suhail&#39;s Meridian Healing</span>-മായി പങ്കുവെക്കാൻ ഞാൻ സമ്മതിക്കുന്നു.',
     treatmentTime: 'നിങ്ങളുടെ ഹീലിംഗ് സെഷൻ <strong>ഇന്ത്യൻ സമയം രാത്രി 10 മണിക്ക്</strong> ആരംഭിക്കും.',
