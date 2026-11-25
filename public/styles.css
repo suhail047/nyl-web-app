@@ -75,6 +75,8 @@ button.secondary:hover { background: var(--tint); }
 .hint-left { color: var(--muted); font-size: .88rem; margin: 6px 0 0; }
 .rules { margin-top: 14px; }
 .rules h2 { font-size: 1.1rem; margin: 0 0 8px; }
+.rules h2:has(+ .rules-tag) { margin-bottom: 0; }
+.rules-tag { color: var(--muted); margin: 2px 0 10px; font-size: .95rem; }
 .rules ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
 .rules li { padding-left: 4px; }
 textarea.short { min-height: 90px; }
