@@ -494,7 +494,7 @@ $('settingsForm').addEventListener('submit', async (e) => {
     $('courseFeeInput').value = courseFee > 0 ? courseFee : '';
     msg.style.color = 'var(--ok)';
     msg.textContent = 'Saved. ' + (fee > 0 ? `Session fee ₹${fee.toLocaleString('en-IN')}. ` : 'No fixed session fee. ')
-      + (courseFee > 0 ? `All 12 sessions: ₹${courseFee.toLocaleString('en-IN')}.` : 'Course offer switched off.');
+      + (courseFee > 0 ? `All 12 sessions: ₹${courseFee.toLocaleString('en-IN')}.` : 'Course price not offered.');
   } catch (err) {
     msg.textContent = err.message;
   } finally {

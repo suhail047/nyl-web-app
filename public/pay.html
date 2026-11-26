@@ -32,7 +32,7 @@
         </label>
         <label class="choice">
           <input type="radio" name="payFor" value="course">
-          <span><strong id="courseTitle"></strong> <em class="offer" data-t>Offer</em>
+          <span><strong id="courseTitle"></strong> <em class="offer" data-t>Course price</em>
             <small id="courseDesc"></small></span>
         </label>
       </div>
@@ -110,7 +110,7 @@
       updatePayButton();
     }
 
-    // First session of a course: pay for this session, or for all 12 at the offer price.
+    // First session of a course: pay for this session, or for all 12 at the course price.
     function showCourseChoice() {
       const c = visit.course;
       const weekly = visit.plan && visit.plan.phase === 'weekly';

@@ -90,11 +90,11 @@
           Leave empty for no fixed fee.</p>
         <label for="feeInput">Default fee (₹)</label>
         <input id="feeInput" type="text" inputmode="decimal" maxlength="9" placeholder="No fixed fee">
-        <h2 style="margin-top:18px">All 12 sessions (offer price)</h2>
+        <h2 style="margin-top:18px">All 12 sessions (course price)</h2>
         <p class="muted">At the start of each 12-session course (daily or weekly), members can pay for all 12 sessions
-          at once for this price. The next 11 sessions then need no payment. Leave empty to switch the offer off.</p>
+          at once for this price. The next 11 sessions then need no payment. Leave empty to not offer it.</p>
         <label for="courseFeeInput">Price for 12 sessions (₹)</label>
-        <input id="courseFeeInput" type="text" inputmode="decimal" maxlength="9" placeholder="Offer off">
+        <input id="courseFeeInput" type="text" inputmode="decimal" maxlength="9" placeholder="Not offered">
         <button type="submit" id="saveSettings">Save</button>
         <div class="error" id="settingsMsg" role="status"></div>
       </form>
