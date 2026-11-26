@@ -141,7 +141,9 @@ const q = {
   insertVisit: db.prepare(`
     INSERT INTO visits (patient_id, problems, photo_file, amount_paise, payment_status, payment_method, visit_kind,
                         treatments_tried, current_medicines, consent_at, phase, session_no, block_no, session_key)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)`),
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN datetime('now') END, ?, ?, ?, ?)`),
+  // Has this person agreed to the User agreement before? Then later sessions don't ask again.
+  hasConsent: db.prepare('SELECT 1 FROM visits WHERE patient_id = ? AND consent_at IS NOT NULL LIMIT 1'),
   // A follow-up: the patient's last session was at most 14 days ago (Indian time), including earlier today.
   // After a longer gap they start again at Session 1 and answer the first-visit questions again.
   hadRecentSession: db.prepare(`

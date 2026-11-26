@@ -423,6 +423,7 @@ app.get('/api/patients/:id', (req, res) => {
   const mine = !visits.length || visits.some((v) => v.session_key && v.session_key === req.sessionKey);
   const step = plan.nextStep(visits[visits.length - 1], p.next_block);
   res.json({ id: p.id, name: p.name, age: p.age, gender: p.gender, phone: p.phone, followUp: isFollowUp(p.id),
+    needsConsent: !q.hasConsent.get(p.id),
     nextSession: mine ? plan.label(step.phase, step.session) : null, canSeeProgress: mine });
 });
 
@@ -475,12 +476,14 @@ app.post('/api/visits', limitUploadsPerIp, limitUploads, upload.single('photo'),
   }
   const patient = ownPatient(req, req.body.patientId);
   const followUp = Boolean(patient) && isFollowUp(patient.id);
-  // Only the photo and the consent tick are required; the answers are optional.
+  // Only the photo (and, the first time, the consent tick) are required; the answers are optional.
   const problems = cleanText(req.body.problems, 5000) || '';
   const treatments = followUp ? null : cleanText(req.body.treatments, 3000) || null;
   const medicines = followUp ? null : cleanText(req.body.medicines, 3000) || null;
+  // The User agreement is asked for once, at the person's first session.
+  const needsConsent = Boolean(patient) && !q.hasConsent.get(patient.id);
   const consented = req.body.consent === 'yes';
-  if (!patient || !req.file || !consented) {
+  if (!patient || !req.file || (needsConsent && !consented)) {
     if (req.file) fs.rm(req.file.path, () => {});
     return res.status(400).json({ error: !patient ? 'Person not found.' : !req.file ? 'Please upload a photo.' : 'Please tick the box to agree to the User agreement.' });
   }
@@ -490,7 +493,7 @@ app.post('/api/visits', limitUploadsPerIp, limitUploads, upload.single('photo'),
   const covered = step.session > 1 && Boolean(q.coursePayment.get(patient.id, step.block));
   const status = covered ? 'covered' : PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
   const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, covered ? 0 : currentFeePaise(), status, PAYMENT_METHOD,
-    followUp ? 'followup' : 'first', treatments, medicines, step.phase, step.session, step.block, req.sessionKey);
+    followUp ? 'followup' : 'first', treatments, medicines, needsConsent ? 1 : 0, step.phase, step.session, step.block, req.sessionKey);
   if (step.consumed) q.setNextBlock.run(null, patient.id);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
   res.status(201).json({ visitId });

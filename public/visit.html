@@ -55,8 +55,8 @@
         <textarea id="medicines" name="medicines" class="short" maxlength="3000" data-t-ph placeholder="Medication names and how often you take them."></textarea>
       </div>
 
-      <label class="consent">
-        <input type="checkbox" id="consent" name="consent" value="yes" required>
+      <label class="consent hidden" id="consentBox">
+        <input type="checkbox" id="consent" name="consent" value="yes">
         <span data-t-key="consentAgree">I have read and agree to the <a href="/agreement" target="_blank">User agreement</a>
           and the <a href="/privacy" target="_blank">Privacy policy</a>.</span>
       </label>
@@ -76,6 +76,7 @@
     const submit = document.getElementById('submit');
     const submitLabel = submit.textContent;
     let followUp = false;
+    let needsConsent = true;
 
     (async () => {
       if (!patientId) return (location.href = '/');
@@ -90,6 +91,9 @@
           document.getElementById('sessionBadge').textContent = t('Today: {plan}', { plan: t(p.nextSession) });
           document.getElementById('sessionBadge').classList.remove('hidden');
         }
+        // The User agreement is only asked for at the first session.
+        needsConsent = p.needsConsent !== false;
+        document.getElementById('consentBox').classList.toggle('hidden', !needsConsent);
         followUp = p.followUp;
         if (p.followUp) {
           // Last healing was within the past week: ask how the patient is improving instead.
@@ -148,7 +152,7 @@
       e.preventDefault();
       error.textContent = '';
       if (!photo.files[0]) return (error.textContent = t('Please add a photo.'));
-      if (!document.getElementById('consent').checked) return (error.textContent = t('Please tick the box to agree to the User agreement.'));
+      if (needsConsent && !document.getElementById('consent').checked) return (error.textContent = t('Please tick the box to agree to the User agreement.'));
 
       const data = new FormData(form);
       data.append('patientId', patientId);
