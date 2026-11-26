@@ -29,6 +29,7 @@
         <p id="nextText"></p>
       </div>
       <p class="sub hidden" id="upiNote" data-t>Your UPI payment will be confirmed by us shortly.</p>
+      <p class="sub hidden" id="coveredNote" data-t>✓ This session is covered by your 12-session course payment.</p>
     </section>
 
     <section class="card rules">
@@ -53,6 +54,7 @@
     const params = new URLSearchParams(location.search);
     const $ = (id) => document.getElementById(id);
     if (params.get('status') === 'upi') $('upiNote').classList.remove('hidden');
+    if (params.get('status') === 'covered') $('coveredNote').classList.remove('hidden');
 
     // Where the patient is in their healing plan, and when to send the next photo.
     if (params.get('visit')) {

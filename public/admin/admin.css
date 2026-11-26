@@ -149,3 +149,6 @@ td .link.link-ok { color: var(--primary); }
   .table-wrap td.row-actions { width: auto; flex: 1 1 50%; justify-content: flex-start; padding-top: 8px; }
   .table-wrap td.row-actions + td.row-actions { justify-content: flex-end; }
 }
+
+.pill.covered { background: #dcfce7; color: #166534; }
+.course-tag { background: #fef3c7; color: #92400e; }

@@ -1,6 +1,6 @@
 const state = { visits: [], patients: [], unseen: 0, day: null, today: null };
 const $ = (id) => document.getElementById(id);
-const STATUS_LABEL = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'UPI – please confirm', failed: 'Not received', not_configured: 'Pay in person' };
+const STATUS_LABEL = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'UPI – please confirm', failed: 'Not received', not_configured: 'Pay in person', covered: 'Course paid' };
 
 // SQLite stores UTC as "YYYY-MM-DD HH:MM:SS"
 function fmtDate(s) {
@@ -16,7 +16,7 @@ function visitCard(v, fresh) {
     <div class="body">
       <div class="row"><button type="button" class="name link-plain" data-progress="${v.patientId}" title="See progress">${esc(v.patientName)}</button><span class="pill ${esc(v.paymentStatus)}">${esc(STATUS_LABEL[v.paymentStatus] || v.paymentStatus)}</span></div>
       <div class="muted">${esc(fmtPhone(v.phone))}${v.age != null ? ' · ' + esc(v.age) + ' yrs' : ''}${v.gender ? ' · ' + esc(v.gender) : ''}</div>
-      ${v.planLabel ? `<div><span class="plan-tag">${esc(v.planLabel)}</span></div>` : ''}
+      ${v.planLabel ? `<div><span class="plan-tag">${esc(v.planLabel)}</span>${v.coursePaid ? ' <span class="plan-tag course-tag">Paying for all 12 sessions</span>' : ''}</div>` : ''}
       <div class="muted kind">${v.visitKind === 'followup' ? '🌱 Positive changes since last healing' : 'Health issues'}</div>
       <div class="problems">${esc(v.problems || '—')}</div>
       ${v.visitKind !== 'followup' ? `
@@ -26,11 +26,11 @@ function visitCard(v, fresh) {
         <div class="problems">${esc(v.currentMedicines || '—')}</div>` : ''}
       ${v.originalPhotoUrl ? `<div><a class="muted small-link" href="${esc(v.originalPhotoUrl)}" target="_blank" rel="noopener">View original photo</a></div>` : ''}
       ${v.consentAt ? '<div class="muted">✓ Consent given</div>' : ''}
-      <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
+      <div class="row muted"><span>${esc(fmtDate(v.createdAt))}</span><span>${v.paymentStatus === 'covered' ? 'Included in course' : v.amount > 0 ? '₹' + esc(v.amount.toLocaleString('en-IN')) : 'No fixed fee'}</span></div>
       ${v.razorpayPaymentId ? `<div class="muted">Payment ID: ${esc(v.razorpayPaymentId)}</div>` : ''}
-      ${v.paymentMethod === 'upi' && v.paymentStatus !== 'paid' ? `<div class="muted">UPI note to look for: <b>Ref ${v.id}</b></div>` : ''}
+      ${v.paymentMethod === 'upi' && v.paymentStatus !== 'paid' && v.paymentStatus !== 'covered' ? `<div class="muted">UPI note to look for: <b>Ref ${v.id}</b></div>` : ''}
       ${v.upiRef ? `<div class="muted">UTR given by member: <b>${esc(v.upiRef)}</b></div>` : ''}
-      ${v.paymentStatus !== 'paid' ? `<div class="pay-actions">
+      ${v.paymentStatus !== 'paid' && v.paymentStatus !== 'covered' ? `<div class="pay-actions">
         <button type="button" data-pay="confirm" data-id="${v.id}">✓ Mark paid</button>
         ${v.paymentStatus === 'upi_claimed' ? `<button type="button" class="secondary" data-pay="reject" data-id="${v.id}">Not received</button>` : ''}
       </div>` : ''}
@@ -463,8 +463,9 @@ $('patients').addEventListener('click', async (e) => {
 });
 
 async function loadSettings() {
-  const { fee } = await api('/api/admin/settings');
+  const { fee, courseFee } = await api('/api/admin/settings');
   $('feeInput').value = fee > 0 ? fee : '';
+  $('courseFeeInput').value = courseFee > 0 ? courseFee : '';
   $('settingsMsg').textContent = '';
   loadBackups();
 }
@@ -484,14 +485,16 @@ $('settingsForm').addEventListener('submit', async (e) => {
   msg.style.color = '';
   $('saveSettings').disabled = true;
   try {
-    const { fee } = await api('/api/admin/settings', {
+    const { fee, courseFee } = await api('/api/admin/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fee: $('feeInput').value }),
+      body: JSON.stringify({ fee: $('feeInput').value, courseFee: $('courseFeeInput').value }),
     });
     $('feeInput').value = fee > 0 ? fee : '';
+    $('courseFeeInput').value = courseFee > 0 ? courseFee : '';
     msg.style.color = 'var(--ok)';
-    msg.textContent = fee > 0 ? `Saved. New members will see ₹${fee.toLocaleString('en-IN')}.` : 'Saved. No fixed fee – members enter the amount.';
+    msg.textContent = 'Saved. ' + (fee > 0 ? `Session fee ₹${fee.toLocaleString('en-IN')}. ` : 'No fixed session fee. ')
+      + (courseFee > 0 ? `All 12 sessions: ₹${courseFee.toLocaleString('en-IN')}.` : 'Course offer switched off.');
   } catch (err) {
     msg.textContent = err.message;
   } finally {

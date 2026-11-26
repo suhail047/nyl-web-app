@@ -10,7 +10,7 @@ const KEEP_DAYS = 365;
 const DAILY_AT = { hour: 23, minute: 30 }; // Indian time
 
 const IST = (col) => `strftime('%Y-%m-%d %H:%M', ${col}, '+5 hours', '+30 minutes')`;
-const STATUS = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'Member says paid (to confirm)', failed: 'Not received', not_configured: 'Pay in person' };
+const STATUS = { paid: 'Paid', pending: 'Payment pending', upi_claimed: 'Member says paid (to confirm)', failed: 'Not received', not_configured: 'Pay in person', covered: 'Covered by course payment' };
 
 function istDate(d = new Date()) {
   return new Date(d.getTime() + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
@@ -61,7 +61,7 @@ async function buildWorkbook() {
   ];
   const rows = db.prepare(`
     SELECT v.id, ${IST('v.created_at')} AS date, v.patient_id, p.name, p.phone, v.visit_kind, v.phase, v.session_no, v.block_no, v.problems,
-           v.treatments_tried, v.current_medicines, v.amount_paise, v.payment_status, v.payment_method, v.upi_ref,
+           v.treatments_tried, v.current_medicines, v.amount_paise, v.payment_status, v.course_paid, v.payment_method, v.upi_ref,
            v.razorpay_payment_id, ${IST('v.paid_at')} AS paid_at, ${IST('v.consent_at')} AS consent_at
     FROM visits v JOIN patients p ON p.id = v.patient_id ORDER BY p.phone, p.name, v.id`).all();
   visits.addRows(rows.map((r) => ({
@@ -69,7 +69,7 @@ async function buildWorkbook() {
     kind: r.visit_kind === 'followup' ? 'Follow-up' : 'First session',
     plan: r.session_no ? plan.label(r.phase, r.session_no) : null,
     amount: r.amount_paise ? r.amount_paise / 100 : null,
-    status: STATUS[r.payment_status] || r.payment_status,
+    status: (STATUS[r.payment_status] || r.payment_status) + (r.course_paid ? ' – full 12-session course' : ''),
   })));
   visits.getColumn('problems').alignment = { wrapText: true, vertical: 'top' };
   visits.getColumn('treatments_tried').alignment = { wrapText: true, vertical: 'top' };

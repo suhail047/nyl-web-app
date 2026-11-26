@@ -34,7 +34,7 @@ db.exec(`
     problems             TEXT NOT NULL,
     photo_file           TEXT,
     amount_paise         INTEGER NOT NULL,
-    payment_status       TEXT NOT NULL DEFAULT 'pending', -- pending | upi_claimed | paid | failed | not_configured
+    payment_status       TEXT NOT NULL DEFAULT 'pending', -- pending | upi_claimed | paid | failed | not_configured | covered
     razorpay_order_id    TEXT,
     razorpay_payment_id  TEXT,
     created_at           TEXT NOT NULL DEFAULT (datetime('now')),
@@ -85,6 +85,8 @@ if (!visitColumns.includes('consent_at')) db.exec('ALTER TABLE visits ADD COLUMN
 // Hash of the patient session (browser) that created the visit: only that browser can read it back.
 if (!visitColumns.includes('session_key')) db.exec('ALTER TABLE visits ADD COLUMN session_key TEXT');
 if (!visitColumns.includes('photo_white')) db.exec('ALTER TABLE visits ADD COLUMN photo_white TEXT');
+// 1 = this payment is for the whole 12-session course; the course's later sessions are then 'covered'.
+if (!visitColumns.includes('course_paid')) db.exec('ALTER TABLE visits ADD COLUMN course_paid INTEGER NOT NULL DEFAULT 0');
 // Healing plan position: phase 'daily' | 'weekly', session 1–12 within the block, block = course number.
 for (const [col, type] of [['phase', 'TEXT'], ['session_no', 'INTEGER'], ['block_no', 'INTEGER']]) {
   if (!visitColumns.includes(col)) db.exec(`ALTER TABLE visits ADD COLUMN ${col} ${type}`);
@@ -123,6 +125,13 @@ const q = {
   insertPatient: db.prepare('INSERT INTO patients (phone, name, age, gender) VALUES (?, ?, ?, ?)'),
   photosForPatient: db.prepare('SELECT photo_file, photo_white FROM visits WHERE patient_id = ? AND photo_file IS NOT NULL'),
   setPhotoWhite: db.prepare('UPDATE visits SET photo_white = ? WHERE id = ?'),
+  setCoursePaid: db.prepare(`UPDATE visits SET course_paid = ? WHERE id = ? AND payment_status != 'paid'`),
+  // A course payment (paid, or claimed by UPI and not rejected) for this person's course number.
+  coursePayment: db.prepare(`SELECT id FROM visits WHERE patient_id = ? AND block_no = ? AND course_paid = 1
+                             AND payment_status IN ('paid', 'upi_claimed') LIMIT 1`),
+  // If staff mark a course payment "Not received", that course's later sessions need paying again.
+  uncoverCourse: db.prepare(`UPDATE visits SET payment_status = 'pending', amount_paise = ?
+                             WHERE patient_id = ? AND block_no = ? AND payment_status = 'covered'`),
   photosWithoutWhite: db.prepare('SELECT id, photo_file FROM visits WHERE photo_file IS NOT NULL AND photo_white IS NULL ORDER BY id DESC'),
   deletePatient: db.prepare('DELETE FROM patients WHERE id = ?'),
   allPatients: db.prepare(`

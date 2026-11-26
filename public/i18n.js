@@ -29,6 +29,13 @@
     'Tap the Share button, then "Add to Home Screen".': 'ഷെയർ ബട്ടൺ അമർത്തി "Add to Home Screen" തിരഞ്ഞെടുക്കുക.',
     // Rules
     'Rules to be followed': 'പാലിക്കേണ്ട നിയമങ്ങൾ',
+    'This session': 'ഈ സെഷൻ മാത്രം',
+    'All 12 sessions': '12 സെഷനുകളും ഒരുമിച്ച്',
+    'All 12 weekly sessions': '12 പ്രതിവാര സെഷനുകളും ഒരുമിച്ച്',
+    'Offer': 'ഓഫർ',
+    '{price} instead of {regular}': '{regular}-ന് പകരം {price}',
+    'No payment needed for the next 11 sessions.': 'അടുത്ത 11 സെഷനുകൾക്ക് പണം അടയ്ക്കേണ്ടതില്ല.',
+    '✓ This session is covered by your 12-session course payment.': '✓ ഈ സെഷൻ നിങ്ങളുടെ 12 സെഷൻ കോഴ്സ് പേയ്മെന്റിൽ ഉൾപ്പെടുന്നു.',
     'Simplest way of living': 'ഏറ്റവും ലളിതമായ ജീവിതരീതി',
     'Do not keep hatred or grudges against anyone.': 'ആരോടും വെറുപ്പും പകയും കൊണ്ടു നടക്കാതിരിക്കുക.',
     'Eat only when hungry, and stop once the hunger is gone.': 'വിശക്കുമ്പോൾ മാത്രം ഭക്ഷണം കഴിക്കുക, വിശപ്പ് മാറിയാൽ നിർത്തുക.',

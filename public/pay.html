@@ -25,6 +25,17 @@
         <div class="line"><span data-t>Name</span><strong id="pname">…</strong></div>
         <div class="problems" id="problems"></div>
       </div>
+      <div class="pay-choice hidden" id="courseChoice" role="radiogroup">
+        <label class="choice">
+          <input type="radio" name="payFor" value="one" checked>
+          <span><strong data-t>This session</strong><small id="oneDesc"></small></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="payFor" value="course">
+          <span><strong id="courseTitle"></strong> <em class="offer" data-t>Offer</em>
+            <small id="courseDesc"></small></span>
+        </label>
+      </div>
       <div class="total" id="totalRow"><span data-t>Total</span><span class="amount" id="amount">—</span></div>
       <div class="amount-edit hidden" id="amountEdit">
         <label for="amountInput" data-t>Amount to pay</label>
@@ -80,6 +91,7 @@
       }
       if (visit.paymentStatus === 'paid') return location.replace('/done?status=paid&visit=' + visitId);
       if (visit.paymentStatus === 'upi_claimed') return location.replace('/done?status=upi&visit=' + visitId);
+      if (visit.paymentStatus === 'covered') return location.replace('/done?status=covered&visit=' + visitId);
       $('pname').textContent = visit.patientName;
       $('problems').textContent = visit.problems;
       $('problems').classList.toggle('hidden', !visit.problems);
@@ -92,10 +104,34 @@
       $('amountEdit').classList.remove('hidden');
       $('amountInput').value = visit.amount > 0 ? visit.amount : '';
       $('amountHint').textContent = t('Enter the amount you wish to pay.');
-      if (visit.paymentMethod === 'upi') return showUpi(visit.upi);
+      if (visit.course) showCourseChoice();
+      if (visit.paymentMethod === 'upi') { showUpi(visit.upi); if (payingForCourse()) refreshQr(); return; }
       $('online').classList.remove('hidden');
       updatePayButton();
     }
+
+    // First session of a course: pay for this session, or for all 12 at the offer price.
+    function showCourseChoice() {
+      const c = visit.course;
+      const weekly = visit.plan && visit.plan.phase === 'weekly';
+      $('oneDesc').textContent = visit.amount > 0 ? rupees(visit.amount) : t('Any amount');
+      $('courseTitle').textContent = weekly ? t('All 12 weekly sessions') : t('All 12 sessions');
+      $('courseDesc').textContent = (c.regular > c.price
+        ? t('{price} instead of {regular}', { price: rupees(c.price), regular: rupees(c.regular) })
+        : rupees(c.price)) + ' · ' + t('No payment needed for the next 11 sessions.');
+      $('courseChoice').classList.remove('hidden');
+      if (c.chosen) document.querySelector('input[name=payFor][value=course]').checked = true;
+      applyChoice(false);
+    }
+    function payingForCourse() {
+      return Boolean(visit.course) && document.querySelector('input[name=payFor]:checked').value === 'course';
+    }
+    function applyChoice(refresh = true) {
+      $('amountInput').value = payingForCourse() ? visit.course.price : visit.amount > 0 ? visit.amount : '';
+      if (!refresh) return;
+      if (visit.paymentMethod === 'razorpay') updatePayButton(); else refreshQr();
+    }
+    document.querySelectorAll('input[name=payFor]').forEach((r) => r.addEventListener('change', () => applyChoice()));
 
     function rupees(n) {
       return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
@@ -160,7 +196,7 @@
         await api('/api/visits/' + visitId + '/upi-paid', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: typedAmount() }),
+          body: JSON.stringify({ amount: typedAmount(), course: payingForCourse() }),
         });
         location.replace('/done?status=upi&visit=' + visitId);
       } catch (err) {
@@ -185,7 +221,7 @@
         order = await api('/api/visits/' + visitId + '/order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: typedAmount() }),
+          body: JSON.stringify({ amount: typedAmount(), course: payingForCourse() }),
         });
       } catch (err) {
         return resetButton(err.message);

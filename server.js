@@ -53,6 +53,19 @@ function currentFeePaise() {
   return saved ? Number(saved.value) : ENV_FEE_PAISE;
 }
 
+// Offer price for paying all 12 sessions of a course at once (Settings, else COURSE_FEE_INR, else ₹3,000).
+// 0 switches the offer off.
+const COURSE_ENV = (process.env.COURSE_FEE_INR ?? '').trim();
+const ENV_COURSE_PAISE = COURSE_ENV === '' ? 300000 : Math.max(0, Math.round((Number(COURSE_ENV) || 0) * 100));
+function courseFeePaise() {
+  const saved = q.getSetting.get('course_fee_paise');
+  return saved ? Number(saved.value) : ENV_COURSE_PAISE;
+}
+// The "pay for all 12" choice is offered on the first session of a course, before it is paid.
+function courseOfferFor(v) {
+  return v.session_no === 1 && courseFeePaise() > 0 && PAYMENT_METHOD !== 'none' && ['pending', 'failed'].includes(v.payment_status);
+}
+
 // Parses a rupee amount typed by a person. Returns paise, 0 for blank, or null if invalid.
 function parseAmount(value) {
   if (value === undefined || value === null || String(value).trim() === '') return 0;
@@ -218,6 +231,7 @@ function visitDto(v) {
     originalPhotoUrl: v.photo_white && v.photo_file ? `/uploads/${v.photo_file}` : null,
     amount: v.amount_paise / 100,
     paymentStatus: v.payment_status,
+    coursePaid: Boolean(v.course_paid),
     razorpayOrderId: v.razorpay_order_id,
     razorpayPaymentId: v.razorpay_payment_id,
     paymentMethod: v.payment_method,
@@ -471,9 +485,11 @@ app.post('/api/visits', limitUploadsPerIp, limitUploads, upload.single('photo'),
     return res.status(400).json({ error: !patient ? 'Person not found.' : !req.file ? 'Please upload a photo.' : 'Please tick the box to agree to the User agreement.' });
   }
 
-  const status = PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
   const step = plan.nextStep(q.lastVisitOfPatient.get(patient.id), patient.next_block);
-  const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, currentFeePaise(), status, PAYMENT_METHOD,
+  // Sessions 2–12 of a course that was paid for in full need no payment.
+  const covered = step.session > 1 && Boolean(q.coursePayment.get(patient.id, step.block));
+  const status = covered ? 'covered' : PAYMENT_METHOD === 'none' ? 'not_configured' : 'pending';
+  const { lastInsertRowid: visitId } = q.insertVisit.run(patient.id, problems, req.file.filename, covered ? 0 : currentFeePaise(), status, PAYMENT_METHOD,
     followUp ? 'followup' : 'first', treatments, medicines, step.phase, step.session, step.block, req.sessionKey);
   if (step.consumed) q.setNextBlock.run(null, patient.id);
   broadcast('visit-created', visitDto(q.visitById.get(visitId)));
@@ -496,6 +512,7 @@ app.get('/api/visits/:id', async (req, res) => {
       upcoming: plan.upcoming(v, q.patientById.get(v.patient_id)?.next_block),
     };
   }
+  if (courseOfferFor(v)) out.course = { price: courseFeePaise() / 100, regular: (currentFeePaise() * 12) / 100, chosen: Boolean(v.course_paid) };
   if (PAYMENT_METHOD === 'upi') out.upi = await upiPayment(v, v.amount_paise);
   res.json(out);
 });
@@ -529,6 +546,7 @@ app.post('/api/visits/:id/upi-paid', (req, res) => {
   const amount = parseAmount(req.body.amount);
   if (amount === null) return res.status(400).json({ error: 'Enter a valid amount (up to ₹1,00,000).' });
   if (req.body.amount !== undefined) q.setVisitAmount.run(amount, v.id); // what the patient says they paid
+  q.setCoursePaid.run(req.body.course && courseOfferFor(v) ? 1 : 0, v.id);
   if (q.markUpiClaimed.run(ref || null, v.id).changes) broadcast('visit-updated', visitDto(q.visitById.get(v.id)));
   res.json({ ok: true });
 });
@@ -551,6 +569,7 @@ app.post('/api/visits/:id/order', async (req, res, next) => {
     }
     q.setVisitOrder.run(order.id, visit.id);
     q.setVisitAmount.run(amount, visit.id);
+    q.setCoursePaid.run(req.body.course && courseOfferFor(visit) ? 1 : 0, visit.id);
     res.json({
       keyId: RZP_KEY_ID, orderId: order.id, amount: order.amount, currency: order.currency, name: CLINIC_NAME,
       prefill: { name: visit.patient_name, contact: `+91${visit.patient_phone}` },
@@ -604,6 +623,7 @@ app.post('/api/admin/visits/:id/payment', (req, res) => {
   stmt.run(id);
   const v = q.visitById.get(id);
   if (!v) return res.status(404).json({ error: 'Visit not found.' });
+  if (req.body.action === 'reject' && v.course_paid) q.uncoverCourse.run(currentFeePaise(), v.patient_id, v.block_no);
   broadcast('visit-updated', visitDto(v));
   res.json(visitDto(v));
 });
@@ -654,13 +674,16 @@ app.get('/api/admin/backups/:name', (req, res) => {
   res.download(file);
 });
 
-app.get('/api/admin/settings', (_req, res) => res.json({ fee: currentFeePaise() / 100 }));
+app.get('/api/admin/settings', (_req, res) => res.json({ fee: currentFeePaise() / 100, courseFee: courseFeePaise() / 100 }));
 
 app.post('/api/admin/settings', (req, res) => {
   const fee = parseAmount(req.body.fee);
   if (fee === null) return res.status(400).json({ error: 'Enter a valid fee (up to ₹1,00,000), or leave it empty for no fixed fee.' });
+  const courseFee = req.body.courseFee === undefined ? courseFeePaise() : parseAmount(req.body.courseFee);
+  if (courseFee === null) return res.status(400).json({ error: 'Enter a valid course price (up to ₹1,00,000), or leave it empty to switch the offer off.' });
   q.setSetting.run('fee_paise', String(fee));
-  res.json({ fee: fee / 100 });
+  q.setSetting.run('course_fee_paise', String(courseFee));
+  res.json({ fee: fee / 100, courseFee: courseFee / 100 });
 });
 
 // One patient's visits, oldest first, for the Progress view.

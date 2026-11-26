@@ -241,3 +241,11 @@ If you use nginx instead, disable buffering for `/api/admin/stream` so live upda
   as PDF**. It uses `PUBLIC_URL`, so set that to your domain first.
 - **Full backup** (Settings): one zip with every photo, the database and an Excel copy. Download it weekly and
   keep it on Google Drive or a computer. Also turn on Hostinger's weekly VPS backups.
+
+## Pay for all 12 sessions (offer)
+
+On the first session of every 12-session course (daily or weekly), the payment page offers **This session**
+(the session fee) or **All 12 sessions** at the offer price (default ₹3,000; change it in Settings, or leave it
+empty to switch the offer off). When a member pays for all 12, Sessions 2–12 of that course skip the payment step
+and show as **Course paid** on the dashboard. If you mark the course payment **Not received**, the later sessions
+of that course go back to *Payment pending*.

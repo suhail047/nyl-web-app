@@ -126,3 +126,12 @@ header.brand { position: relative; }
 .lang-switch:hover { background: var(--tint); }
 .small-note { font-size: .82rem; }
 html[lang="ml"] body { line-height: 1.6; }
+
+/* Payment page: this session, or all 12 at the offer price */
+.pay-choice { display: grid; gap: 10px; margin: 14px 0 6px; }
+.pay-choice .choice { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; font-weight: 400; margin: 0; background: #fff; }
+.pay-choice .choice:has(input:checked) { border-color: var(--primary); background: var(--tint); }
+.pay-choice input { width: 20px; height: 20px; margin: 2px 0 0; flex: 0 0 auto; accent-color: var(--primary); }
+.pay-choice strong { color: var(--text, #111); }
+.pay-choice small { display: block; color: var(--muted); margin-top: 2px; font-size: .88rem; }
+.pay-choice .offer { font-style: normal; font-size: .75rem; font-weight: 700; color: #fff; background: var(--primary); border-radius: 999px; padding: 1px 8px; margin-left: 4px; vertical-align: 2px; }
