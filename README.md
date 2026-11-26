@@ -237,7 +237,7 @@ If you use nginx instead, disable buffering for `/api/admin/stream` so live upda
 
 - **📷 Photos only** (top of the dashboard, or `/admin/photos`): just the day's photos, large, updating live.
   Tap a photo to see it full screen and swipe between photos. Untick **Names** to hide names.
-- **QR card** (`/admin/qr`): one printable card with the name, "Drugless wellness service", the QR code (yin-yang in the middle), phone number and web address. Use **Print / Save
+- **QR card** (`/admin/qr`): one printable card with the name, "Simplest way of living", the QR code (yin-yang in the middle), phone number and web address. Use **Print / Save
   as PDF**. It uses `PUBLIC_URL`, so set that to your domain first.
 - **Full backup** (Settings): one zip with every photo, the database and an Excel copy. Download it weekly and
   keep it on Google Drive or a computer. Also turn on Hostinger's weekly VPS backups.
